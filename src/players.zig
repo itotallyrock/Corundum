@@ -1,3 +1,4 @@
+const std = @import("std");
 
 pub const Player = enum {
     White,
@@ -7,3 +8,7 @@ pub const Player = enum {
         return if (self == .White) .Black else .White;
     }
 };
+
+pub fn ByPlayer(comptime T: type) type {
+    return std.EnumArray(Player, T);
+}
