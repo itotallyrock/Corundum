@@ -28,14 +28,14 @@ pub const File = enum(u3) {
     A, B, C, D, E, F, G, H,
 
     pub fn ep_square_for(self: File, player: Player) EnPassantSquare {
-        return @enumFromInt(@intFromEnum(self) + @intFromEnum(Rank.ep_rank_for(player)) * 8);
+        return @enumFromInt(@as(u6, @intFromEnum(self)) + @as(u6, @intFromEnum(Rank.ep_rank_for(player))) * 8);
     }
 };
 
 pub const Rank = enum(u3) {
     _1, _2, _3, _4, _5, _6, _7, _8,
 
-    pub fn ep_rank_for(player: Player) EnPassantSquare {
+    pub fn ep_rank_for(player: Player) Rank {
         if (player == .White) {
             return ._3;
         } else {
@@ -55,7 +55,7 @@ pub const Square = enum(u6) {
     A8, B8, C8, D8, E8, F8, G8, H8,
 
     pub fn from_rank_and_file(rank: Rank, file: File) Square {
-        return @enumFromInt(@intFromEnum(rank) * 8 + @intFromEnum(file));
+        return @enumFromInt(@as(u8, @intFromEnum(rank)) * 8 + @as(u8, @intFromEnum(file)));
     }
 
     pub fn to_bitboard(self: Square) Bitboard {
@@ -63,7 +63,9 @@ pub const Square = enum(u6) {
     }
 
     pub fn shift(self: Square, direction: Direction) ?Square {
-        return try @as(Square, @enumFromInt(@intFromEnum(self) + @intFromEnum(direction))) catch null;
+        const offset = @as(i8, @intFromEnum(self)) + @as(i8, @intFromEnum(direction));
+        if (offset < 0 or offset > 63) return null;
+        return @enumFromInt(offset);
     }
 };
 
@@ -73,6 +75,28 @@ pub const EnPassantSquare = enum(u6) {
 
     pub fn to_square(self: EnPassantSquare) Square {
         return @enumFromInt(@intFromEnum(self));
+    }
+
+    pub fn from_square(square: Square) !EnPassantSquare {
+        return switch (square) {
+            .A3 => .A3,
+            .B3 => .B3,
+            .C3 => .C3,
+            .D3 => .D3,
+            .E3 => .E3,
+            .F3 => .F3,
+            .G3 => .G3,
+            .H3 => .H3,
+            .A6 => .A6,
+            .B6 => .B6,
+            .C6 => .C6,
+            .D6 => .D6,
+            .E6 => .E6,
+            .F6 => .F6,
+            .G6 => .G6,
+            .H6 => .H6,
+            ._ => error.InvalidEnPassantSquare,
+        };
     }
 };
 

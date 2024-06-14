@@ -187,7 +187,7 @@ pub const ZobristHash = struct {
 
     key: ZobristKey,
 
-    pub fn init(side_to_move: Player, king_squares: ByPlayer(Square), castle_rights: CastleRights, en_passant_square: ?EnPassantSquare) ZobristHash {
+    pub fn init(side_to_move: Player, king_squares: ByPlayer(Square), comptime castle_rights: CastleRights, comptime en_passant_square: ?EnPassantSquare) ZobristHash {
         var hash = EMPTY
             .toggle_piece(.{ .player = .White, .piece = .King }, king_squares.get(.White))
             .toggle_piece(.{ .player = .Black, .piece = .King }, king_squares.get(.Black))
@@ -225,7 +225,7 @@ pub const ZobristHash = struct {
             .toggle_en_passant_square(en_passant_square);
     }
 
-    pub fn clear_en_passant(self: ZobristHash, comptime en_passant_file: File) ZobristHash {
+    pub fn clear_en_passant(self: ZobristHash, comptime en_passant_file: File, comptime player: Player) ZobristHash {
         const en_passant_square = en_passant_file.ep_square_for(player);
         return self.toggle_en_passant_square(en_passant_square);
     }
@@ -245,8 +245,8 @@ pub const ZobristHash = struct {
 
     fn toggle_castle_rights(self : ZobristHash, comptime castle_rights: CastleRights) ZobristHash {
         var result = self;
-        inline for (std.enums.values(Player)) |player| {
-            inline for (std.enums.values(CastleDirection)) |castle_direction| {
+        inline for (comptime std.enums.values(Player)) |player| {
+            inline for (comptime std.enums.values(CastleDirection)) |castle_direction| {
                 if (castle_rights.has_rights(player, castle_direction)) {
                     result = ZobristHash { .key = result.key ^ CASTLE_KEYS.get(player).get(castle_direction) };
                 }
