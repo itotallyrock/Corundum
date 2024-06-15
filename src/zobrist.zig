@@ -216,18 +216,26 @@ pub const ZobristHash = struct {
             .toggle_piece(piece, to);
     }
 
-    pub fn double_pawn_push(self: ZobristHash, comptime player: Player, en_passant_file: File) ZobristHash {
-        const en_passant_square = en_passant_file.ep_square_for(player);
+    pub fn double_pawn_push(self: ZobristHash, comptime player: Player, comptime en_passant_file: File) ZobristHash {
+        const en_passant_square = comptime en_passant_file.ep_square_for(player);
         const from = .A2;
         const to = .A4;
         return self
-            .move(.{ .Player = player, .Piece = .Pawn }, from, to)
+            .move(.{ .player = player, .piece = .Pawn }, from, to)
             .toggle_en_passant_square(en_passant_square);
     }
 
     pub fn clear_en_passant(self: ZobristHash, comptime en_passant_file: File, comptime player: Player) ZobristHash {
         const en_passant_square = en_passant_file.ep_square_for(player);
         return self.toggle_en_passant_square(en_passant_square);
+    }
+
+    pub fn en_passant_capture(self: ZobristHash, comptime player: Player, comptime en_passant_file: File, from: Square, to: Square) ZobristHash {
+        const en_passant_square = comptime en_passant_file.ep_square_for(player);
+        return self
+            .move(.{ .player = player, .piece = .Pawn }, from, to)
+            .toggle_piece(.{ .player = player.opposite(), .piece = .Pawn }, en_passant_square.to_square())
+            .toggle_en_passant_square(en_passant_square);
     }
 
     pub fn promote(self: ZobristHash, comptime player: Player, comptime promotion: PromotionPiece, from: Square, to: Square) ZobristHash {
@@ -243,7 +251,7 @@ pub const ZobristHash = struct {
             .toggle_piece(.{ .Player = player, .Piece = promotion.to_piece() }, to);
     }
 
-    fn toggle_castle_rights(self : ZobristHash, comptime castle_rights: CastleRights) ZobristHash {
+    fn toggle_castle_rights(self: ZobristHash, comptime castle_rights: CastleRights) ZobristHash {
         var result = self;
         inline for (comptime std.enums.values(Player)) |player| {
             inline for (comptime std.enums.values(CastleDirection)) |castle_direction| {

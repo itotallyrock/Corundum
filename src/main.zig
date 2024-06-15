@@ -44,6 +44,7 @@ pub fn main() !void {
         .pawn_push(.E4)
         .double_pawn_push(.F)
         .en_passant_capture(.E)
+        .king_move(.E8, .E7)
         .debug_print();
 }
 

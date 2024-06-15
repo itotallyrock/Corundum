@@ -177,7 +177,9 @@ const PersistentBoardState = struct {
 
     // TODO: replace OwnedPiece with OwnedNonPawnPiece
     pub fn quiet_move(self: PersistentBoardState, comptime piece: OwnedNonPawnPiece, from_square: Square, to_square: Square) PersistentBoardState {
-        var result = self.move_piece(piece.to_owned(), from_square, to_square);
+        var result = self;
+
+        result.key = result.key.move(piece, from_square, to_square);
         result.halfmove_clock = result.halfmove_clock.increment();
         // todo: update move generation masks
         return result;
@@ -193,22 +195,32 @@ const PersistentBoardState = struct {
         return result;
     }
 
-    pub fn double_pawn_push(self: PersistentBoardState, comptime side_to_move: Player, from_square: Square) PersistentBoardState {
+    pub fn double_pawn_push(self: PersistentBoardState, comptime side_to_move: Player, comptime en_passant_file: File) PersistentBoardState {
         var result = self;
-        const forward = Direction.forward(side_to_move);
-        const to_square = from_square.shift(forward).?.shift(forward).?;
         result.halfmove_clock = HalfMoveCount.reset();
-        result.key = result.key.move(.{ .player = side_to_move, .piece = .Pawn }, from_square, to_square);
+        result.key = result.key.double_pawn_push(side_to_move, en_passant_file);
         // todo: update move generation masks
         return result;
     }
 
-    pub fn en_passant_capture(self: PersistentBoardState, comptime side_to_move: Player, from_square: Square, to_square: Square) PersistentBoardState {
+    pub fn en_passant_capture(self: PersistentBoardState, comptime side_to_move: Player, comptime en_passant_file: File, from_square: Square, to_square: Square) PersistentBoardState {
         var result = self;
         result.halfmove_clock = HalfMoveCount.reset();
-        result.key = result.key.move(.{ .player = side_to_move, .piece = .Pawn }, from_square, to_square);
+        result.key = result.key.en_passant_capture(side_to_move, en_passant_file, from_square, to_square);
         // todo: update move generation masks
         return result;
+    }
+
+    pub fn king_move_with_rights(self: PersistentBoardState, comptime side_to_move: Player, from_square: Square, to_square: Square) PersistentBoardState {
+        var result = self.move_piece(.{ .player = side_to_move, .piece = .King }, from_square, to_square);
+        result.key = result.key.toggle_rights(side_to_move, CastleRights.forSide(side_to_move));
+        // todo: update move generation masks
+        return result;
+    }
+
+    pub fn king_move(self: PersistentBoardState, comptime side_to_move: Player, from_square: Square, to_square: Square) PersistentBoardState {
+        return self.move_piece(.{ .player = side_to_move, .piece = .King }, from_square, to_square);
+        // todo: update move generation masks
     }
 
     // todo: add other move types, including those that reset the halfmove clock
@@ -302,19 +314,25 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
             const from_square = next_ep_square.shift(Direction.forward(side_to_move).opposite()).?;
             const to_square = next_ep_square.shift(Direction.forward(side_to_move)).?;
             var updated_board = self.move_piece(.{.piece = .Pawn, .player = side_to_move}, from_square, to_square);
-            updated_board.state = updated_board.state.double_pawn_push(side_to_move, from_square);
+            updated_board.state = updated_board.state.double_pawn_push(side_to_move, file);
 
             return updated_board.next(file, rights);
         }
 
-        pub fn en_passant_capture(self: Board(side_to_move, en_passant_file, rights), comptime from_file: File) Board(side_to_move.opposite(), null, rights) {
+        pub fn en_passant_capture(self: Board(side_to_move, en_passant_file, rights), from_file: File) Board(side_to_move.opposite(), null, rights) {
             const to_square = self.ep_square().?.to_square();
             const from_square = from_file.ep_square_for(side_to_move.opposite()).to_square().shift(Direction.forward(side_to_move.opposite())).?;
             const captured_pawn_square = to_square.shift(Direction.forward(side_to_move.opposite())).?;
             var updated_board = self.remove_piece(.{.piece = .Pawn, .player = side_to_move.opposite()}, captured_pawn_square)
                 .move_piece(.{.piece = .Pawn, .player = side_to_move}, from_square, to_square);
-            updated_board.state = updated_board.state.en_passant_capture(side_to_move, from_square, to_square);
+            updated_board.state = updated_board.state.en_passant_capture(side_to_move, en_passant_file.?, from_square, to_square);
             return updated_board.next(null, rights);
+        }
+
+        pub fn king_move(self: Board(side_to_move, en_passant_file, rights), from_square: Square, to_square: Square) Board(side_to_move.opposite(), null, rights.king_move(side_to_move)) {
+            var updated_board = self.move_piece(.{.piece = .King, .player = side_to_move}, from_square, to_square);
+            updated_board.state = updated_board.state.king_move(side_to_move, from_square, to_square);
+            return updated_board.next(null, rights.king_move(side_to_move));
         }
 
         pub fn debug_print(self: Board(side_to_move, en_passant_file, rights)) void {
