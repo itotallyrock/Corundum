@@ -1,22 +1,29 @@
 const std = @import("std");
-const Player = @import("players.zig").Player;
-const ByPlayer = @import("players.zig").ByPlayer;
-const CastleRights = @import("castles.zig").CastleRights;
-const CastleDirection = @import("castles.zig").CastleDirection;
-const Square = @import("square.zig").Square;
-const Rank = @import("square.zig").Rank;
-const File = @import("square.zig").File;
-const EnPassantSquare = @import("square.zig").EnPassantSquare;
-const Bitboard = @import("bitboard.zig").Bitboard;
-const NonKingPiece = @import("pieces.zig").NonKingPiece;
-const ByNonKingPiece = @import("pieces.zig").ByNonKingPiece;
-const OwnedPiece = @import("pieces.zig").OwnedPiece;
-const OwnedNonPawnPiece = @import("pieces.zig").OwnedNonPawnPiece;
-const OwnedNonKingPiece = @import("pieces.zig").OwnedNonKingPiece;
-const Piece = @import("pieces.zig").Piece;
-const Direction = @import("square.zig").Direction;
-const ZobristHash = @import("zobrist.zig").ZobristHash;
-const BASE_ZOBRIST_KEY = @import("zobrist.zig").BASE_ZOBRIST_KEY;
+const playerModule = @import("players.zig");
+const bitboardModule = @import("bitboard.zig");
+const castlesModule = @import("castles.zig");
+const piecesModule = @import("pieces.zig");
+const squareModule = @import("square.zig");
+const zobristModule = @import("zobrist.zig");
+
+const Bitboard = bitboardModule.Bitboard;
+const Player = playerModule.Player;
+const ByPlayer = playerModule.ByPlayer;
+const CastleRights = castlesModule.CastleRights;
+const CastleDirection = castlesModule.CastleDirection;
+const Square = squareModule.Square;
+const Rank = squareModule.Rank;
+const File = squareModule.File;
+const Direction = squareModule.Direction;
+const EnPassantSquare = squareModule.EnPassantSquare;
+const NonKingPiece = piecesModule.NonKingPiece;
+const ByNonKingPiece = piecesModule.ByNonKingPiece;
+const OwnedPiece = piecesModule.OwnedPiece;
+const OwnedNonPawnPiece = piecesModule.OwnedNonPawnPiece;
+const OwnedNonKingPiece = piecesModule.OwnedNonKingPiece;
+const Piece = piecesModule.Piece;
+const ZobristHash = zobristModule.ZobristHash;
+const BASE_ZOBRIST_KEY = zobristModule.BASE_ZOBRIST_KEY;
 
 pub const FullMoveCount = u8;
 
@@ -25,19 +32,19 @@ pub const HalfMoveCount = struct {
     halfmoves: u8 = 0,
 
     pub fn increment(self: HalfMoveCount) HalfMoveCount {
-        return HalfMoveCount { .halfmoves = self.halfmoves +| 1 };
+        return HalfMoveCount{ .halfmoves = self.halfmoves +| 1 };
     }
 
     pub fn decrement(self: HalfMoveCount) HalfMoveCount {
-        return HalfMoveCount { .halfmoves = self.halfmoves -| 1 };
+        return HalfMoveCount{ .halfmoves = self.halfmoves -| 1 };
     }
 
     pub fn init(halfmoves: u8) HalfMoveCount {
-        return HalfMoveCount { .halfmoves = halfmoves };
+        return HalfMoveCount{ .halfmoves = halfmoves };
     }
 
     pub fn reset() HalfMoveCount {
-        return HalfMoveCount { .halfmoves = 0 };
+        return HalfMoveCount{ .halfmoves = 0 };
     }
 
     pub fn from_fullmoves(fullmoves: FullMoveCount, side_to_move: Player) HalfMoveCount {
@@ -49,85 +56,113 @@ pub const HalfMoveCount = struct {
     }
 };
 
+/// The state of the game board.
 pub const PieceArrangement = struct {
+    /// The bitboard for each side, where each bit represents the presence of a piece.
     side_masks: ByPlayer(Bitboard) = ByPlayer(Bitboard).initFill(Bitboard.Empty),
+    /// The bitboard for each piece type, where each bit represents the presence of a piece.
     piece_masks: ByNonKingPiece(Bitboard) = ByNonKingPiece(Bitboard).initFill(Bitboard.Empty),
+    /// The squares of the kings for each side.
     kings: ByPlayer(Square),
 
+    /// Create a new `PieceArrangement` with a king square for each side.
     pub fn init(king_squares: ByPlayer(Square)) PieceArrangement {
-        const side_masks = std.EnumArray(Player, Bitboard).init(.{.White = king_squares.get(.White).to_bitboard(), .Black = king_squares.get(.Black).to_bitboard()});
-        return PieceArrangement {
-            .side_masks = side_masks,
+        return PieceArrangement{
+            // The side masks are initialized with the king squares since they are the only pieces on the board.
+            .side_masks = std.EnumArray(Player, Bitboard).init(.{
+                .White = king_squares.get(.White).to_bitboard(),
+                .Black = king_squares.get(.Black).to_bitboard(),
+            }),
             .kings = king_squares,
         };
     }
 
+    /// Add a non-king piece to the board on a given square
     pub fn add_piece(self: PieceArrangement, comptime piece: OwnedNonKingPiece, square: Square) PieceArrangement {
+        // TODO: Enable this assertion once we've raised the eval branch quota for the compiler.
+        // std.debug.assert(self.side_on(square) == null and self.piece_on(square) == null);
+
         var result = self;
         const square_bitboard = square.to_bitboard();
-        // TODO: Debug assert empty square
         result.side_masks.set(piece.player, result.side_masks.get(piece.player).logicalOr(square_bitboard));
         result.piece_masks.set(piece.piece, result.piece_masks.get(piece.piece).logicalOr(square_bitboard));
         return result;
     }
 
+    /// Remove a non-king piece from the board from a given square
     pub fn remove_piece(self: PieceArrangement, comptime piece: OwnedNonKingPiece, square: Square) PieceArrangement {
+        std.debug.assert(self.side_on(square).? == piece.player and self.piece_on(square).? == piece.piece.to_piece());
+
         var result = self;
         const square_bitboard = square.to_bitboard();
-        std.debug.assert(result.side_on(square).? == piece.player);
-        std.debug.assert(result.piece_on(square).? == piece.piece.to_piece());
-
         result.side_masks.set(piece.player, result.side_masks.get(piece.player).logicalAnd(square_bitboard.logicalNot()));
         result.piece_masks.set(piece.piece, result.piece_masks.get(piece.piece).logicalAnd(square_bitboard.logicalNot()));
         return result;
     }
 
+    /// Move a piece from one square to another
     pub fn move_piece(self: PieceArrangement, comptime piece: OwnedPiece, from_square: Square, to_square: Square) PieceArrangement {
+        std.debug.assert(self.side_on(from_square).? == piece.player and self.piece_on(from_square).? == piece.piece);
+        std.debug.assert(self.side_on(to_square) == null and self.piece_on(to_square) == null);
+
         var result = self;
         const from_square_bitboard = from_square.to_bitboard();
         const to_square_bitboard = to_square.to_bitboard();
         const from_to_square_bitboard = from_square_bitboard.logicalOr(to_square_bitboard);
-        // TODO: Debug assert empty to square
-        // TODO: Debug assert piece on from square
-        set_piece_mask: {
-            const non_king_piece = NonKingPiece.from_piece(piece.piece) catch {
-                result.kings.set(piece.player, to_square);
-                break :set_piece_mask;
-            };
-            result.piece_masks.set(non_king_piece, result.piece_masks.get(non_king_piece).logicalXor(from_to_square_bitboard));
+        const non_king_piece = NonKingPiece.from_piece(piece.piece) catch null;
+
+        if (non_king_piece) |p| {
+            result.piece_masks.set(p, result.piece_masks.get(p).logicalXor(from_to_square_bitboard));
+        } else {
+            result.kings.set(piece.player, to_square);
         }
+
         result.side_masks.set(piece.player, result.side_masks.get(piece.player).logicalXor(from_to_square_bitboard));
         return result;
     }
 
+    /// Get the piece on a given square if any
     pub fn piece_on(self: PieceArrangement, square: Square) ?Piece {
-        if ((self.kings.get(.White) == square) or (self.kings.get(.Black) == square)) {
-            return .King;
+        // Check if piece is a king
+        inline for (comptime std.enums.values(Player)) |player| {
+            if (self.kings.get(player) == square) {
+                return .King;
+            }
         }
 
+        // Check if piece is a non-king piece
         const square_mask = square.to_bitboard();
         inline for (comptime std.enums.values(NonKingPiece)) |piece| {
             if (!self.piece_masks.get(piece).logicalAnd(square_mask).isEmpty()) {
                 return piece.to_piece();
             }
         }
+
+        // No piece on square
         return null;
     }
 
+    /// Get the side of the piece on a given square if any
     pub fn side_on(self: PieceArrangement, square: Square) ?Player {
+        // Check each side mask for the square
         const square_mask = square.to_bitboard();
         inline for (comptime std.enums.values(Player)) |player| {
             if (!self.side_masks.get(player).logicalAnd(square_mask).isEmpty()) {
                 return player;
             }
         }
+
+        // No piece on square
         return null;
     }
 
+    /// Get the `OwnedPiece` (piece and side) on a given square if any
     pub fn sided_piece_on(self: PieceArrangement, square: Square) ?OwnedPiece {
         if (self.piece_on(square)) |piece| {
-            return .{.piece = piece, .player = self.side_on(square).?};
+            return .{ .piece = piece, .player = self.side_on(square).? };
         }
+
+        // No piece on square
         return null;
     }
 };
@@ -144,7 +179,7 @@ const PersistentBoardState = struct {
 
     pub fn init(comptime side_to_move: Player, comptime en_passant_file: ?File, comptime rights: CastleRights, king_squares: ByPlayer(Square)) PersistentBoardState {
         const ep_square = if (en_passant_file) |*ep_file| ep_file.ep_square_for(side_to_move) else null;
-        return PersistentBoardState {
+        return PersistentBoardState{
             .key = ZobristHash.init(side_to_move, king_squares, rights, ep_square),
             // todo: compute move generation masks
             .checkers = Bitboard.Empty,
@@ -162,11 +197,11 @@ const PersistentBoardState = struct {
     }
 
     fn remove_piece(self: PersistentBoardState, comptime piece: OwnedNonKingPiece, square: Square) PersistentBoardState {
-       var result = self;
-       result.key = result.key.toggle_piece(piece.to_owned(), square);
-       // todo: update move generation masks?
-       return result;
-   }
+        var result = self;
+        result.key = result.key.toggle_piece(piece.to_owned(), square);
+        // todo: update move generation masks?
+        return result;
+    }
 
     fn move_piece(self: PersistentBoardState, comptime piece: OwnedPiece, from_square: Square, to_square: Square) PersistentBoardState {
         var result = self;
@@ -234,7 +269,7 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
         state: PersistentBoardState,
 
         fn with_kings(king_squares: ByPlayer(Square)) Board(side_to_move, en_passant_file, rights) {
-            return Board(side_to_move, en_passant_file, rights) {
+            return Board(side_to_move, en_passant_file, rights){
                 .pieces = PieceArrangement.init(king_squares),
                 .state = PersistentBoardState.init(side_to_move, en_passant_file, rights, king_squares),
             };
@@ -266,7 +301,7 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
         }
 
         fn next(self: Board(side_to_move, en_passant_file, rights), comptime next_en_passant_file: ?File, comptime next_rights: CastleRights) Board(side_to_move.opposite(), next_en_passant_file, next_rights) {
-            return Board(side_to_move.opposite(), next_en_passant_file, next_rights) {
+            return Board(side_to_move.opposite(), next_en_passant_file, next_rights){
                 .pieces = self.pieces,
                 .state = self.state,
                 .halfmove_count = self.halfmove_count,
@@ -274,7 +309,7 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
         }
 
         fn increment_halfmove_count(self: Board(side_to_move, en_passant_file, rights)) Board(side_to_move, en_passant_file, rights) {
-            return Board(side_to_move, en_passant_file, rights) {
+            return Board(side_to_move, en_passant_file, rights){
                 .pieces = self.pieces,
                 .state = self.state,
                 .halfmove_count = self.halfmove_count.increment(),
@@ -303,7 +338,7 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
 
         pub fn pawn_push(self: Board(side_to_move, en_passant_file, rights), from_square: Square) Board(side_to_move.opposite(), null, rights) {
             const to_square = from_square.shift(Direction.forward(side_to_move)).?;
-            var updated_board = self.move_piece(.{.piece = .Pawn, .player = side_to_move}, from_square, to_square);
+            var updated_board = self.move_piece(.{ .piece = .Pawn, .player = side_to_move }, from_square, to_square);
             updated_board.state = updated_board.state.pawn_push(side_to_move, from_square);
 
             return updated_board.next(null, rights);
@@ -313,7 +348,7 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
             const next_ep_square = file.ep_square_for(side_to_move).to_square();
             const from_square = next_ep_square.shift(Direction.forward(side_to_move).opposite()).?;
             const to_square = next_ep_square.shift(Direction.forward(side_to_move)).?;
-            var updated_board = self.move_piece(.{.piece = .Pawn, .player = side_to_move}, from_square, to_square);
+            var updated_board = self.move_piece(.{ .piece = .Pawn, .player = side_to_move }, from_square, to_square);
             updated_board.state = updated_board.state.double_pawn_push(side_to_move, file);
 
             return updated_board.next(file, rights);
@@ -323,14 +358,14 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
             const to_square = self.ep_square().?.to_square();
             const from_square = from_file.ep_square_for(side_to_move.opposite()).to_square().shift(Direction.forward(side_to_move.opposite())).?;
             const captured_pawn_square = to_square.shift(Direction.forward(side_to_move.opposite())).?;
-            var updated_board = self.remove_piece(.{.piece = .Pawn, .player = side_to_move.opposite()}, captured_pawn_square)
-                .move_piece(.{.piece = .Pawn, .player = side_to_move}, from_square, to_square);
+            var updated_board = self.remove_piece(.{ .piece = .Pawn, .player = side_to_move.opposite() }, captured_pawn_square)
+                .move_piece(.{ .piece = .Pawn, .player = side_to_move }, from_square, to_square);
             updated_board.state = updated_board.state.en_passant_capture(side_to_move, en_passant_file.?, from_square, to_square);
             return updated_board.next(null, rights);
         }
 
         pub fn king_move(self: Board(side_to_move, en_passant_file, rights), from_square: Square, to_square: Square) Board(side_to_move.opposite(), null, rights.king_move(side_to_move)) {
-            var updated_board = self.move_piece(.{.piece = .King, .player = side_to_move}, from_square, to_square);
+            var updated_board = self.move_piece(.{ .piece = .King, .player = side_to_move }, from_square, to_square);
             updated_board.state = updated_board.state.king_move(side_to_move, from_square, to_square);
             return updated_board.next(null, rights.king_move(side_to_move));
         }
@@ -344,7 +379,7 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
                     const piece = self.sided_piece_on(square);
                     const pieceChar = if (piece) |p| @tagName(p.piece)[0] else ' ';
                     const sidedPieceChar = if (piece) |p| if (p.player == .White) std.ascii.toUpper(pieceChar) else std.ascii.toLower(pieceChar) else pieceChar;
-                    std.debug.print("| {c} ", .{ sidedPieceChar });
+                    std.debug.print("| {c} ", .{sidedPieceChar});
                 }
                 switch (rank) {
                     ._8 => std.debug.print("|\n{s}\n", .{line}),
@@ -353,9 +388,9 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
                         line,
                         rights.get_uci_string(),
                     }),
-                    ._6 => std.debug.print("|      En Passant: {s}\n{s}  Halfmove Clock: {d}\n", .{if (self.ep_square()) |sq| @tagName(sq) else "-", line, self.state.halfmove_clock.halfmoves}),
-                    ._5 => std.debug.print("|\n{s}    Zobrist Hash: 0x{X}\n", .{line, self.state.key.key}),
-                    ._4 => std.debug.print("|   Checkers Mask: 0x{X}\n{s}\n", .{self.state.checkers.mask, line}),
+                    ._6 => std.debug.print("|      En Passant: {s}\n{s}  Halfmove Clock: {d}\n", .{ if (self.ep_square()) |sq| @tagName(sq) else "-", line, self.state.halfmove_clock.halfmoves }),
+                    ._5 => std.debug.print("|\n{s}    Zobrist Hash: 0x{X}\n", .{ line, self.state.key.key }),
+                    ._4 => std.debug.print("|   Checkers Mask: 0x{X}\n{s}\n", .{ self.state.checkers.mask, line }),
                     ._3 => std.debug.print("|\n{s}\n", .{line}),
                     ._2 => std.debug.print("|\n{s}\n", .{line}),
                     ._1 => std.debug.print("|\n{s}\n", .{line}),
@@ -366,39 +401,38 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
 }
 
 pub const DefaultBoard = Board(.White, null, CastleRights.initFill(true))
-    .with_kings(std.EnumArray(Player, Square).init(.{.White = .E1, .Black = .E8}))
-    .add_piece(.{.piece = .Rook, .player = .White}, .A1)
-    .add_piece(.{.piece = .Pawn, .player = .White}, .A2)
-    .add_piece(.{.piece = .Pawn, .player = .White}, .B2)
-    .add_piece(.{.piece = .Pawn, .player = .White}, .C2)
-    .add_piece(.{.piece = .Pawn, .player = .White}, .D2)
-    .add_piece(.{.piece = .Pawn, .player = .White}, .E2)
-    .add_piece(.{.piece = .Pawn, .player = .White}, .F2)
-    .add_piece(.{.piece = .Pawn, .player = .White}, .G2)
-    .add_piece(.{.piece = .Pawn, .player = .White}, .H2)
-    .add_piece(.{.piece = .Rook, .player = .White}, .A1)
-    .add_piece(.{.piece = .Knight, .player = .White}, .B1)
-    .add_piece(.{.piece = .Bishop, .player = .White}, .C1)
-    .add_piece(.{.piece = .Queen, .player = .White}, .D1)
-    .add_piece(.{.piece = .Bishop, .player = .White}, .F1)
-    .add_piece(.{.piece = .Knight, .player = .White}, .G1)
-    .add_piece(.{.piece = .Rook, .player = .White}, .H1)
-    // black pieces
-    .add_piece(.{.piece = .Pawn, .player = .Black}, .A7)
-    .add_piece(.{.piece = .Pawn, .player = .Black}, .B7)
-    .add_piece(.{.piece = .Pawn, .player = .Black}, .C7)
-    .add_piece(.{.piece = .Pawn, .player = .Black}, .D7)
-    .add_piece(.{.piece = .Pawn, .player = .Black}, .E7)
-    .add_piece(.{.piece = .Pawn, .player = .Black}, .F7)
-    .add_piece(.{.piece = .Pawn, .player = .Black}, .G7)
-    .add_piece(.{.piece = .Pawn, .player = .Black}, .H7)
-    .add_piece(.{.piece = .Rook, .player = .Black}, .A8)
-    .add_piece(.{.piece = .Knight, .player = .Black}, .B8)
-    .add_piece(.{.piece = .Bishop, .player = .Black}, .C8)
-    .add_piece(.{.piece = .Queen, .player = .Black}, .D8)
-    .add_piece(.{.piece = .Bishop, .player = .Black}, .F8)
-    .add_piece(.{.piece = .Knight, .player = .Black}, .G8)
-    .add_piece(.{.piece = .Rook, .player = .Black}, .H8);
+    .with_kings(std.EnumArray(Player, Square).init(.{ .White = .E1, .Black = .E8 }))
+    .add_piece(.{ .piece = .Pawn, .player = .White }, .A2)
+    .add_piece(.{ .piece = .Pawn, .player = .White }, .B2)
+    .add_piece(.{ .piece = .Pawn, .player = .White }, .C2)
+    .add_piece(.{ .piece = .Pawn, .player = .White }, .D2)
+    .add_piece(.{ .piece = .Pawn, .player = .White }, .E2)
+    .add_piece(.{ .piece = .Pawn, .player = .White }, .F2)
+    .add_piece(.{ .piece = .Pawn, .player = .White }, .G2)
+    .add_piece(.{ .piece = .Pawn, .player = .White }, .H2)
+    .add_piece(.{ .piece = .Rook, .player = .White }, .A1)
+    .add_piece(.{ .piece = .Knight, .player = .White }, .B1)
+    .add_piece(.{ .piece = .Bishop, .player = .White }, .C1)
+    .add_piece(.{ .piece = .Queen, .player = .White }, .D1)
+    .add_piece(.{ .piece = .Bishop, .player = .White }, .F1)
+    .add_piece(.{ .piece = .Knight, .player = .White }, .G1)
+    .add_piece(.{ .piece = .Rook, .player = .White }, .H1)
+// black pieces
+    .add_piece(.{ .piece = .Pawn, .player = .Black }, .A7)
+    .add_piece(.{ .piece = .Pawn, .player = .Black }, .B7)
+    .add_piece(.{ .piece = .Pawn, .player = .Black }, .C7)
+    .add_piece(.{ .piece = .Pawn, .player = .Black }, .D7)
+    .add_piece(.{ .piece = .Pawn, .player = .Black }, .E7)
+    .add_piece(.{ .piece = .Pawn, .player = .Black }, .F7)
+    .add_piece(.{ .piece = .Pawn, .player = .Black }, .G7)
+    .add_piece(.{ .piece = .Pawn, .player = .Black }, .H7)
+    .add_piece(.{ .piece = .Rook, .player = .Black }, .A8)
+    .add_piece(.{ .piece = .Knight, .player = .Black }, .B8)
+    .add_piece(.{ .piece = .Bishop, .player = .Black }, .C8)
+    .add_piece(.{ .piece = .Queen, .player = .Black }, .D8)
+    .add_piece(.{ .piece = .Bishop, .player = .Black }, .F8)
+    .add_piece(.{ .piece = .Knight, .player = .Black }, .G8)
+    .add_piece(.{ .piece = .Rook, .player = .Black }, .H8);
 
 test "some basic moves on the start board" {
     const board = DefaultBoard;
