@@ -14,31 +14,22 @@ pub const NonKingPiece = @import("pieces.zig").NonKingPiece;
 pub const OwnedPiece = @import("pieces.zig").OwnedPiece;
 pub const OwnedNonKingPiece = @import("pieces.zig").OwnedNonKingPiece;
 pub const ByPlayer = @import("players.zig").ByPlayer;
-// pub const parse_fen = @import("fen.zig").parse_fen;
 
 test {
+    std.testing.refAllDecls(@import("bitboard.zig"));
     std.testing.refAllDecls(@import("board.zig"));
+    std.testing.refAllDecls(@import("castles.zig"));
+    // std.testing.refAllDecls(@import("fen.zig"));
+    // std.testing.refAllDecls(@import("moves.zig"));
+    std.testing.refAllDecls(@import("pieces.zig"));
+    std.testing.refAllDecls(@import("players.zig"));
+    std.testing.refAllDecls(@import("square.zig"));
     std.testing.refAllDecls(@import("zobrist.zig"));
 }
 
-test "simple test" {
-    var list = std.ArrayList(i32).init(std.testing.allocator);
-    defer list.deinit(); // try commenting this out and see if zig detects the memory leak!
-    try list.append(42);
-    try std.testing.expectEqual(@as(i32, 42), list.pop());
-}
-
-// test "from fen" {
-//     const fen = "rnbq1rk1/ppp2ppp/1b1p1n2/4N3/2BPP3/8/PPP2PPP/RNBQ1RK1 w - - 0 1";
-//     try parse_fen(fen);
-// }
-
 pub fn main() !void {
-    // const board = Board(Player.White, null, CastleRights.initFill(true))
-    //     .with_kings(ByPlayer(Square).init(.{.White = .E1, .Black = .E8}));
     @import("board.zig")
         .DefaultBoard
-        // .quiet_move(.E2, .E3)
         .double_pawn_push(.E)
         .pawn_push(.E7)
         .pawn_push(.E4)
@@ -47,9 +38,3 @@ pub fn main() !void {
         .king_move(.E8, .E7)
         .debug_print();
 }
-
-// pub const testing = @import("std").testing;
-// pub const _ = @import("design.zig");
-// test {
-//     testing.refAllDecls(@import("design.zig"));
-// }
