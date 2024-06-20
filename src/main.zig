@@ -1,5 +1,3 @@
-comptime { @setEvalBranchQuota(2000); }
-
 const std = @import("std");
 
 pub const Square = @import("square.zig").Square;
@@ -16,15 +14,7 @@ pub const OwnedNonKingPiece = @import("pieces.zig").OwnedNonKingPiece;
 pub const ByPlayer = @import("players.zig").ByPlayer;
 
 test {
-    std.testing.refAllDecls(@import("bitboard.zig"));
-    std.testing.refAllDecls(@import("board.zig"));
-    std.testing.refAllDecls(@import("castles.zig"));
-    // std.testing.refAllDecls(@import("fen.zig"));
-    // std.testing.refAllDecls(@import("moves.zig"));
-    std.testing.refAllDecls(@import("pieces.zig"));
-    std.testing.refAllDecls(@import("players.zig"));
-    std.testing.refAllDecls(@import("square.zig"));
-    std.testing.refAllDecls(@import("zobrist.zig"));
+    std.testing.refAllDeclsRecursive(@This());
 }
 
 pub fn main() !void {

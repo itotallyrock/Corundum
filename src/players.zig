@@ -11,17 +11,19 @@ pub const Player = enum {
     pub fn opposite(self: Player) Player {
         return if (self == .White) .Black else .White;
     }
+
+    test opposite {
+        try std.testing.expectEqual(Player.White.opposite(), .Black);
+        try std.testing.expectEqual(Player.Black.opposite(), .White);
+    }
 };
 
 /// A type that is indexed by player
-///
-/// ```zig
-/// const std = @import("std");
-/// const Bitboard = @import("bitboard.zig").Bitboard;
-/// const ByPlayer = @import("players.zig").ByPlayer;
-/// const playerMasks = ByPlayer(Bitboard).initFill(Bitboard.Empty);
-/// std.testing.assert(playerMasks.get(.White).isEmpty() && playerMasks.get(.Black).isEmpty());
-/// ```
 pub fn ByPlayer(comptime T: type) type {
     return std.EnumArray(Player, T);
+}
+
+test ByPlayer {
+    const playerMasks = ByPlayer(bool).initFill(true);
+    try std.testing.expect(playerMasks.get(.White) and playerMasks.get(.Black));
 }

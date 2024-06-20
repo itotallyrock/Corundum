@@ -18,21 +18,21 @@ pub fn ByCastleDirection(comptime T: type) type {
 /// Represents the rights to castle for each player and direction.
 pub const CastleRights = struct {
     /// All possible castle rights.
-    pub const All = ByPlayer(ByCastleDirection(bool)).initFill(ByCastleDirection(bool).initFill(true));
+    pub const All = CastleRights.init(ByPlayer(ByCastleDirection(bool)).initFill(ByCastleDirection(bool).initFill(true)));
     /// No castle rights.
-    pub const None = ByPlayer(ByCastleDirection(bool)).initFill(ByCastleDirection(bool).initFill(false));
+    pub const None = CastleRights.init(ByPlayer(ByCastleDirection(bool)).initFill(ByCastleDirection(bool).initFill(false)));
     /// All rights for white.
-    pub const WhiteAll = CastleRights.All.remove_right(.Black, .KingSide).remove_right(.Black, .QueenSide);
+    pub const WhiteAll = CastleRights.None.add_right(.White, .KingSide).add_right(.White, .QueenSide);
     /// All rights for black.
-    pub const BlackAll = CastleRights.All.remove_right(.White, .KingSide).remove_right(.White, .QueenSide);
+    pub const BlackAll = CastleRights.None.add_right(.Black, .KingSide).add_right(.Black, .QueenSide);
     /// All rights for white on the king side.
-    pub const WhiteKingSide = None.All.add_right(.Black, .QueenSide);
+    pub const WhiteKingSide = CastleRights.None.add_right(.White, .KingSide);
     /// All rights for white on the queen side.
-    pub const WhiteQueenSide = None.All.add_right(.Black, .KingSide);
+    pub const WhiteQueenSide = CastleRights.None.add_right(.White, .QueenSide);
     /// All rights for black on the king side.
-    pub const BlackKingSide = None.All.add_right(.White, .QueenSide);
+    pub const BlackKingSide = CastleRights.None.add_right(.Black, .KingSide);
     /// All rights for black on the queen side.
-    pub const BlackQueenSide = None.All.add_right(.White, .KingSide);
+    pub const BlackQueenSide = CastleRights.None.add_right(.Black, .QueenSide);
 
     /// The underlying rights flags for each player and direction.
     rights: ByPlayer(ByCastleDirection(bool)),
@@ -44,12 +44,12 @@ pub const CastleRights = struct {
 
     /// Initialize the castle rights with the given rights.
     pub fn init(rights: ByPlayer(ByCastleDirection(bool))) CastleRights {
-        return CastleRights { .rights = rights };
+        return CastleRights{ .rights = rights };
     }
 
     /// Initialize the castle rights with the given rights flag to apply for all players and directions.
     pub fn initFill(allRights: bool) CastleRights {
-        return CastleRights {
+        return CastleRights{
             .rights = ByPlayer(ByCastleDirection(bool)).initFill(ByCastleDirection(bool).initFill(allRights)),
         };
     }
