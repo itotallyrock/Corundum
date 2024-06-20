@@ -4,6 +4,7 @@ const bitboardModule = @import("bitboard.zig");
 const castlesModule = @import("castles.zig");
 const piecesModule = @import("pieces.zig");
 const squareModule = @import("square.zig");
+const directionsModule = @import("directions.zig");
 const zobristModule = @import("zobrist.zig");
 
 const Bitboard = bitboardModule.Bitboard;
@@ -14,7 +15,7 @@ const CastleDirection = castlesModule.CastleDirection;
 const Square = squareModule.Square;
 const Rank = squareModule.Rank;
 const File = squareModule.File;
-const Direction = squareModule.Direction;
+const Direction = directionsModule.Direction;
 const EnPassantSquare = squareModule.EnPassantSquare;
 const NonKingPiece = piecesModule.NonKingPiece;
 const ByNonKingPiece = piecesModule.ByNonKingPiece;
