@@ -5,7 +5,9 @@ const Direction = @import("directions.zig").Direction;
 
 /// A column index for the board
 pub const File = enum(u3) {
+    // zig fmt: off
     A, B, C, D, E, F, G, H,
+    // zig fmt: on
 
     /// Returns the en passant square on the given file for the desired player
     pub fn ep_square_for(self: File, player: Player) EnPassantSquare {
@@ -36,7 +38,9 @@ pub const File = enum(u3) {
 
 /// A row index for the board
 pub const Rank = enum(u3) {
+    // zig fmt: off
     _1, _2, _3, _4, _5, _6, _7, _8,
+    // zig fmt: on
 
     /// Returns the rank for the en passant square for the desired player
     pub fn ep_rank_for(player: Player) Rank {
@@ -55,6 +59,7 @@ pub const Rank = enum(u3) {
 
 /// A location for a single tile on the board.
 pub const Square = enum(u6) {
+    // zig fmt: off
     A1, B1, C1, D1, E1, F1, G1, H1,
     A2, B2, C2, D2, E2, F2, G2, H2,
     A3, B3, C3, D3, E3, F3, G3, H3,
@@ -63,6 +68,7 @@ pub const Square = enum(u6) {
     A6, B6, C6, D6, E6, F6, G6, H6,
     A7, B7, C7, D7, E7, F7, G7, H7,
     A8, B8, C8, D8, E8, F8, G8, H8,
+    // zig fmt: on
 
     /// Creates a square from a file and rank.
     pub fn from_file_and_rank(file: File, rank: Rank) Square {
@@ -116,8 +122,10 @@ pub const Square = enum(u6) {
 
 /// A subset of `Square` used only for en passant tiles.
 pub const EnPassantSquare = enum(u6) {
+    // zig fmt: off
     A3 = @intFromEnum(Square.A3), B3 = @intFromEnum(Square.B3), C3 = @intFromEnum(Square.C3), D3 = @intFromEnum(Square.D3), E3 = @intFromEnum(Square.E3), F3 = @intFromEnum(Square.F3), G3 = @intFromEnum(Square.G3), H3 = @intFromEnum(Square.H3),
     A6 = @intFromEnum(Square.A6), B6 = @intFromEnum(Square.B6), C6 = @intFromEnum(Square.C6), D6 = @intFromEnum(Square.D6), E6 = @intFromEnum(Square.E6), F6 = @intFromEnum(Square.F6), G6 = @intFromEnum(Square.G6), H6 = @intFromEnum(Square.H6),
+    // zig fmt: on
 
     /// Create a normal `Square` from an `EnPassantSquare`
     pub fn to_square(self: EnPassantSquare) Square {
