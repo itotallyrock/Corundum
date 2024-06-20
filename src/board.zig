@@ -264,10 +264,14 @@ const PersistentBoardState = struct {
 
 pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, comptime rights: CastleRights) type {
     return struct {
+        /// The arrangement of pieces on the board.
         pieces: PieceArrangement,
+        /// The number of halfmoves since the last pawn move or capture.
         halfmove_count: HalfMoveCount = HalfMoveCount.reset(),
+        /// The current state of the board (for maintaining move generation and similar functionality)
         state: PersistentBoardState,
 
+        /// Create a new board with the given king positions.
         fn with_kings(king_squares: ByPlayer(Square)) Board(side_to_move, en_passant_file, rights) {
             return Board(side_to_move, en_passant_file, rights){
                 .pieces = PieceArrangement.init(king_squares),
@@ -275,6 +279,7 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
             };
         }
 
+        /// Add a piece to the board.
         fn add_piece(self: Board(side_to_move, en_passant_file, rights), comptime piece: OwnedNonKingPiece, square: Square) Board(side_to_move, en_passant_file, rights) {
             return Board(side_to_move, en_passant_file, rights){
                 .pieces = self.pieces.add_piece(piece, square),
@@ -282,6 +287,7 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
             };
         }
 
+        /// Remove a piece from the board.
         fn remove_piece(self: Board(side_to_move, en_passant_file, rights), comptime piece: OwnedNonKingPiece, square: Square) Board(side_to_move, en_passant_file, rights) {
             return Board(side_to_move, en_passant_file, rights){
                 .pieces = self.pieces.remove_piece(piece, square),
@@ -289,6 +295,7 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
             };
         }
 
+        /// Move a piece on the board.
         fn move_piece(self: Board(side_to_move, en_passant_file, rights), comptime piece: OwnedPiece, from_square: Square, to_square: Square) Board(side_to_move, en_passant_file, rights) {
             return Board(side_to_move, en_passant_file, rights){
                 .pieces = self.pieces.move_piece(piece, from_square, to_square),
@@ -296,10 +303,12 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
             };
         }
 
+        /// Get the mask of squares attacked by the attacking side.
         pub fn attacked(_: Board(side_to_move, en_passant_file, rights)) Bitboard {
             @compileError("TODO: implement attacked mask");
         }
 
+        /// Finish applying a move to the board and goto the next player's turn.
         fn next(self: Board(side_to_move, en_passant_file, rights), comptime next_en_passant_file: ?File, comptime next_rights: CastleRights) Board(side_to_move.opposite(), next_en_passant_file, next_rights) {
             return Board(side_to_move.opposite(), next_en_passant_file, next_rights){
                 .pieces = self.pieces,
@@ -320,18 +329,22 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
             return side_to_move;
         }
 
+        /// Get the square that can be captured en passant if any.
         pub fn ep_square(_: Board(side_to_move, en_passant_file, rights)) ?EnPassantSquare {
             return if (en_passant_file) |*ep_file| ep_file.ep_square_for(side_to_move.opposite()) else null;
         }
 
+        /// Get the piece on the given square if any.
         pub fn piece_on(self: Board(side_to_move, en_passant_file, rights), square: Square) ?Piece {
             return self.pieces.piece_on(square);
         }
 
+        /// Get the player of the piece on the given square if any.
         pub fn side_on(self: Board(side_to_move, en_passant_file, rights), square: Square) ?Player {
             return self.pieces.side_on(square);
         }
 
+        /// Get the `OwnedPiece` (piece and player) on a given square, if any.
         pub fn sided_piece_on(self: Board(side_to_move, en_passant_file, rights), square: Square) ?OwnedPiece {
             return self.pieces.sided_piece_on(square);
         }
@@ -371,9 +384,10 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
         }
 
         pub fn debug_print(self: Board(side_to_move, en_passant_file, rights)) void {
-            const line = "+---+---+---+---+---+---+---+---+";
-            std.debug.print("{s}\n", .{line});
+            const line = "  +---+---+---+---+---+---+---+---+";
+            std.debug.print("    A   B   C   D   E   F   G   H\n{s}\n", .{line});
             inline for (comptime .{ Rank._8, Rank._7, Rank._6, Rank._5, Rank._4, Rank._3, Rank._2, Rank._1 }) |rank| {
+                std.debug.print("{d} ", .{@as(u8, @intFromEnum(rank)) + 1});
                 inline for (comptime std.enums.values(File)) |file| {
                     const square = Square.from_rank_and_file(rank, file);
                     const piece = self.sided_piece_on(square);
