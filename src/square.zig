@@ -141,6 +141,16 @@ pub const EnPassantSquare = enum(u6) {
     }
 };
 
+/// A type that is indexed by `Rank`
+pub fn ByRank(comptime T: type) type {
+    return std.EnumArray(Rank, T);
+}
+
+/// A type that is indexed by `File`
+pub fn ByFile(comptime T: type) type {
+    return std.EnumArray(File, T);
+}
+
 /// A type that is indexed by `Square`
 pub fn BySquare(comptime T: type) type {
     return std.EnumArray(Square, T);
