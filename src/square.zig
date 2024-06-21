@@ -75,6 +75,16 @@ pub const Square = enum(u6) {
         return @enumFromInt(@as(u8, @intFromEnum(rank)) * 8 + @as(u8, @intFromEnum(file)));
     }
 
+    /// Returns the rank of the square.
+    pub fn rankOf(self: Square) Rank {
+        return @enumFromInt(@as(u8, @intFromEnum(self)) / 8);
+    }
+
+    /// Returns the file of the square.
+    pub fn fileOf(self: Square) File {
+        return @enumFromInt(@as(u8, @intFromEnum(self)) % 8);
+    }
+
     /// Creates a `Bitboard` with only this square set.
     pub fn to_bitboard(self: Square) Bitboard {
         return Bitboard{ .mask = Bitboard.A1.mask << @intFromEnum(self) };
@@ -84,6 +94,7 @@ pub const Square = enum(u6) {
     /// Returns null if the slided square would be out of bounds.
     pub fn shift(self: Square, direction: Direction) ?Square {
         const offset = @as(i8, @intFromEnum(self)) + @as(i8, @intFromEnum(direction));
+        // TODO: Fix A-West and H-East shift edge cases (literally)
         if (offset < 0 or offset > 63) return null;
         return @enumFromInt(offset);
     }
@@ -104,6 +115,32 @@ pub const Square = enum(u6) {
         try std.testing.expectEqual(Square.from_file_and_rank(File.E, Rank._8), Square.E8);
         try std.testing.expectEqual(Square.from_file_and_rank(File.F, Rank._4), Square.F4);
         try std.testing.expectEqual(Square.from_file_and_rank(File.G, Rank._1), Square.G1);
+    }
+
+    test fileOf {
+        try std.testing.expectEqual(Square.A1.fileOf(), File.A);
+        try std.testing.expectEqual(Square.B4.fileOf(), File.B);
+        try std.testing.expectEqual(Square.C5.fileOf(), File.C);
+        try std.testing.expectEqual(Square.D8.fileOf(), File.D);
+        try std.testing.expectEqual(Square.E2.fileOf(), File.E);
+        try std.testing.expectEqual(Square.G5.fileOf(), File.G);
+        try std.testing.expectEqual(Square.H8.fileOf(), File.H);
+        try std.testing.expectEqual(Square.A8.fileOf(), File.A);
+        try std.testing.expectEqual(Square.H1.fileOf(), File.H);
+        try std.testing.expectEqual(Square.F7.fileOf(), File.F);
+    }
+
+    test rankOf {
+        try std.testing.expectEqual(Square.A1.rankOf(), Rank._1);
+        try std.testing.expectEqual(Square.B4.rankOf(), Rank._4);
+        try std.testing.expectEqual(Square.C5.rankOf(), Rank._5);
+        try std.testing.expectEqual(Square.D8.rankOf(), Rank._8);
+        try std.testing.expectEqual(Square.E2.rankOf(), Rank._2);
+        try std.testing.expectEqual(Square.G5.rankOf(), Rank._5);
+        try std.testing.expectEqual(Square.H8.rankOf(), Rank._8);
+        try std.testing.expectEqual(Square.A8.rankOf(), Rank._8);
+        try std.testing.expectEqual(Square.H1.rankOf(), Rank._1);
+        try std.testing.expectEqual(Square.F7.rankOf(), Rank._7);
     }
 
     test to_bitboard {
