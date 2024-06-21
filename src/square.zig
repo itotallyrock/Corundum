@@ -86,17 +86,17 @@ pub const Square = enum(u6) {
     }
 
     /// Creates a `Bitboard` with only this square set.
-    pub fn to_bitboard(self: Square) Bitboard {
+    pub fn toBitboard(self: Square) Bitboard {
         return Bitboard{ .mask = Bitboard.A1.mask << @intFromEnum(self) };
     }
 
     /// Try to shift/move the square in the given direction.
     /// Returns null if the slided square would be out of bounds.
-    pub fn shift(self: Square, direction: Direction) ?Square {
-        const offset = @as(i8, @intFromEnum(self)) + @as(i8, @intFromEnum(direction));
-        // TODO: Fix A-West and H-East shift edge cases (literally)
-        if (offset < 0 or offset > 63) return null;
-        return @enumFromInt(offset);
+    pub fn shift(self: Square, comptime direction: Direction) ?Square {
+        return self
+            .toBitboard()
+            .shift(direction)
+            .getSquare();
     }
 
     test from_file_and_rank {
@@ -143,17 +143,47 @@ pub const Square = enum(u6) {
         try std.testing.expectEqual(Square.F7.rankOf(), Rank._7);
     }
 
-    test to_bitboard {
-        try std.testing.expectEqual(Square.A1.to_bitboard(), Bitboard.A1);
-        try std.testing.expectEqual(Square.B4.to_bitboard(), Bitboard{ .mask = 0x2000000 });
-        try std.testing.expectEqual(Square.G5.to_bitboard(), Bitboard{ .mask = 0x4000000000 });
-        try std.testing.expectEqual(Square.H8.to_bitboard(), Bitboard{ .mask = 0x8000000000000000 });
-        try std.testing.expectEqual(Square.A8.to_bitboard(), Bitboard{ .mask = 0x100000000000000 });
-        try std.testing.expectEqual(Square.H1.to_bitboard(), Bitboard{ .mask = 0x80 });
-        try std.testing.expectEqual(Square.F7.to_bitboard(), Bitboard{ .mask = 0x20000000000000 });
-        try std.testing.expectEqual(Square.C2.to_bitboard(), Bitboard{ .mask = 0x400 });
-        try std.testing.expectEqual(Square.D3.to_bitboard(), Bitboard{ .mask = 0x80000 });
-        try std.testing.expectEqual(Square.E6.to_bitboard(), Bitboard{ .mask = 0x100000000000 });
+    test toBitboard {
+        try std.testing.expectEqual(Square.A1.toBitboard(), Bitboard.A1);
+        try std.testing.expectEqual(Square.B4.toBitboard(), Bitboard{ .mask = 0x2000000 });
+        try std.testing.expectEqual(Square.G5.toBitboard(), Bitboard{ .mask = 0x4000000000 });
+        try std.testing.expectEqual(Square.H8.toBitboard(), Bitboard{ .mask = 0x8000000000000000 });
+        try std.testing.expectEqual(Square.A8.toBitboard(), Bitboard{ .mask = 0x100000000000000 });
+        try std.testing.expectEqual(Square.H1.toBitboard(), Bitboard{ .mask = 0x80 });
+        try std.testing.expectEqual(Square.F7.toBitboard(), Bitboard{ .mask = 0x20000000000000 });
+        try std.testing.expectEqual(Square.C2.toBitboard(), Bitboard{ .mask = 0x400 });
+        try std.testing.expectEqual(Square.D3.toBitboard(), Bitboard{ .mask = 0x80000 });
+        try std.testing.expectEqual(Square.E6.toBitboard(), Bitboard{ .mask = 0x100000000000 });
+    }
+
+    test shift {
+        // Test A1 (bottom left corner)
+        try std.testing.expectEqual(Square.A1.shift(Direction.North), .A2);
+        try std.testing.expectEqual(Square.A1.shift(Direction.NorthEast), .B2);
+        try std.testing.expectEqual(Square.A1.shift(Direction.East), .B1);
+        try std.testing.expectEqual(Square.A1.shift(Direction.SouthEast), null);
+        try std.testing.expectEqual(Square.A1.shift(Direction.South), null);
+        try std.testing.expectEqual(Square.A1.shift(Direction.SouthWest), null);
+        try std.testing.expectEqual(Square.A1.shift(Direction.West), null);
+
+        // Test H8 (top right corner)
+        try std.testing.expectEqual(Square.H8.shift(Direction.North), null);
+        try std.testing.expectEqual(Square.H8.shift(Direction.NorthEast), null);
+        try std.testing.expectEqual(Square.H8.shift(Direction.East), null);
+        try std.testing.expectEqual(Square.H8.shift(Direction.SouthEast), null);
+        try std.testing.expectEqual(Square.H8.shift(Direction.South), .H7);
+        try std.testing.expectEqual(Square.H8.shift(Direction.SouthWest), .G7);
+        try std.testing.expectEqual(Square.H8.shift(Direction.West), .G8);
+
+        // Test E4 (middle)
+        try std.testing.expectEqual(Square.E4.shift(Direction.North), .E5);
+        try std.testing.expectEqual(Square.E4.shift(Direction.NorthEast), .F5);
+        try std.testing.expectEqual(Square.E4.shift(Direction.NorthWest), .D5);
+        try std.testing.expectEqual(Square.E4.shift(Direction.East), .F4);
+        try std.testing.expectEqual(Square.E4.shift(Direction.SouthEast), .F3);
+        try std.testing.expectEqual(Square.E4.shift(Direction.South), .E3);
+        try std.testing.expectEqual(Square.E4.shift(Direction.SouthWest), .D3);
+        try std.testing.expectEqual(Square.E4.shift(Direction.West), .D4);
     }
 };
 

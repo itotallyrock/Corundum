@@ -317,7 +317,3 @@ pub const ZobristHash = struct {
         }
     }
 };
-
-test {
-    std.testing.refAllDecls(@This());
-}

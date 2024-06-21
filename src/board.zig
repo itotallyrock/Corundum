@@ -71,8 +71,8 @@ pub const PieceArrangement = struct {
         return PieceArrangement{
             // The side masks are initialized with the king squares since they are the only pieces on the board.
             .side_masks = std.EnumArray(Player, Bitboard).init(.{
-                .White = king_squares.get(.White).to_bitboard(),
-                .Black = king_squares.get(.Black).to_bitboard(),
+                .White = king_squares.get(.White).toBitboard(),
+                .Black = king_squares.get(.Black).toBitboard(),
             }),
             .kings = king_squares,
         };
@@ -84,7 +84,7 @@ pub const PieceArrangement = struct {
         // std.debug.assert(self.side_on(square) == null and self.piece_on(square) == null);
 
         var result = self;
-        const square_bitboard = square.to_bitboard();
+        const square_bitboard = square.toBitboard();
         result.side_masks.set(piece.player, result.side_masks.get(piece.player).logicalOr(square_bitboard));
         result.piece_masks.set(piece.piece, result.piece_masks.get(piece.piece).logicalOr(square_bitboard));
         return result;
@@ -95,7 +95,7 @@ pub const PieceArrangement = struct {
         std.debug.assert(self.side_on(square).? == piece.player and self.piece_on(square).? == piece.piece.to_piece());
 
         var result = self;
-        const square_bitboard = square.to_bitboard();
+        const square_bitboard = square.toBitboard();
         result.side_masks.set(piece.player, result.side_masks.get(piece.player).logicalAnd(square_bitboard.logicalNot()));
         result.piece_masks.set(piece.piece, result.piece_masks.get(piece.piece).logicalAnd(square_bitboard.logicalNot()));
         return result;
@@ -107,8 +107,8 @@ pub const PieceArrangement = struct {
         std.debug.assert(self.side_on(to_square) == null and self.piece_on(to_square) == null);
 
         var result = self;
-        const from_square_bitboard = from_square.to_bitboard();
-        const to_square_bitboard = to_square.to_bitboard();
+        const from_square_bitboard = from_square.toBitboard();
+        const to_square_bitboard = to_square.toBitboard();
         const from_to_square_bitboard = from_square_bitboard.logicalOr(to_square_bitboard);
         const non_king_piece = NonKingPiece.from_piece(piece.piece) catch null;
 
@@ -132,7 +132,7 @@ pub const PieceArrangement = struct {
         }
 
         // Check if piece is a non-king piece
-        const square_mask = square.to_bitboard();
+        const square_mask = square.toBitboard();
         inline for (comptime std.enums.values(NonKingPiece)) |piece| {
             if (!self.piece_masks.get(piece).logicalAnd(square_mask).isEmpty()) {
                 return piece.to_piece();
@@ -146,7 +146,7 @@ pub const PieceArrangement = struct {
     /// Get the side of the piece on a given square if any
     pub fn side_on(self: PieceArrangement, square: Square) ?Player {
         // Check each side mask for the square
-        const square_mask = square.to_bitboard();
+        const square_mask = square.toBitboard();
         inline for (comptime std.enums.values(Player)) |player| {
             if (!self.side_masks.get(player).logicalAnd(square_mask).isEmpty()) {
                 return player;
@@ -223,7 +223,7 @@ const PersistentBoardState = struct {
 
     pub fn pawn_push(self: PersistentBoardState, comptime side_to_move: Player, from_square: Square) PersistentBoardState {
         var result = self;
-        const forward = Direction.forward(side_to_move);
+        const forward = comptime Direction.forward(side_to_move);
         const to_square = from_square.shift(forward).?;
         result.halfmove_clock = HalfMoveCount.reset();
         result.key = result.key.move(.{ .player = side_to_move, .piece = .Pawn }, from_square, to_square);

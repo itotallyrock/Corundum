@@ -87,20 +87,28 @@ pub const Bitboard = struct {
 
     /// Check if the bitboard contains a specific square.
     pub fn contains(self: Bitboard, square: Square) bool {
-        return !self.logicalAnd(square.to_bitboard()).isEmpty();
+        return !self.logicalAnd(square.toBitboard()).isEmpty();
+    }
+
+    /// Get the lowest value `Square` (based on rank closest to 1, then by file cloest to A)
+    /// Returns `null` if the bitboard is empty.
+    pub fn getSquare(self: Bitboard) ?Square {
+        if (self.isEmpty()) {
+            return null;
+        }
+
+        return @enumFromInt(@ctz(self.mask));
     }
 
     /// Get the lowest value `Square` (based on rank closest to 1, then by file cloest to A) and remove from the Bitboard (aka. remove the square from the set)
     /// Returns `null` if the bitboard is empty.
     pub fn popSquare(self: *Bitboard) ?Square {
-        if (self.isEmpty()) {
-            return null;
+        if (self.getSquare()) |square| {
+            self.* = self.logicalXor(square.toBitboard());
+            return square;
         }
-        const square_offset = @ctz(self.mask);
-        const square: Square = @enumFromInt(square_offset);
-        self.* = self.logicalXor(square.to_bitboard());
 
-        return square;
+        return null;
     }
 
     pub fn shift(self: Bitboard, comptime direction: Direction) Bitboard {
@@ -248,6 +256,21 @@ pub const Bitboard = struct {
         try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalShift(-9), Bitboard{ .mask = 0x00091 });
         try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalShift(-10), Bitboard{ .mask = 0x00048 });
         try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalShift(-11), Bitboard{ .mask = 0x00024 });
+    }
+
+    test getSquare {
+        try std.testing.expectEqual(Bitboard.Empty.getSquare(), null);
+        try std.testing.expectEqual(Bitboard.All.getSquare().?, .A1);
+        try std.testing.expectEqual(Bitboard.A1.getSquare().?, .A1);
+        try std.testing.expectEqual((Bitboard{ .mask = 0x400200000012200 }).getSquare().?, .B2);
+        try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).getSquare().?, .A2);
+        try std.testing.expectEqual((Bitboard{ .mask = 0x100000000000000 }).getSquare().?, .A8);
+        try std.testing.expectEqual((Bitboard{ .mask = 0x8000000000000000 }).getSquare().?, .H8);
+        try std.testing.expectEqual((Bitboard{ .mask = 0x80 }).getSquare().?, .H1);
+        try std.testing.expectEqual((Bitboard{ .mask = 0x2000000400 }).getSquare().?, .C2);
+        try std.testing.expectEqual((Bitboard{ .mask = 0xfe00000000000000 }).getSquare().?, .B8);
+        try std.testing.expectEqual((Bitboard{ .mask = 0xfe28000000000000 }).getSquare().?, .D7);
+        try std.testing.expectEqual((Bitboard{ .mask = 0xf628022000000000 }).getSquare().?, .F5);
     }
 
     test popSquare {
