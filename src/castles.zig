@@ -5,9 +5,9 @@ const ByPlayer = @import("players.zig").ByPlayer;
 /// Represents the direction of a castle move.
 pub const CastleDirection = enum {
     /// The king-side castle direction.
-    KingSide,
+    king_side,
     /// The queen-side castle direction.
-    QueenSide,
+    queen_side,
 };
 
 /// A type that maps `T` for each `CastleDirection`.
@@ -22,17 +22,17 @@ pub const CastleRights = struct {
     /// No castle rights.
     pub const None = CastleRights.init(ByPlayer(ByCastleDirection(bool)).initFill(ByCastleDirection(bool).initFill(false)));
     /// All rights for white.
-    pub const WhiteAll = CastleRights.None.add_right(.white, .KingSide).add_right(.white, .QueenSide);
+    pub const WhiteAll = CastleRights.None.add_right(.white, .king_side).add_right(.white, .queen_side);
     /// All rights for black.
-    pub const BlackAll = CastleRights.None.add_right(.black, .KingSide).add_right(.black, .QueenSide);
+    pub const BlackAll = CastleRights.None.add_right(.black, .king_side).add_right(.black, .queen_side);
     /// All rights for white on the king side.
-    pub const WhiteKingSide = CastleRights.None.add_right(.white, .KingSide);
+    pub const WhiteKingSide = CastleRights.None.add_right(.white, .king_side);
     /// All rights for white on the queen side.
-    pub const WhiteQueenSide = CastleRights.None.add_right(.white, .QueenSide);
+    pub const WhiteQueenSide = CastleRights.None.add_right(.white, .queen_side);
     /// All rights for black on the king side.
-    pub const BlackKingSide = CastleRights.None.add_right(.black, .KingSide);
+    pub const BlackKingSide = CastleRights.None.add_right(.black, .king_side);
     /// All rights for black on the queen side.
-    pub const BlackQueenSide = CastleRights.None.add_right(.black, .QueenSide);
+    pub const BlackQueenSide = CastleRights.None.add_right(.black, .queen_side);
 
     /// The underlying rights flags for each player and direction.
     rights: ByPlayer(ByCastleDirection(bool)),
@@ -75,7 +75,7 @@ pub const CastleRights = struct {
 
     /// Remove all rights for a player and return it.
     pub fn king_move(self: CastleRights, comptime player: Player) CastleRights {
-        return self.remove_right(player, .KingSide).remove_right(player, .QueenSide);
+        return self.remove_right(player, .king_side).remove_right(player, .queen_side);
     }
 
     /// Remove the rights for a specific castle direction based on which rook moved and return it.
@@ -86,49 +86,49 @@ pub const CastleRights = struct {
     /// Get the UCI string representation of the castle rights.
     /// i.e. "KQkq" for all rights, "KQk" for all rights except black queen side, etc.
     pub fn get_uci_string(self: CastleRights) []const u8 {
-        if (self.has_rights(.white, .KingSide) and self.has_rights(.white, .QueenSide) and self.has_rights(.black, .KingSide) and self.has_rights(.black, .QueenSide)) {
+        if (self.has_rights(.white, .king_side) and self.has_rights(.white, .queen_side) and self.has_rights(.black, .king_side) and self.has_rights(.black, .queen_side)) {
             return "KQkq";
         }
-        if (self.has_rights(.white, .KingSide) and self.has_rights(.white, .QueenSide) and self.has_rights(.black, .KingSide) and !self.has_rights(.black, .QueenSide)) {
+        if (self.has_rights(.white, .king_side) and self.has_rights(.white, .queen_side) and self.has_rights(.black, .king_side) and !self.has_rights(.black, .queen_side)) {
             return "KQk";
         }
-        if (self.has_rights(.white, .KingSide) and self.has_rights(.white, .QueenSide) and !self.has_rights(.black, .KingSide) and self.has_rights(.black, .QueenSide)) {
+        if (self.has_rights(.white, .king_side) and self.has_rights(.white, .queen_side) and !self.has_rights(.black, .king_side) and self.has_rights(.black, .queen_side)) {
             return "KQq";
         }
-        if (self.has_rights(.white, .KingSide) and self.has_rights(.white, .QueenSide) and !self.has_rights(.black, .KingSide) and !self.has_rights(.black, .QueenSide)) {
+        if (self.has_rights(.white, .king_side) and self.has_rights(.white, .queen_side) and !self.has_rights(.black, .king_side) and !self.has_rights(.black, .queen_side)) {
             return "KQ";
         }
-        if (self.has_rights(.white, .KingSide) and !self.has_rights(.white, .QueenSide) and self.has_rights(.black, .KingSide) and self.has_rights(.black, .QueenSide)) {
+        if (self.has_rights(.white, .king_side) and !self.has_rights(.white, .queen_side) and self.has_rights(.black, .king_side) and self.has_rights(.black, .queen_side)) {
             return "Kkq";
         }
-        if (self.has_rights(.white, .KingSide) and !self.has_rights(.white, .QueenSide) and self.has_rights(.black, .KingSide) and !self.has_rights(.black, .QueenSide)) {
+        if (self.has_rights(.white, .king_side) and !self.has_rights(.white, .queen_side) and self.has_rights(.black, .king_side) and !self.has_rights(.black, .queen_side)) {
             return "Kk";
         }
-        if (self.has_rights(.white, .KingSide) and !self.has_rights(.white, .QueenSide) and !self.has_rights(.black, .KingSide) and self.has_rights(.black, .QueenSide)) {
+        if (self.has_rights(.white, .king_side) and !self.has_rights(.white, .queen_side) and !self.has_rights(.black, .king_side) and self.has_rights(.black, .queen_side)) {
             return "Kq";
         }
-        if (self.has_rights(.white, .KingSide) and !self.has_rights(.white, .QueenSide) and !self.has_rights(.black, .KingSide) and !self.has_rights(.black, .QueenSide)) {
+        if (self.has_rights(.white, .king_side) and !self.has_rights(.white, .queen_side) and !self.has_rights(.black, .king_side) and !self.has_rights(.black, .queen_side)) {
             return "K";
         }
-        if (!self.has_rights(.white, .KingSide) and self.has_rights(.white, .QueenSide) and self.has_rights(.black, .KingSide) and self.has_rights(.black, .QueenSide)) {
+        if (!self.has_rights(.white, .king_side) and self.has_rights(.white, .queen_side) and self.has_rights(.black, .king_side) and self.has_rights(.black, .queen_side)) {
             return "Qkq";
         }
-        if (!self.has_rights(.white, .KingSide) and self.has_rights(.white, .QueenSide) and self.has_rights(.black, .KingSide) and !self.has_rights(.black, .QueenSide)) {
+        if (!self.has_rights(.white, .king_side) and self.has_rights(.white, .queen_side) and self.has_rights(.black, .king_side) and !self.has_rights(.black, .queen_side)) {
             return "Qk";
         }
-        if (!self.has_rights(.white, .KingSide) and self.has_rights(.white, .QueenSide) and !self.has_rights(.black, .KingSide) and self.has_rights(.black, .QueenSide)) {
+        if (!self.has_rights(.white, .king_side) and self.has_rights(.white, .queen_side) and !self.has_rights(.black, .king_side) and self.has_rights(.black, .queen_side)) {
             return "Qq";
         }
-        if (!self.has_rights(.white, .KingSide) and self.has_rights(.white, .QueenSide) and !self.has_rights(.black, .KingSide) and !self.has_rights(.black, .QueenSide)) {
+        if (!self.has_rights(.white, .king_side) and self.has_rights(.white, .queen_side) and !self.has_rights(.black, .king_side) and !self.has_rights(.black, .queen_side)) {
             return "Q";
         }
-        if (!self.has_rights(.white, .KingSide) and !self.has_rights(.white, .QueenSide) and self.has_rights(.black, .KingSide) and self.has_rights(.black, .QueenSide)) {
+        if (!self.has_rights(.white, .king_side) and !self.has_rights(.white, .queen_side) and self.has_rights(.black, .king_side) and self.has_rights(.black, .queen_side)) {
             return "kq";
         }
-        if (!self.has_rights(.white, .KingSide) and !self.has_rights(.white, .QueenSide) and self.has_rights(.black, .KingSide) and !self.has_rights(.black, .QueenSide)) {
+        if (!self.has_rights(.white, .king_side) and !self.has_rights(.white, .queen_side) and self.has_rights(.black, .king_side) and !self.has_rights(.black, .queen_side)) {
             return "k";
         }
-        if (!self.has_rights(.white, .KingSide) and !self.has_rights(.white, .QueenSide) and !self.has_rights(.black, .KingSide) and self.has_rights(.black, .QueenSide)) {
+        if (!self.has_rights(.white, .king_side) and !self.has_rights(.white, .queen_side) and !self.has_rights(.black, .king_side) and self.has_rights(.black, .queen_side)) {
             return "q";
         }
         return "-";

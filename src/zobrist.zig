@@ -44,12 +44,12 @@ pub const ZobristHash = struct {
     /// Hash for one of 4 castle rights, white/black king-side/queen-side
     const CASTLE_KEYS: ByPlayer(ByCastleDirection(ZobristKey)) = ByPlayer(ByCastleDirection(ZobristKey)).init(.{
         .white = ByCastleDirection(ZobristKey).init(.{
-            .KingSide = 0x8499_3F26_2ABB_0E4A,
-            .QueenSide = 0x49A6_17EA_01D9_B291,
+            .king_side = 0x8499_3F26_2ABB_0E4A,
+            .queen_side = 0x49A6_17EA_01D9_B291,
         }),
         .black = ByCastleDirection(ZobristKey).init(.{
-            .KingSide = 0xA0AC_B86F_0695_F023,
-            .QueenSide = 0xE111_D878_8EEF_CFDE,
+            .king_side = 0xA0AC_B86F_0695_F023,
+            .queen_side = 0xE111_D878_8EEF_CFDE,
         }),
     });
     /// Hash value for all piece square possibilities (including some illegal positions like pawns on last rank)
