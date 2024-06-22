@@ -6,7 +6,7 @@ const Direction = @import("directions.zig").Direction;
 /// A column index for the board
 pub const File = enum(u3) {
     // zig fmt: off
-    A, B, C, D, E, F, G, H,
+    a, b, c, d, e, f, g, h,
     // zig fmt: on
 
     /// Returns the en passant square on the given file for the desired player
@@ -16,23 +16,23 @@ pub const File = enum(u3) {
 
     test epSquareFor {
         // White
-        try std.testing.expectEqual(File.A.epSquareFor(.white), EnPassantSquare.A3);
-        try std.testing.expectEqual(File.B.epSquareFor(.white), EnPassantSquare.B3);
-        try std.testing.expectEqual(File.C.epSquareFor(.white), EnPassantSquare.C3);
-        try std.testing.expectEqual(File.D.epSquareFor(.white), EnPassantSquare.D3);
-        try std.testing.expectEqual(File.E.epSquareFor(.white), EnPassantSquare.E3);
-        try std.testing.expectEqual(File.F.epSquareFor(.white), EnPassantSquare.F3);
-        try std.testing.expectEqual(File.G.epSquareFor(.white), EnPassantSquare.G3);
+        try std.testing.expectEqual(File.a.epSquareFor(.white), EnPassantSquare.A3);
+        try std.testing.expectEqual(File.b.epSquareFor(.white), EnPassantSquare.B3);
+        try std.testing.expectEqual(File.c.epSquareFor(.white), EnPassantSquare.C3);
+        try std.testing.expectEqual(File.d.epSquareFor(.white), EnPassantSquare.D3);
+        try std.testing.expectEqual(File.e.epSquareFor(.white), EnPassantSquare.E3);
+        try std.testing.expectEqual(File.f.epSquareFor(.white), EnPassantSquare.F3);
+        try std.testing.expectEqual(File.g.epSquareFor(.white), EnPassantSquare.G3);
         // Black
-        try std.testing.expectEqual(File.H.epSquareFor(.white), EnPassantSquare.H3);
-        try std.testing.expectEqual(File.A.epSquareFor(.black), EnPassantSquare.A6);
-        try std.testing.expectEqual(File.B.epSquareFor(.black), EnPassantSquare.B6);
-        try std.testing.expectEqual(File.C.epSquareFor(.black), EnPassantSquare.C6);
-        try std.testing.expectEqual(File.D.epSquareFor(.black), EnPassantSquare.D6);
-        try std.testing.expectEqual(File.E.epSquareFor(.black), EnPassantSquare.E6);
-        try std.testing.expectEqual(File.F.epSquareFor(.black), EnPassantSquare.F6);
-        try std.testing.expectEqual(File.G.epSquareFor(.black), EnPassantSquare.G6);
-        try std.testing.expectEqual(File.H.epSquareFor(.black), EnPassantSquare.H6);
+        try std.testing.expectEqual(File.h.epSquareFor(.white), EnPassantSquare.H3);
+        try std.testing.expectEqual(File.a.epSquareFor(.black), EnPassantSquare.A6);
+        try std.testing.expectEqual(File.b.epSquareFor(.black), EnPassantSquare.B6);
+        try std.testing.expectEqual(File.c.epSquareFor(.black), EnPassantSquare.C6);
+        try std.testing.expectEqual(File.d.epSquareFor(.black), EnPassantSquare.D6);
+        try std.testing.expectEqual(File.e.epSquareFor(.black), EnPassantSquare.E6);
+        try std.testing.expectEqual(File.f.epSquareFor(.black), EnPassantSquare.F6);
+        try std.testing.expectEqual(File.g.epSquareFor(.black), EnPassantSquare.G6);
+        try std.testing.expectEqual(File.h.epSquareFor(.black), EnPassantSquare.H6);
     }
 };
 
@@ -87,7 +87,7 @@ pub const Square = enum(u6) {
 
     /// Creates a `Bitboard` with only this square set.
     pub fn toBitboard(self: Square) Bitboard {
-        return Bitboard{ .mask = Bitboard.A1.mask << @intFromEnum(self) };
+        return Bitboard{ .mask = Bitboard.a1.mask << @intFromEnum(self) };
     }
 
     /// Try to shift/move the square in the given direction.
@@ -100,34 +100,34 @@ pub const Square = enum(u6) {
     }
 
     test fromFileAndRank {
-        try std.testing.expectEqual(Square.fromFileAndRank(File.A, Rank._1), Square.A1);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.B, Rank._4), Square.B4);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.C, Rank._8), Square.C8);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.D, Rank._3), Square.D3);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.E, Rank._6), Square.E6);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.F, Rank._2), Square.F2);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.G, Rank._7), Square.G7);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.H, Rank._5), Square.H5);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.A, Rank._5), Square.A5);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.B, Rank._2), Square.B2);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.C, Rank._7), Square.C7);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.D, Rank._1), Square.D1);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.E, Rank._8), Square.E8);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.F, Rank._4), Square.F4);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.G, Rank._1), Square.G1);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.a, Rank._1), Square.A1);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.b, Rank._4), Square.B4);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.c, Rank._8), Square.C8);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.d, Rank._3), Square.D3);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.e, Rank._6), Square.E6);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.f, Rank._2), Square.F2);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.g, Rank._7), Square.G7);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.h, Rank._5), Square.H5);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.a, Rank._5), Square.A5);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.b, Rank._2), Square.B2);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.c, Rank._7), Square.C7);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.d, Rank._1), Square.D1);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.e, Rank._8), Square.E8);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.f, Rank._4), Square.F4);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.g, Rank._1), Square.G1);
     }
 
     test fileOf {
-        try std.testing.expectEqual(Square.A1.fileOf(), File.A);
-        try std.testing.expectEqual(Square.B4.fileOf(), File.B);
-        try std.testing.expectEqual(Square.C5.fileOf(), File.C);
-        try std.testing.expectEqual(Square.D8.fileOf(), File.D);
-        try std.testing.expectEqual(Square.E2.fileOf(), File.E);
-        try std.testing.expectEqual(Square.G5.fileOf(), File.G);
-        try std.testing.expectEqual(Square.H8.fileOf(), File.H);
-        try std.testing.expectEqual(Square.A8.fileOf(), File.A);
-        try std.testing.expectEqual(Square.H1.fileOf(), File.H);
-        try std.testing.expectEqual(Square.F7.fileOf(), File.F);
+        try std.testing.expectEqual(Square.A1.fileOf(), File.a);
+        try std.testing.expectEqual(Square.B4.fileOf(), File.b);
+        try std.testing.expectEqual(Square.C5.fileOf(), File.c);
+        try std.testing.expectEqual(Square.D8.fileOf(), File.d);
+        try std.testing.expectEqual(Square.E2.fileOf(), File.e);
+        try std.testing.expectEqual(Square.G5.fileOf(), File.g);
+        try std.testing.expectEqual(Square.H8.fileOf(), File.h);
+        try std.testing.expectEqual(Square.A8.fileOf(), File.a);
+        try std.testing.expectEqual(Square.H1.fileOf(), File.h);
+        try std.testing.expectEqual(Square.F7.fileOf(), File.f);
     }
 
     test rankOf {
@@ -144,7 +144,7 @@ pub const Square = enum(u6) {
     }
 
     test toBitboard {
-        try std.testing.expectEqual(Square.A1.toBitboard(), Bitboard.A1);
+        try std.testing.expectEqual(Square.A1.toBitboard(), Bitboard.a1);
         try std.testing.expectEqual(Square.B4.toBitboard(), Bitboard{ .mask = 0x2000000 });
         try std.testing.expectEqual(Square.G5.toBitboard(), Bitboard{ .mask = 0x4000000000 });
         try std.testing.expectEqual(Square.H8.toBitboard(), Bitboard{ .mask = 0x8000000000000000 });

@@ -20,11 +20,11 @@ test {
 pub fn main() !void {
     @import("board.zig")
         .DefaultBoard
-        .double_pawn_push(.E)
+        .double_pawn_push(.e)
         .pawn_push(.E7)
         .pawn_push(.E4)
-        .double_pawn_push(.F)
-        .en_passant_capture(.E)
+        .double_pawn_push(.f)
+        .en_passant_capture(.e)
         .king_move(.E8, .E7)
         .debug_print();
 }

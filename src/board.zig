@@ -60,9 +60,9 @@ pub const HalfMoveCount = struct {
 /// The state of the game board.
 pub const PieceArrangement = struct {
     /// The bitboard for each side, where each bit represents the presence of a piece.
-    side_masks: ByPlayer(Bitboard) = ByPlayer(Bitboard).initFill(Bitboard.Empty),
+    side_masks: ByPlayer(Bitboard) = ByPlayer(Bitboard).initFill(Bitboard.empty),
     /// The bitboard for each piece type, where each bit represents the presence of a piece.
-    piece_masks: ByNonKingPiece(Bitboard) = ByNonKingPiece(Bitboard).initFill(Bitboard.Empty),
+    piece_masks: ByNonKingPiece(Bitboard) = ByNonKingPiece(Bitboard).initFill(Bitboard.empty),
     /// The squares of the kings for each side.
     kings: ByPlayer(Square),
 
@@ -183,10 +183,10 @@ const PersistentBoardState = struct {
         return PersistentBoardState{
             .key = ZobristHash.init(side_to_move, king_squares, rights, ep_square),
             // todo: compute move generation masks
-            .checkers = Bitboard.Empty,
-            .pinners = ByPlayer(Bitboard).initFill(Bitboard.Empty),
-            .blockers = ByPlayer(Bitboard).initFill(Bitboard.Empty),
-            .check_squares = ByNonKingPiece(Bitboard).initFill(Bitboard.Empty),
+            .checkers = Bitboard.empty,
+            .pinners = ByPlayer(Bitboard).initFill(Bitboard.empty),
+            .blockers = ByPlayer(Bitboard).initFill(Bitboard.empty),
+            .check_squares = ByNonKingPiece(Bitboard).initFill(Bitboard.empty),
         };
     }
 
@@ -462,7 +462,7 @@ test "some basic moves on the start board" {
 
     try std.testing.expectEqual(pawnE2E3.pieces.piece_on(.E7), .Pawn);
     try std.testing.expectEqual(pawnE2E3.pieces.piece_on(.E5), null);
-    const pawnE7E5 = pawnE2E3.double_pawn_push(.E);
+    const pawnE7E5 = pawnE2E3.double_pawn_push(.e);
     try std.testing.expectEqual(pawnE7E5.pieces.piece_on(.E7), null);
     try std.testing.expectEqual(pawnE7E5.pieces.piece_on(.E5), .Pawn);
     try std.testing.expectEqual(pawnE7E5.halfmove_count, HalfMoveCount.reset());

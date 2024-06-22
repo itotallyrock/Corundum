@@ -10,11 +10,11 @@ const Direction = @import("directions.zig").Direction;
 /// Bits set to 0 represent squares that are not part of the set.
 pub const Bitboard = struct {
     /// An empty bitboard with no squares set.
-    pub const Empty = Bitboard{ .mask = 0 };
+    pub const empty = Bitboard{ .mask = 0 };
     /// A bitboard with all squares set.
-    pub const All = Empty.logicalNot();
+    pub const all = empty.logicalNot();
     /// A bitboard with only the A1 square set.
-    pub const A1 = Bitboard{ .mask = 1 };
+    pub const a1 = Bitboard{ .mask = 1 };
 
     /// Mask of each rank
     pub const Ranks = ByRank(Bitboard).init(.{
@@ -30,14 +30,14 @@ pub const Bitboard = struct {
 
     /// Mask of each file
     pub const Files = ByFile(Bitboard).init(.{
-        .A = Bitboard{ .mask = 0x0101_0101_0101_0101 },
-        .B = Bitboard{ .mask = 0x0202_0202_0202_0202 },
-        .C = Bitboard{ .mask = 0x0404_0404_0404_0404 },
-        .D = Bitboard{ .mask = 0x0808_0808_0808_0808 },
-        .E = Bitboard{ .mask = 0x1010_1010_1010_1010 },
-        .F = Bitboard{ .mask = 0x2020_2020_2020_2020 },
-        .G = Bitboard{ .mask = 0x4040_4040_4040_4040 },
-        .H = Bitboard{ .mask = 0x8080_8080_8080_8080 },
+        .a = Bitboard{ .mask = 0x0101_0101_0101_0101 },
+        .b = Bitboard{ .mask = 0x0202_0202_0202_0202 },
+        .c = Bitboard{ .mask = 0x0404_0404_0404_0404 },
+        .d = Bitboard{ .mask = 0x0808_0808_0808_0808 },
+        .e = Bitboard{ .mask = 0x1010_1010_1010_1010 },
+        .f = Bitboard{ .mask = 0x2020_2020_2020_2020 },
+        .g = Bitboard{ .mask = 0x4040_4040_4040_4040 },
+        .h = Bitboard{ .mask = 0x8080_8080_8080_8080 },
     });
 
     /// The underlying mask that represents the set of squares.
@@ -77,7 +77,7 @@ pub const Bitboard = struct {
 
     /// If the bitboard is contains no squares.
     pub fn isEmpty(self: Bitboard) bool {
-        return self.mask == Empty.mask;
+        return self.mask == empty.mask;
     }
 
     /// The number of squares set in the bitboard.
@@ -112,39 +112,41 @@ pub const Bitboard = struct {
     }
 
     pub fn shift(self: Bitboard, comptime direction: Direction) Bitboard {
-        const shiftMask = comptime switch (direction) {
-            .North, .South => Bitboard.All,
-            .East, .NorthEast, .SouthEast => Bitboard.Files.get(.H).logicalNot(),
-            .West, .NorthWest, .SouthWest => Bitboard.Files.get(.A).logicalNot(),
+        const shiftable_squares_mask = comptime switch (direction) {
+            .North, .South => Bitboard.all,
+            .East, .NorthEast, .SouthEast => Bitboard.Files.get(.h).logicalNot(),
+            .West, .NorthWest, .SouthWest => Bitboard.Files.get(.a).logicalNot(),
         };
-        return self.logicalAnd(shiftMask).logicalShift(@intFromEnum(direction));
+        return self
+            .logicalAnd(shiftable_squares_mask)
+            .logicalShift(@intFromEnum(direction));
     }
 
     test isEmpty {
-        try std.testing.expect(Bitboard.Empty.isEmpty());
-        try std.testing.expect(!Bitboard.All.isEmpty());
+        try std.testing.expect(Bitboard.empty.isEmpty());
+        try std.testing.expect(!Bitboard.all.isEmpty());
         try std.testing.expect(!(Bitboard{ .mask = 0x12300 }).isEmpty());
         try std.testing.expect(!(Bitboard{ .mask = 0x8400400004000 }).isEmpty());
         try std.testing.expect(!(Bitboard{ .mask = 0x22000812 }).isEmpty());
     }
 
     test numSquares {
-        try std.testing.expectEqual(Bitboard.Empty.numSquares(), 0);
-        try std.testing.expectEqual(Bitboard.All.numSquares(), 64);
+        try std.testing.expectEqual(Bitboard.empty.numSquares(), 0);
+        try std.testing.expectEqual(Bitboard.all.numSquares(), 64);
         try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).numSquares(), 4);
         try std.testing.expectEqual((Bitboard{ .mask = 0x8400400004000 }).numSquares(), 4);
         try std.testing.expectEqual((Bitboard{ .mask = 0x22000812 }).numSquares(), 5);
     }
 
     test contains {
-        try std.testing.expect(!Bitboard.Empty.contains(.A1));
-        try std.testing.expect(!Bitboard.Empty.contains(.H8));
-        try std.testing.expect(!Bitboard.Empty.contains(.D4));
-        try std.testing.expect(!Bitboard.Empty.contains(.G7));
-        try std.testing.expect(Bitboard.All.contains(.A1));
-        try std.testing.expect(Bitboard.All.contains(.H8));
-        try std.testing.expect(Bitboard.All.contains(.D4));
-        try std.testing.expect(Bitboard.All.contains(.G7));
+        try std.testing.expect(!Bitboard.empty.contains(.A1));
+        try std.testing.expect(!Bitboard.empty.contains(.H8));
+        try std.testing.expect(!Bitboard.empty.contains(.D4));
+        try std.testing.expect(!Bitboard.empty.contains(.G7));
+        try std.testing.expect(Bitboard.all.contains(.A1));
+        try std.testing.expect(Bitboard.all.contains(.H8));
+        try std.testing.expect(Bitboard.all.contains(.D4));
+        try std.testing.expect(Bitboard.all.contains(.G7));
         try std.testing.expect(!(Bitboard{ .mask = 0x12300 }).contains(.A1));
         try std.testing.expect((Bitboard{ .mask = 0x12300 }).contains(.A2));
         try std.testing.expect((Bitboard{ .mask = 0x12300 }).contains(.A3));
@@ -185,41 +187,41 @@ pub const Bitboard = struct {
     }
 
     test logicalAnd {
-        try std.testing.expectEqual(Bitboard.Empty.logicalAnd(Bitboard.Empty), Bitboard.Empty);
-        try std.testing.expectEqual(Bitboard.Empty.logicalAnd(Bitboard.All), Bitboard.Empty);
-        try std.testing.expectEqual(Bitboard.All.logicalAnd(Bitboard.Empty), Bitboard.Empty);
-        try std.testing.expectEqual(Bitboard.All.logicalAnd(Bitboard.All), Bitboard.All);
-        try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalAnd(Bitboard.All), Bitboard{ .mask = 0x12300 });
-        try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalAnd(Bitboard.Empty), Bitboard.Empty);
-        try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalAnd(Bitboard{ .mask = 0x8400400004000 }), Bitboard.Empty);
+        try std.testing.expectEqual(Bitboard.empty.logicalAnd(Bitboard.empty), Bitboard.empty);
+        try std.testing.expectEqual(Bitboard.empty.logicalAnd(Bitboard.all), Bitboard.empty);
+        try std.testing.expectEqual(Bitboard.all.logicalAnd(Bitboard.empty), Bitboard.empty);
+        try std.testing.expectEqual(Bitboard.all.logicalAnd(Bitboard.all), Bitboard.all);
+        try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalAnd(Bitboard.all), Bitboard{ .mask = 0x12300 });
+        try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalAnd(Bitboard.empty), Bitboard.empty);
+        try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalAnd(Bitboard{ .mask = 0x8400400004000 }), Bitboard.empty);
         try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalAnd(Bitboard{ .mask = 0x101010123010913 }), Bitboard{ .mask = 0x10100 });
     }
 
     test logicalOr {
-        try std.testing.expectEqual(Bitboard.Empty.logicalOr(Bitboard.Empty), Bitboard.Empty);
-        try std.testing.expectEqual(Bitboard.Empty.logicalOr(Bitboard.All), Bitboard.All);
-        try std.testing.expectEqual(Bitboard.All.logicalOr(Bitboard.Empty), Bitboard.All);
-        try std.testing.expectEqual(Bitboard.All.logicalOr(Bitboard.All), Bitboard.All);
-        try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalOr(Bitboard.All), Bitboard.All);
-        try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalOr(Bitboard.Empty), Bitboard{ .mask = 0x12300 });
+        try std.testing.expectEqual(Bitboard.empty.logicalOr(Bitboard.empty), Bitboard.empty);
+        try std.testing.expectEqual(Bitboard.empty.logicalOr(Bitboard.all), Bitboard.all);
+        try std.testing.expectEqual(Bitboard.all.logicalOr(Bitboard.empty), Bitboard.all);
+        try std.testing.expectEqual(Bitboard.all.logicalOr(Bitboard.all), Bitboard.all);
+        try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalOr(Bitboard.all), Bitboard.all);
+        try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalOr(Bitboard.empty), Bitboard{ .mask = 0x12300 });
         try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalOr(Bitboard{ .mask = 0x8400400004000 }), Bitboard{ .mask = 0x8400400016300 });
         try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalOr(Bitboard{ .mask = 0x101010123010913 }), Bitboard{ .mask = 0x101010123012b13 });
     }
 
     test logicalXor {
-        try std.testing.expectEqual(Bitboard.Empty.logicalXor(Bitboard.Empty), Bitboard.Empty);
-        try std.testing.expectEqual(Bitboard.Empty.logicalXor(Bitboard.All), Bitboard.All);
-        try std.testing.expectEqual(Bitboard.All.logicalXor(Bitboard.Empty), Bitboard.All);
-        try std.testing.expectEqual(Bitboard.All.logicalXor(Bitboard.All), Bitboard.Empty);
-        try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalXor(Bitboard.All), Bitboard{ .mask = 0xfffffffffffedcff });
-        try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalXor(Bitboard.Empty), Bitboard{ .mask = 0x12300 });
+        try std.testing.expectEqual(Bitboard.empty.logicalXor(Bitboard.empty), Bitboard.empty);
+        try std.testing.expectEqual(Bitboard.empty.logicalXor(Bitboard.all), Bitboard.all);
+        try std.testing.expectEqual(Bitboard.all.logicalXor(Bitboard.empty), Bitboard.all);
+        try std.testing.expectEqual(Bitboard.all.logicalXor(Bitboard.all), Bitboard.empty);
+        try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalXor(Bitboard.all), Bitboard{ .mask = 0xfffffffffffedcff });
+        try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalXor(Bitboard.empty), Bitboard{ .mask = 0x12300 });
         try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalXor(Bitboard{ .mask = 0x8400400014000 }), Bitboard{ .mask = 0x8400400006300 });
         try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalXor(Bitboard{ .mask = 0x101010123010913 }), Bitboard{ .mask = 0x101010123002a13 });
     }
 
     test logicalNot {
-        try std.testing.expectEqual(Bitboard.Empty.logicalNot(), Bitboard.All);
-        try std.testing.expectEqual(Bitboard.All.logicalNot(), Bitboard.Empty);
+        try std.testing.expectEqual(Bitboard.empty.logicalNot(), Bitboard.all);
+        try std.testing.expectEqual(Bitboard.all.logicalNot(), Bitboard.empty);
         try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalNot(), Bitboard{ .mask = 0xfffffffffffedcff });
         try std.testing.expectEqual((Bitboard{ .mask = 0x8400400004000 }).logicalNot(), Bitboard{ .mask = 0xfff7bffbffffbfff });
         try std.testing.expectEqual((Bitboard{ .mask = 0x22000812 }).logicalNot(), Bitboard{ .mask = 0xffffffffddfff7ed });
@@ -227,10 +229,10 @@ pub const Bitboard = struct {
 
     test logicalShift {
         // Left
-        try std.testing.expectEqual(Bitboard.Empty.logicalShift(0), Bitboard.Empty);
-        try std.testing.expectEqual(Bitboard.All.logicalShift(0), Bitboard.All);
-        try std.testing.expectEqual(Bitboard.Empty.logicalShift(1), Bitboard.Empty);
-        try std.testing.expectEqual(Bitboard.All.logicalShift(1), Bitboard{ .mask = 0xfffffffffffffffe });
+        try std.testing.expectEqual(Bitboard.empty.logicalShift(0), Bitboard.empty);
+        try std.testing.expectEqual(Bitboard.all.logicalShift(0), Bitboard.all);
+        try std.testing.expectEqual(Bitboard.empty.logicalShift(1), Bitboard.empty);
+        try std.testing.expectEqual(Bitboard.all.logicalShift(1), Bitboard{ .mask = 0xfffffffffffffffe });
         try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalShift(1), Bitboard{ .mask = 0x24600 });
         try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalShift(2), Bitboard{ .mask = 0x48c00 });
         try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalShift(3), Bitboard{ .mask = 0x91800 });
@@ -243,8 +245,8 @@ pub const Bitboard = struct {
         try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalShift(10), Bitboard{ .mask = 0x48c0000 });
         try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalShift(11), Bitboard{ .mask = 0x9180000 });
         // Right
-        try std.testing.expectEqual(Bitboard.Empty.logicalShift(-1), Bitboard.Empty);
-        try std.testing.expectEqual(Bitboard.All.logicalShift(-1), Bitboard{ .mask = 0x7fffffffffffffff });
+        try std.testing.expectEqual(Bitboard.empty.logicalShift(-1), Bitboard.empty);
+        try std.testing.expectEqual(Bitboard.all.logicalShift(-1), Bitboard{ .mask = 0x7fffffffffffffff });
         try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalShift(-1), Bitboard{ .mask = 0x09180 });
         try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalShift(-2), Bitboard{ .mask = 0x048c0 });
         try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).logicalShift(-3), Bitboard{ .mask = 0x02460 });
@@ -259,9 +261,9 @@ pub const Bitboard = struct {
     }
 
     test getSquare {
-        try std.testing.expectEqual(Bitboard.Empty.getSquare(), null);
-        try std.testing.expectEqual(Bitboard.All.getSquare().?, .A1);
-        try std.testing.expectEqual(Bitboard.A1.getSquare().?, .A1);
+        try std.testing.expectEqual(Bitboard.empty.getSquare(), null);
+        try std.testing.expectEqual(Bitboard.all.getSquare().?, .A1);
+        try std.testing.expectEqual(Bitboard.a1.getSquare().?, .A1);
         try std.testing.expectEqual((Bitboard{ .mask = 0x400200000012200 }).getSquare().?, .B2);
         try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).getSquare().?, .A2);
         try std.testing.expectEqual((Bitboard{ .mask = 0x100000000000000 }).getSquare().?, .A8);
@@ -284,14 +286,14 @@ pub const Bitboard = struct {
     }
 
     test shift {
-        try std.testing.expectEqual(Bitboard.Empty.shift(.North), Bitboard.Empty);
-        try std.testing.expectEqual(Bitboard.All.shift(.North), Bitboard{ .mask = 0xffffffffffffff00 });
-        try std.testing.expectEqual(Bitboard.Empty.shift(.South), Bitboard.Empty);
-        try std.testing.expectEqual(Bitboard.All.shift(.South), Bitboard{ .mask = 0xffffffffffffff });
-        try std.testing.expectEqual(Bitboard.Empty.shift(.East), Bitboard.Empty);
-        try std.testing.expectEqual(Bitboard.All.shift(.East), Bitboard{ .mask = 0xfefefefefefefefe });
-        try std.testing.expectEqual(Bitboard.Empty.shift(.West), Bitboard.Empty);
-        try std.testing.expectEqual(Bitboard.All.shift(.West), Bitboard{ .mask = 0x7f7f7f7f7f7f7f7f });
+        try std.testing.expectEqual(Bitboard.empty.shift(.North), Bitboard.empty);
+        try std.testing.expectEqual(Bitboard.all.shift(.North), Bitboard{ .mask = 0xffffffffffffff00 });
+        try std.testing.expectEqual(Bitboard.empty.shift(.South), Bitboard.empty);
+        try std.testing.expectEqual(Bitboard.all.shift(.South), Bitboard{ .mask = 0xffffffffffffff });
+        try std.testing.expectEqual(Bitboard.empty.shift(.East), Bitboard.empty);
+        try std.testing.expectEqual(Bitboard.all.shift(.East), Bitboard{ .mask = 0xfefefefefefefefe });
+        try std.testing.expectEqual(Bitboard.empty.shift(.West), Bitboard.empty);
+        try std.testing.expectEqual(Bitboard.all.shift(.West), Bitboard{ .mask = 0x7f7f7f7f7f7f7f7f });
         try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).shift(.North), Bitboard{ .mask = 0x1230000 });
         try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).shift(.South), Bitboard{ .mask = 0x123 });
         try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).shift(.East), Bitboard{ .mask = 0x24600 });
