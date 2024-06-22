@@ -378,10 +378,10 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
             return updated_board.next(null, rights);
         }
 
-        pub fn king_move(self: Board(side_to_move, en_passant_file, rights), from_square: Square, to_square: Square) Board(side_to_move.opposite(), null, rights.king_move(side_to_move)) {
+        pub fn king_move(self: Board(side_to_move, en_passant_file, rights), from_square: Square, to_square: Square) Board(side_to_move.opposite(), null, rights.kingMove(side_to_move)) {
             var updated_board = self.move_piece(.{ .piece = .King, .player = side_to_move }, from_square, to_square);
             updated_board.state = updated_board.state.king_move(side_to_move, from_square, to_square);
-            return updated_board.next(null, rights.king_move(side_to_move));
+            return updated_board.next(null, rights.kingMove(side_to_move));
         }
 
         pub fn debug_print(self: Board(side_to_move, en_passant_file, rights)) void {
@@ -401,7 +401,7 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
                     ._7 => std.debug.print("|    Side to Move: {s}\n{s}   Castle Rights: {s}\n", .{
                         @tagName(side_to_move),
                         line,
-                        rights.get_uci_string(),
+                        rights.getUciString(),
                     }),
                     ._6 => std.debug.print("|      En Passant: {s}\n{s}  Halfmove Clock: {d}\n", .{ if (self.ep_square()) |sq| @tagName(sq) else "-", line, self.state.halfmove_clock.halfmoves }),
                     ._5 => std.debug.print("|\n{s}    Zobrist Hash: 0x{X}\n", .{ line, self.state.key.key }),
