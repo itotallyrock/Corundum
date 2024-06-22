@@ -71,7 +71,7 @@ pub const Square = enum(u6) {
     // zig fmt: on
 
     /// Creates a square from a file and rank.
-    pub fn from_file_and_rank(file: File, rank: Rank) Square {
+    pub fn fromFileAndRank(file: File, rank: Rank) Square {
         return @enumFromInt(@as(u8, @intFromEnum(rank)) * 8 + @as(u8, @intFromEnum(file)));
     }
 
@@ -99,22 +99,22 @@ pub const Square = enum(u6) {
             .getSquare();
     }
 
-    test from_file_and_rank {
-        try std.testing.expectEqual(Square.from_file_and_rank(File.A, Rank._1), Square.A1);
-        try std.testing.expectEqual(Square.from_file_and_rank(File.B, Rank._4), Square.B4);
-        try std.testing.expectEqual(Square.from_file_and_rank(File.C, Rank._8), Square.C8);
-        try std.testing.expectEqual(Square.from_file_and_rank(File.D, Rank._3), Square.D3);
-        try std.testing.expectEqual(Square.from_file_and_rank(File.E, Rank._6), Square.E6);
-        try std.testing.expectEqual(Square.from_file_and_rank(File.F, Rank._2), Square.F2);
-        try std.testing.expectEqual(Square.from_file_and_rank(File.G, Rank._7), Square.G7);
-        try std.testing.expectEqual(Square.from_file_and_rank(File.H, Rank._5), Square.H5);
-        try std.testing.expectEqual(Square.from_file_and_rank(File.A, Rank._5), Square.A5);
-        try std.testing.expectEqual(Square.from_file_and_rank(File.B, Rank._2), Square.B2);
-        try std.testing.expectEqual(Square.from_file_and_rank(File.C, Rank._7), Square.C7);
-        try std.testing.expectEqual(Square.from_file_and_rank(File.D, Rank._1), Square.D1);
-        try std.testing.expectEqual(Square.from_file_and_rank(File.E, Rank._8), Square.E8);
-        try std.testing.expectEqual(Square.from_file_and_rank(File.F, Rank._4), Square.F4);
-        try std.testing.expectEqual(Square.from_file_and_rank(File.G, Rank._1), Square.G1);
+    test fromFileAndRank {
+        try std.testing.expectEqual(Square.fromFileAndRank(File.A, Rank._1), Square.A1);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.B, Rank._4), Square.B4);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.C, Rank._8), Square.C8);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.D, Rank._3), Square.D3);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.E, Rank._6), Square.E6);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.F, Rank._2), Square.F2);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.G, Rank._7), Square.G7);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.H, Rank._5), Square.H5);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.A, Rank._5), Square.A5);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.B, Rank._2), Square.B2);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.C, Rank._7), Square.C7);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.D, Rank._1), Square.D1);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.E, Rank._8), Square.E8);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.F, Rank._4), Square.F4);
+        try std.testing.expectEqual(Square.fromFileAndRank(File.G, Rank._1), Square.G1);
     }
 
     test fileOf {

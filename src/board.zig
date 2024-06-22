@@ -390,7 +390,7 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
             inline for (comptime .{ Rank._8, Rank._7, Rank._6, Rank._5, Rank._4, Rank._3, Rank._2, Rank._1 }) |rank| {
                 std.debug.print("{d} ", .{@as(u8, @intFromEnum(rank)) + 1});
                 inline for (comptime std.enums.values(File)) |file| {
-                    const square = Square.from_file_and_rank(file, rank);
+                    const square = Square.fromFileAndRank(file, rank);
                     const piece = self.sided_piece_on(square);
                     const pieceChar = if (piece) |p| @tagName(p.piece)[0] else ' ';
                     const sidedPieceChar = if (piece) |p| if (p.player == .white) std.ascii.toUpper(pieceChar) else std.ascii.toLower(pieceChar) else pieceChar;

@@ -166,7 +166,7 @@ pub const Bitboard = struct {
         inline for (comptime std.enums.values(Rank)) |rank| {
             const rankBitboard = Bitboard.Ranks.get(rank);
             inline for (comptime std.enums.values(File)) |file| {
-                const square = Square.from_file_and_rank(file, rank);
+                const square = Square.fromFileAndRank(file, rank);
                 try std.testing.expect(rankBitboard.contains(square));
             }
         }
@@ -178,7 +178,7 @@ pub const Bitboard = struct {
         inline for (comptime std.enums.values(File)) |file| {
             const fileBitboard = Bitboard.Files.get(file);
             inline for (comptime std.enums.values(Rank)) |rank| {
-                const square = Square.from_file_and_rank(file, rank);
+                const square = Square.fromFileAndRank(file, rank);
                 try std.testing.expect(fileBitboard.contains(square));
             }
         }
