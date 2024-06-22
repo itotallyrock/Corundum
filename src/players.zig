@@ -24,6 +24,6 @@ pub fn ByPlayer(comptime T: type) type {
 }
 
 test ByPlayer {
-    const playerMasks = ByPlayer(bool).initFill(true);
-    try std.testing.expect(playerMasks.get(.white) and playerMasks.get(.black));
+    const player_masks = ByPlayer(bool).initFill(true);
+    try std.testing.expect(player_masks.get(.white) and player_masks.get(.black));
 }

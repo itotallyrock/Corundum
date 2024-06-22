@@ -179,7 +179,7 @@ const PersistentBoardState = struct {
     check_squares: ByNonKingPiece(Bitboard),
 
     pub fn init(comptime side_to_move: Player, comptime en_passant_file: ?File, comptime rights: CastleRights, king_squares: ByPlayer(Square)) PersistentBoardState {
-        const ep_square = if (en_passant_file) |*ep_file| ep_file.ep_square_for(side_to_move) else null;
+        const ep_square = if (en_passant_file) |*ep_file| ep_file.epSquareFor(side_to_move) else null;
         return PersistentBoardState{
             .key = ZobristHash.init(side_to_move, king_squares, rights, ep_square),
             // todo: compute move generation masks
@@ -332,7 +332,7 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
 
         /// Get the square that can be captured en passant if any.
         pub fn ep_square(_: Board(side_to_move, en_passant_file, rights)) ?EnPassantSquare {
-            return if (en_passant_file) |*ep_file| ep_file.ep_square_for(side_to_move.opposite()) else null;
+            return if (en_passant_file) |*ep_file| ep_file.epSquareFor(side_to_move.opposite()) else null;
         }
 
         /// Get the piece on the given square if any.
@@ -359,7 +359,7 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
         }
 
         pub fn double_pawn_push(self: Board(side_to_move, en_passant_file, rights), comptime file: File) Board(side_to_move.opposite(), file, rights) {
-            const next_ep_square = file.ep_square_for(side_to_move).to_square();
+            const next_ep_square = file.epSquareFor(side_to_move).to_square();
             const from_square = next_ep_square.shift(Direction.forward(side_to_move).opposite()).?;
             const to_square = next_ep_square.shift(Direction.forward(side_to_move)).?;
             var updated_board = self.move_piece(.{ .piece = .Pawn, .player = side_to_move }, from_square, to_square);
@@ -370,7 +370,7 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
 
         pub fn en_passant_capture(self: Board(side_to_move, en_passant_file, rights), from_file: File) Board(side_to_move.opposite(), null, rights) {
             const to_square = self.ep_square().?.to_square();
-            const from_square = from_file.ep_square_for(side_to_move.opposite()).to_square().shift(Direction.forward(side_to_move.opposite())).?;
+            const from_square = from_file.epSquareFor(side_to_move.opposite()).to_square().shift(Direction.forward(side_to_move.opposite())).?;
             const captured_pawn_square = to_square.shift(Direction.forward(side_to_move.opposite())).?;
             var updated_board = self.remove_piece(.{ .piece = .Pawn, .player = side_to_move.opposite() }, captured_pawn_square)
                 .move_piece(.{ .piece = .Pawn, .player = side_to_move }, from_square, to_square);

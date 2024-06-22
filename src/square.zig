@@ -10,29 +10,29 @@ pub const File = enum(u3) {
     // zig fmt: on
 
     /// Returns the en passant square on the given file for the desired player
-    pub fn ep_square_for(self: File, player: Player) EnPassantSquare {
+    pub fn epSquareFor(self: File, player: Player) EnPassantSquare {
         return @enumFromInt(@as(u6, @intFromEnum(self)) + @as(u6, @intFromEnum(Rank.ep_rank_for(player))) * 8);
     }
 
-    test ep_square_for {
+    test epSquareFor {
         // White
-        try std.testing.expectEqual(File.A.ep_square_for(.white), EnPassantSquare.A3);
-        try std.testing.expectEqual(File.B.ep_square_for(.white), EnPassantSquare.B3);
-        try std.testing.expectEqual(File.C.ep_square_for(.white), EnPassantSquare.C3);
-        try std.testing.expectEqual(File.D.ep_square_for(.white), EnPassantSquare.D3);
-        try std.testing.expectEqual(File.E.ep_square_for(.white), EnPassantSquare.E3);
-        try std.testing.expectEqual(File.F.ep_square_for(.white), EnPassantSquare.F3);
-        try std.testing.expectEqual(File.G.ep_square_for(.white), EnPassantSquare.G3);
+        try std.testing.expectEqual(File.A.epSquareFor(.white), EnPassantSquare.A3);
+        try std.testing.expectEqual(File.B.epSquareFor(.white), EnPassantSquare.B3);
+        try std.testing.expectEqual(File.C.epSquareFor(.white), EnPassantSquare.C3);
+        try std.testing.expectEqual(File.D.epSquareFor(.white), EnPassantSquare.D3);
+        try std.testing.expectEqual(File.E.epSquareFor(.white), EnPassantSquare.E3);
+        try std.testing.expectEqual(File.F.epSquareFor(.white), EnPassantSquare.F3);
+        try std.testing.expectEqual(File.G.epSquareFor(.white), EnPassantSquare.G3);
         // Black
-        try std.testing.expectEqual(File.H.ep_square_for(.white), EnPassantSquare.H3);
-        try std.testing.expectEqual(File.A.ep_square_for(.black), EnPassantSquare.A6);
-        try std.testing.expectEqual(File.B.ep_square_for(.black), EnPassantSquare.B6);
-        try std.testing.expectEqual(File.C.ep_square_for(.black), EnPassantSquare.C6);
-        try std.testing.expectEqual(File.D.ep_square_for(.black), EnPassantSquare.D6);
-        try std.testing.expectEqual(File.E.ep_square_for(.black), EnPassantSquare.E6);
-        try std.testing.expectEqual(File.F.ep_square_for(.black), EnPassantSquare.F6);
-        try std.testing.expectEqual(File.G.ep_square_for(.black), EnPassantSquare.G6);
-        try std.testing.expectEqual(File.H.ep_square_for(.black), EnPassantSquare.H6);
+        try std.testing.expectEqual(File.H.epSquareFor(.white), EnPassantSquare.H3);
+        try std.testing.expectEqual(File.A.epSquareFor(.black), EnPassantSquare.A6);
+        try std.testing.expectEqual(File.B.epSquareFor(.black), EnPassantSquare.B6);
+        try std.testing.expectEqual(File.C.epSquareFor(.black), EnPassantSquare.C6);
+        try std.testing.expectEqual(File.D.epSquareFor(.black), EnPassantSquare.D6);
+        try std.testing.expectEqual(File.E.epSquareFor(.black), EnPassantSquare.E6);
+        try std.testing.expectEqual(File.F.epSquareFor(.black), EnPassantSquare.F6);
+        try std.testing.expectEqual(File.G.epSquareFor(.black), EnPassantSquare.G6);
+        try std.testing.expectEqual(File.H.epSquareFor(.black), EnPassantSquare.H6);
     }
 };
 

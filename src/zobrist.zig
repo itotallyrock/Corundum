@@ -888,7 +888,7 @@ pub const ZobristHash = struct {
     }
 
     pub fn double_pawn_push(self: ZobristHash, comptime player: Player, comptime en_passant_file: File) ZobristHash {
-        const en_passant_square = comptime en_passant_file.ep_square_for(player);
+        const en_passant_square = comptime en_passant_file.epSquareFor(player);
         const from = .A2;
         const to = .A4;
         return self
@@ -897,12 +897,12 @@ pub const ZobristHash = struct {
     }
 
     pub fn clear_en_passant(self: ZobristHash, comptime en_passant_file: File, comptime player: Player) ZobristHash {
-        const en_passant_square = en_passant_file.ep_square_for(player);
+        const en_passant_square = en_passant_file.epSquareFor(player);
         return self.toggle_en_passant_square(en_passant_square);
     }
 
     pub fn en_passant_capture(self: ZobristHash, comptime player: Player, comptime en_passant_file: File, from: Square, to: Square) ZobristHash {
-        const en_passant_square = comptime en_passant_file.ep_square_for(player);
+        const en_passant_square = comptime en_passant_file.epSquareFor(player);
         return self
             .move(.{ .player = player, .piece = .Pawn }, from, to)
             .toggle_piece(.{ .player = player.opposite(), .piece = .Pawn }, en_passant_square.to_square())
