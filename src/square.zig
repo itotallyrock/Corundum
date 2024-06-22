@@ -158,32 +158,32 @@ pub const Square = enum(u6) {
 
     test shift {
         // Test A1 (bottom left corner)
-        try std.testing.expectEqual(Square.A1.shift(Direction.North), .A2);
-        try std.testing.expectEqual(Square.A1.shift(Direction.NorthEast), .B2);
-        try std.testing.expectEqual(Square.A1.shift(Direction.East), .B1);
-        try std.testing.expectEqual(Square.A1.shift(Direction.SouthEast), null);
-        try std.testing.expectEqual(Square.A1.shift(Direction.South), null);
-        try std.testing.expectEqual(Square.A1.shift(Direction.SouthWest), null);
-        try std.testing.expectEqual(Square.A1.shift(Direction.West), null);
+        try std.testing.expectEqual(Square.A1.shift(Direction.north), .A2);
+        try std.testing.expectEqual(Square.A1.shift(Direction.north_east), .B2);
+        try std.testing.expectEqual(Square.A1.shift(Direction.east), .B1);
+        try std.testing.expectEqual(Square.A1.shift(Direction.south_east), null);
+        try std.testing.expectEqual(Square.A1.shift(Direction.south), null);
+        try std.testing.expectEqual(Square.A1.shift(Direction.south_west), null);
+        try std.testing.expectEqual(Square.A1.shift(Direction.west), null);
 
         // Test H8 (top right corner)
-        try std.testing.expectEqual(Square.H8.shift(Direction.North), null);
-        try std.testing.expectEqual(Square.H8.shift(Direction.NorthEast), null);
-        try std.testing.expectEqual(Square.H8.shift(Direction.East), null);
-        try std.testing.expectEqual(Square.H8.shift(Direction.SouthEast), null);
-        try std.testing.expectEqual(Square.H8.shift(Direction.South), .H7);
-        try std.testing.expectEqual(Square.H8.shift(Direction.SouthWest), .G7);
-        try std.testing.expectEqual(Square.H8.shift(Direction.West), .G8);
+        try std.testing.expectEqual(Square.H8.shift(Direction.north), null);
+        try std.testing.expectEqual(Square.H8.shift(Direction.north_east), null);
+        try std.testing.expectEqual(Square.H8.shift(Direction.east), null);
+        try std.testing.expectEqual(Square.H8.shift(Direction.south_east), null);
+        try std.testing.expectEqual(Square.H8.shift(Direction.south), .H7);
+        try std.testing.expectEqual(Square.H8.shift(Direction.south_west), .G7);
+        try std.testing.expectEqual(Square.H8.shift(Direction.west), .G8);
 
         // Test E4 (middle)
-        try std.testing.expectEqual(Square.E4.shift(Direction.North), .E5);
-        try std.testing.expectEqual(Square.E4.shift(Direction.NorthEast), .F5);
-        try std.testing.expectEqual(Square.E4.shift(Direction.NorthWest), .D5);
-        try std.testing.expectEqual(Square.E4.shift(Direction.East), .F4);
-        try std.testing.expectEqual(Square.E4.shift(Direction.SouthEast), .F3);
-        try std.testing.expectEqual(Square.E4.shift(Direction.South), .E3);
-        try std.testing.expectEqual(Square.E4.shift(Direction.SouthWest), .D3);
-        try std.testing.expectEqual(Square.E4.shift(Direction.West), .D4);
+        try std.testing.expectEqual(Square.E4.shift(Direction.north), .E5);
+        try std.testing.expectEqual(Square.E4.shift(Direction.north_east), .F5);
+        try std.testing.expectEqual(Square.E4.shift(Direction.north_west), .D5);
+        try std.testing.expectEqual(Square.E4.shift(Direction.east), .F4);
+        try std.testing.expectEqual(Square.E4.shift(Direction.south_east), .F3);
+        try std.testing.expectEqual(Square.E4.shift(Direction.south), .E3);
+        try std.testing.expectEqual(Square.E4.shift(Direction.south_west), .D3);
+        try std.testing.expectEqual(Square.E4.shift(Direction.west), .D4);
     }
 };
 

@@ -113,9 +113,9 @@ pub const Bitboard = struct {
 
     pub fn shift(self: Bitboard, comptime direction: Direction) Bitboard {
         const shiftable_squares_mask = comptime switch (direction) {
-            .North, .South => Bitboard.all,
-            .East, .NorthEast, .SouthEast => Bitboard.files.get(.h).logicalNot(),
-            .West, .NorthWest, .SouthWest => Bitboard.files.get(.a).logicalNot(),
+            .north, .south => Bitboard.all,
+            .east, .north_east, .south_east => Bitboard.files.get(.h).logicalNot(),
+            .west, .north_west, .south_west => Bitboard.files.get(.a).logicalNot(),
         };
         return self
             .logicalAnd(shiftable_squares_mask)
@@ -286,21 +286,21 @@ pub const Bitboard = struct {
     }
 
     test shift {
-        try std.testing.expectEqual(Bitboard.empty.shift(.North), Bitboard.empty);
-        try std.testing.expectEqual(Bitboard.all.shift(.North), Bitboard{ .mask = 0xffffffffffffff00 });
-        try std.testing.expectEqual(Bitboard.empty.shift(.South), Bitboard.empty);
-        try std.testing.expectEqual(Bitboard.all.shift(.South), Bitboard{ .mask = 0xffffffffffffff });
-        try std.testing.expectEqual(Bitboard.empty.shift(.East), Bitboard.empty);
-        try std.testing.expectEqual(Bitboard.all.shift(.East), Bitboard{ .mask = 0xfefefefefefefefe });
-        try std.testing.expectEqual(Bitboard.empty.shift(.West), Bitboard.empty);
-        try std.testing.expectEqual(Bitboard.all.shift(.West), Bitboard{ .mask = 0x7f7f7f7f7f7f7f7f });
-        try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).shift(.North), Bitboard{ .mask = 0x1230000 });
-        try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).shift(.South), Bitboard{ .mask = 0x123 });
-        try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).shift(.East), Bitboard{ .mask = 0x24600 });
-        try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).shift(.West), Bitboard{ .mask = 0x1100 });
-        try std.testing.expectEqual((Bitboard{ .mask = 0x8001d00400002208 }).shift(.NorthEast), Bitboard{ .mask = 0x2a0080000441000 });
-        try std.testing.expectEqual((Bitboard{ .mask = 0x8001d00400002208 }).shift(.NorthWest), Bitboard{ .mask = 0x68020000110400 });
-        try std.testing.expectEqual((Bitboard{ .mask = 0x8001d00400002208 }).shift(.SouthEast), Bitboard{ .mask = 0x2a008000044 });
-        try std.testing.expectEqual((Bitboard{ .mask = 0x8001d00400002208 }).shift(.SouthWest), Bitboard{ .mask = 0x40006802000011 });
+        try std.testing.expectEqual(Bitboard.empty.shift(.north), Bitboard.empty);
+        try std.testing.expectEqual(Bitboard.all.shift(.north), Bitboard{ .mask = 0xffffffffffffff00 });
+        try std.testing.expectEqual(Bitboard.empty.shift(.south), Bitboard.empty);
+        try std.testing.expectEqual(Bitboard.all.shift(.south), Bitboard{ .mask = 0xffffffffffffff });
+        try std.testing.expectEqual(Bitboard.empty.shift(.east), Bitboard.empty);
+        try std.testing.expectEqual(Bitboard.all.shift(.east), Bitboard{ .mask = 0xfefefefefefefefe });
+        try std.testing.expectEqual(Bitboard.empty.shift(.west), Bitboard.empty);
+        try std.testing.expectEqual(Bitboard.all.shift(.west), Bitboard{ .mask = 0x7f7f7f7f7f7f7f7f });
+        try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).shift(.north), Bitboard{ .mask = 0x1230000 });
+        try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).shift(.south), Bitboard{ .mask = 0x123 });
+        try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).shift(.east), Bitboard{ .mask = 0x24600 });
+        try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).shift(.west), Bitboard{ .mask = 0x1100 });
+        try std.testing.expectEqual((Bitboard{ .mask = 0x8001d00400002208 }).shift(.north_east), Bitboard{ .mask = 0x2a0080000441000 });
+        try std.testing.expectEqual((Bitboard{ .mask = 0x8001d00400002208 }).shift(.north_west), Bitboard{ .mask = 0x68020000110400 });
+        try std.testing.expectEqual((Bitboard{ .mask = 0x8001d00400002208 }).shift(.south_east), Bitboard{ .mask = 0x2a008000044 });
+        try std.testing.expectEqual((Bitboard{ .mask = 0x8001d00400002208 }).shift(.south_west), Bitboard{ .mask = 0x40006802000011 });
     }
 };
