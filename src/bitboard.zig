@@ -2,7 +2,7 @@ const std = @import("std");
 const Square = @import("square.zig").Square;
 const ByRank = @import("square.zig").ByRank;
 const ByFile = @import("square.zig").ByFile;
-const Direction = @import("directions.zig").Direction;
+const BoardDirection = @import("directions.zig").BoardDirection;
 
 /// A board mask that represents a set of squares on a chess board.
 /// The mask is a 64-bit integer where each bit represents a square on the board.
@@ -111,7 +111,7 @@ pub const Bitboard = struct {
         return null;
     }
 
-    pub fn shift(self: Bitboard, comptime direction: Direction) Bitboard {
+    pub fn shift(self: Bitboard, comptime direction: BoardDirection) Bitboard {
         const shiftable_squares_mask = comptime switch (direction) {
             .north, .south => Bitboard.all,
             .east, .north_east, .south_east => Bitboard.files.get(.h).logicalNot(),

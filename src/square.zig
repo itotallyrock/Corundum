@@ -1,7 +1,7 @@
 const std = @import("std");
 const Bitboard = @import("bitboard.zig").Bitboard;
 const Player = @import("players.zig").Player;
-const Direction = @import("directions.zig").Direction;
+const BoardDirection = @import("directions.zig").BoardDirection;
 
 /// A column index for the board
 pub const File = enum(u3) {
@@ -92,7 +92,7 @@ pub const Square = enum(u6) {
 
     /// Try to shift/move the square in the given direction.
     /// Returns null if the slided square would be out of bounds.
-    pub fn shift(self: Square, comptime direction: Direction) ?Square {
+    pub fn shift(self: Square, comptime direction: BoardDirection) ?Square {
         return self
             .toBitboard()
             .shift(direction)
@@ -158,32 +158,32 @@ pub const Square = enum(u6) {
 
     test shift {
         // Test A1 (bottom left corner)
-        try std.testing.expectEqual(Square.A1.shift(Direction.north), .A2);
-        try std.testing.expectEqual(Square.A1.shift(Direction.north_east), .B2);
-        try std.testing.expectEqual(Square.A1.shift(Direction.east), .B1);
-        try std.testing.expectEqual(Square.A1.shift(Direction.south_east), null);
-        try std.testing.expectEqual(Square.A1.shift(Direction.south), null);
-        try std.testing.expectEqual(Square.A1.shift(Direction.south_west), null);
-        try std.testing.expectEqual(Square.A1.shift(Direction.west), null);
+        try std.testing.expectEqual(Square.A1.shift(.north), .A2);
+        try std.testing.expectEqual(Square.A1.shift(.north_east), .B2);
+        try std.testing.expectEqual(Square.A1.shift(.east), .B1);
+        try std.testing.expectEqual(Square.A1.shift(.south_east), null);
+        try std.testing.expectEqual(Square.A1.shift(.south), null);
+        try std.testing.expectEqual(Square.A1.shift(.south_west), null);
+        try std.testing.expectEqual(Square.A1.shift(.west), null);
 
         // Test H8 (top right corner)
-        try std.testing.expectEqual(Square.H8.shift(Direction.north), null);
-        try std.testing.expectEqual(Square.H8.shift(Direction.north_east), null);
-        try std.testing.expectEqual(Square.H8.shift(Direction.east), null);
-        try std.testing.expectEqual(Square.H8.shift(Direction.south_east), null);
-        try std.testing.expectEqual(Square.H8.shift(Direction.south), .H7);
-        try std.testing.expectEqual(Square.H8.shift(Direction.south_west), .G7);
-        try std.testing.expectEqual(Square.H8.shift(Direction.west), .G8);
+        try std.testing.expectEqual(Square.H8.shift(.north), null);
+        try std.testing.expectEqual(Square.H8.shift(.north_east), null);
+        try std.testing.expectEqual(Square.H8.shift(.east), null);
+        try std.testing.expectEqual(Square.H8.shift(.south_east), null);
+        try std.testing.expectEqual(Square.H8.shift(.south), .H7);
+        try std.testing.expectEqual(Square.H8.shift(.south_west), .G7);
+        try std.testing.expectEqual(Square.H8.shift(.west), .G8);
 
         // Test E4 (middle)
-        try std.testing.expectEqual(Square.E4.shift(Direction.north), .E5);
-        try std.testing.expectEqual(Square.E4.shift(Direction.north_east), .F5);
-        try std.testing.expectEqual(Square.E4.shift(Direction.north_west), .D5);
-        try std.testing.expectEqual(Square.E4.shift(Direction.east), .F4);
-        try std.testing.expectEqual(Square.E4.shift(Direction.south_east), .F3);
-        try std.testing.expectEqual(Square.E4.shift(Direction.south), .E3);
-        try std.testing.expectEqual(Square.E4.shift(Direction.south_west), .D3);
-        try std.testing.expectEqual(Square.E4.shift(Direction.west), .D4);
+        try std.testing.expectEqual(Square.E4.shift(.north), .E5);
+        try std.testing.expectEqual(Square.E4.shift(.north_east), .F5);
+        try std.testing.expectEqual(Square.E4.shift(.north_west), .D5);
+        try std.testing.expectEqual(Square.E4.shift(.east), .F4);
+        try std.testing.expectEqual(Square.E4.shift(.south_east), .F3);
+        try std.testing.expectEqual(Square.E4.shift(.south), .E3);
+        try std.testing.expectEqual(Square.E4.shift(.south_west), .D3);
+        try std.testing.expectEqual(Square.E4.shift(.west), .D4);
     }
 };
 

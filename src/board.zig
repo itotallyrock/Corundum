@@ -15,7 +15,7 @@ const CastleDirection = castlesModule.CastleDirection;
 const Square = squareModule.Square;
 const Rank = squareModule.Rank;
 const File = squareModule.File;
-const Direction = directionsModule.Direction;
+const BoardDirection = directionsModule.BoardDirection;
 const EnPassantSquare = squareModule.EnPassantSquare;
 const NonKingPiece = piecesModule.NonKingPiece;
 const ByNonKingPiece = piecesModule.ByNonKingPiece;
@@ -223,7 +223,7 @@ const PersistentBoardState = struct {
 
     pub fn pawnPush(self: PersistentBoardState, comptime side_to_move: Player, from_square: Square) PersistentBoardState {
         var result = self;
-        const forward = comptime Direction.forward(side_to_move);
+        const forward = comptime BoardDirection.forward(side_to_move);
         const to_square = from_square.shift(forward).?;
         result.halfmove_clock = HalfMoveCount.reset();
         result.key = result.key.move(.{ .player = side_to_move, .piece = .pawn }, from_square, to_square);
@@ -351,7 +351,7 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
         }
 
         pub fn pawnPush(self: Board(side_to_move, en_passant_file, rights), from_square: Square) Board(side_to_move.opposite(), null, rights) {
-            const to_square = from_square.shift(Direction.forward(side_to_move)).?;
+            const to_square = from_square.shift(BoardDirection.forward(side_to_move)).?;
             var updated_board = self.movePiece(.{ .piece = .pawn, .player = side_to_move }, from_square, to_square);
             updated_board.state = updated_board.state.pawnPush(side_to_move, from_square);
 
@@ -360,8 +360,8 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
 
         pub fn doublePawnPush(self: Board(side_to_move, en_passant_file, rights), comptime file: File) Board(side_to_move.opposite(), file, rights) {
             const next_ep_square = file.epSquareFor(side_to_move).to_square();
-            const from_square = next_ep_square.shift(Direction.forward(side_to_move).opposite()).?;
-            const to_square = next_ep_square.shift(Direction.forward(side_to_move)).?;
+            const from_square = next_ep_square.shift(BoardDirection.forward(side_to_move).opposite()).?;
+            const to_square = next_ep_square.shift(BoardDirection.forward(side_to_move)).?;
             var updated_board = self.movePiece(.{ .piece = .pawn, .player = side_to_move }, from_square, to_square);
             updated_board.state = updated_board.state.doublePawnPush(side_to_move, file);
 
@@ -370,8 +370,8 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
 
         pub fn enPassantCapture(self: Board(side_to_move, en_passant_file, rights), from_file: File) Board(side_to_move.opposite(), null, rights) {
             const to_square = self.epSquare().?.to_square();
-            const from_square = from_file.epSquareFor(side_to_move.opposite()).to_square().shift(Direction.forward(side_to_move.opposite())).?;
-            const captured_pawn_square = to_square.shift(Direction.forward(side_to_move.opposite())).?;
+            const from_square = from_file.epSquareFor(side_to_move.opposite()).to_square().shift(BoardDirection.forward(side_to_move.opposite())).?;
+            const captured_pawn_square = to_square.shift(BoardDirection.forward(side_to_move.opposite())).?;
             var updated_board = self.removePiece(.{ .piece = .pawn, .player = side_to_move.opposite() }, captured_pawn_square)
                 .movePiece(.{ .piece = .pawn, .player = side_to_move }, from_square, to_square);
             updated_board.state = updated_board.state.enPassantCapture(side_to_move, en_passant_file.?, from_square, to_square);
