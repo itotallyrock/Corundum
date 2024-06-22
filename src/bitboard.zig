@@ -17,7 +17,7 @@ pub const Bitboard = struct {
     pub const a1 = Bitboard{ .mask = 1 };
 
     /// Mask of each rank
-    pub const Ranks = ByRank(Bitboard).init(.{
+    pub const ranks = ByRank(Bitboard).init(.{
         ._1 = Bitboard{ .mask = 0xFF },
         ._2 = Bitboard{ .mask = 0xFF00 },
         ._3 = Bitboard{ .mask = 0x00FF_0000 },
@@ -29,7 +29,7 @@ pub const Bitboard = struct {
     });
 
     /// Mask of each file
-    pub const Files = ByFile(Bitboard).init(.{
+    pub const files = ByFile(Bitboard).init(.{
         .a = Bitboard{ .mask = 0x0101_0101_0101_0101 },
         .b = Bitboard{ .mask = 0x0202_0202_0202_0202 },
         .c = Bitboard{ .mask = 0x0404_0404_0404_0404 },
@@ -114,8 +114,8 @@ pub const Bitboard = struct {
     pub fn shift(self: Bitboard, comptime direction: Direction) Bitboard {
         const shiftable_squares_mask = comptime switch (direction) {
             .North, .South => Bitboard.all,
-            .East, .NorthEast, .SouthEast => Bitboard.Files.get(.h).logicalNot(),
-            .West, .NorthWest, .SouthWest => Bitboard.Files.get(.a).logicalNot(),
+            .East, .NorthEast, .SouthEast => Bitboard.files.get(.h).logicalNot(),
+            .West, .NorthWest, .SouthWest => Bitboard.files.get(.a).logicalNot(),
         };
         return self
             .logicalAnd(shiftable_squares_mask)
@@ -162,11 +162,11 @@ pub const Bitboard = struct {
         try std.testing.expect((Bitboard{ .mask = 0x400200000012200 }).contains(.C8));
     }
 
-    test Ranks {
+    test ranks {
         const Rank = @import("square.zig").Rank;
         const File = @import("square.zig").File;
         inline for (comptime std.enums.values(Rank)) |rank| {
-            const rankBitboard = Bitboard.Ranks.get(rank);
+            const rankBitboard = Bitboard.ranks.get(rank);
             inline for (comptime std.enums.values(File)) |file| {
                 const square = Square.fromFileAndRank(file, rank);
                 try std.testing.expect(rankBitboard.contains(square));
@@ -174,11 +174,11 @@ pub const Bitboard = struct {
         }
     }
 
-    test Files {
+    test files {
         const Rank = @import("square.zig").Rank;
         const File = @import("square.zig").File;
         inline for (comptime std.enums.values(File)) |file| {
-            const fileBitboard = Bitboard.Files.get(file);
+            const fileBitboard = Bitboard.files.get(file);
             inline for (comptime std.enums.values(Rank)) |rank| {
                 const square = Square.fromFileAndRank(file, rank);
                 try std.testing.expect(fileBitboard.contains(square));
