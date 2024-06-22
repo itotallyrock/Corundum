@@ -71,8 +71,8 @@ pub const PieceArrangement = struct {
         return PieceArrangement{
             // The side masks are initialized with the king squares since they are the only pieces on the board.
             .side_masks = std.EnumArray(Player, Bitboard).init(.{
-                .White = king_squares.get(.White).toBitboard(),
-                .Black = king_squares.get(.Black).toBitboard(),
+                .white = king_squares.get(.white).toBitboard(),
+                .black = king_squares.get(.black).toBitboard(),
             }),
             .kings = king_squares,
         };
@@ -393,7 +393,7 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
                     const square = Square.from_file_and_rank(file, rank);
                     const piece = self.sided_piece_on(square);
                     const pieceChar = if (piece) |p| @tagName(p.piece)[0] else ' ';
-                    const sidedPieceChar = if (piece) |p| if (p.player == .White) std.ascii.toUpper(pieceChar) else std.ascii.toLower(pieceChar) else pieceChar;
+                    const sidedPieceChar = if (piece) |p| if (p.player == .white) std.ascii.toUpper(pieceChar) else std.ascii.toLower(pieceChar) else pieceChar;
                     std.debug.print("| {c} ", .{sidedPieceChar});
                 }
                 switch (rank) {
@@ -415,39 +415,39 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
     };
 }
 
-pub const DefaultBoard = Board(.White, null, CastleRights.initFill(true))
-    .with_kings(std.EnumArray(Player, Square).init(.{ .White = .E1, .Black = .E8 }))
-    .add_piece(.{ .piece = .Pawn, .player = .White }, .A2)
-    .add_piece(.{ .piece = .Pawn, .player = .White }, .B2)
-    .add_piece(.{ .piece = .Pawn, .player = .White }, .C2)
-    .add_piece(.{ .piece = .Pawn, .player = .White }, .D2)
-    .add_piece(.{ .piece = .Pawn, .player = .White }, .E2)
-    .add_piece(.{ .piece = .Pawn, .player = .White }, .F2)
-    .add_piece(.{ .piece = .Pawn, .player = .White }, .G2)
-    .add_piece(.{ .piece = .Pawn, .player = .White }, .H2)
-    .add_piece(.{ .piece = .Rook, .player = .White }, .A1)
-    .add_piece(.{ .piece = .Knight, .player = .White }, .B1)
-    .add_piece(.{ .piece = .Bishop, .player = .White }, .C1)
-    .add_piece(.{ .piece = .Queen, .player = .White }, .D1)
-    .add_piece(.{ .piece = .Bishop, .player = .White }, .F1)
-    .add_piece(.{ .piece = .Knight, .player = .White }, .G1)
-    .add_piece(.{ .piece = .Rook, .player = .White }, .H1)
+pub const DefaultBoard = Board(.white, null, CastleRights.initFill(true))
+    .with_kings(std.EnumArray(Player, Square).init(.{ .white = .E1, .black = .E8 }))
+    .add_piece(.{ .piece = .Pawn, .player = .white }, .A2)
+    .add_piece(.{ .piece = .Pawn, .player = .white }, .B2)
+    .add_piece(.{ .piece = .Pawn, .player = .white }, .C2)
+    .add_piece(.{ .piece = .Pawn, .player = .white }, .D2)
+    .add_piece(.{ .piece = .Pawn, .player = .white }, .E2)
+    .add_piece(.{ .piece = .Pawn, .player = .white }, .F2)
+    .add_piece(.{ .piece = .Pawn, .player = .white }, .G2)
+    .add_piece(.{ .piece = .Pawn, .player = .white }, .H2)
+    .add_piece(.{ .piece = .Rook, .player = .white }, .A1)
+    .add_piece(.{ .piece = .Knight, .player = .white }, .B1)
+    .add_piece(.{ .piece = .Bishop, .player = .white }, .C1)
+    .add_piece(.{ .piece = .Queen, .player = .white }, .D1)
+    .add_piece(.{ .piece = .Bishop, .player = .white }, .F1)
+    .add_piece(.{ .piece = .Knight, .player = .white }, .G1)
+    .add_piece(.{ .piece = .Rook, .player = .white }, .H1)
 // black pieces
-    .add_piece(.{ .piece = .Pawn, .player = .Black }, .A7)
-    .add_piece(.{ .piece = .Pawn, .player = .Black }, .B7)
-    .add_piece(.{ .piece = .Pawn, .player = .Black }, .C7)
-    .add_piece(.{ .piece = .Pawn, .player = .Black }, .D7)
-    .add_piece(.{ .piece = .Pawn, .player = .Black }, .E7)
-    .add_piece(.{ .piece = .Pawn, .player = .Black }, .F7)
-    .add_piece(.{ .piece = .Pawn, .player = .Black }, .G7)
-    .add_piece(.{ .piece = .Pawn, .player = .Black }, .H7)
-    .add_piece(.{ .piece = .Rook, .player = .Black }, .A8)
-    .add_piece(.{ .piece = .Knight, .player = .Black }, .B8)
-    .add_piece(.{ .piece = .Bishop, .player = .Black }, .C8)
-    .add_piece(.{ .piece = .Queen, .player = .Black }, .D8)
-    .add_piece(.{ .piece = .Bishop, .player = .Black }, .F8)
-    .add_piece(.{ .piece = .Knight, .player = .Black }, .G8)
-    .add_piece(.{ .piece = .Rook, .player = .Black }, .H8);
+    .add_piece(.{ .piece = .Pawn, .player = .black }, .A7)
+    .add_piece(.{ .piece = .Pawn, .player = .black }, .B7)
+    .add_piece(.{ .piece = .Pawn, .player = .black }, .C7)
+    .add_piece(.{ .piece = .Pawn, .player = .black }, .D7)
+    .add_piece(.{ .piece = .Pawn, .player = .black }, .E7)
+    .add_piece(.{ .piece = .Pawn, .player = .black }, .F7)
+    .add_piece(.{ .piece = .Pawn, .player = .black }, .G7)
+    .add_piece(.{ .piece = .Pawn, .player = .black }, .H7)
+    .add_piece(.{ .piece = .Rook, .player = .black }, .A8)
+    .add_piece(.{ .piece = .Knight, .player = .black }, .B8)
+    .add_piece(.{ .piece = .Bishop, .player = .black }, .C8)
+    .add_piece(.{ .piece = .Queen, .player = .black }, .D8)
+    .add_piece(.{ .piece = .Bishop, .player = .black }, .F8)
+    .add_piece(.{ .piece = .Knight, .player = .black }, .G8)
+    .add_piece(.{ .piece = .Rook, .player = .black }, .H8);
 
 test "some basic moves on the start board" {
     const board = DefaultBoard;

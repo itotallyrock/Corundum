@@ -67,7 +67,7 @@ pub const Rank = enum(u3) {
     _1, _2, _3, _4, _5, _6, _7, _8,
 
     pub fn epRankFor(comptime player: Player) Rank {
-        if (player == .White) {
+        if (player == .white) {
             return ._3;
         } else {
             return ._6;
@@ -75,7 +75,7 @@ pub const Rank = enum(u3) {
     }
 
     pub fn promotionRankFor(comptime player: Player) Rank {
-        if (player == .White) {
+        if (player == .white) {
             return ._8;
         } else {
             return ._1;

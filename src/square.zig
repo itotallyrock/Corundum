@@ -16,23 +16,23 @@ pub const File = enum(u3) {
 
     test ep_square_for {
         // White
-        try std.testing.expectEqual(File.A.ep_square_for(.White), EnPassantSquare.A3);
-        try std.testing.expectEqual(File.B.ep_square_for(.White), EnPassantSquare.B3);
-        try std.testing.expectEqual(File.C.ep_square_for(.White), EnPassantSquare.C3);
-        try std.testing.expectEqual(File.D.ep_square_for(.White), EnPassantSquare.D3);
-        try std.testing.expectEqual(File.E.ep_square_for(.White), EnPassantSquare.E3);
-        try std.testing.expectEqual(File.F.ep_square_for(.White), EnPassantSquare.F3);
-        try std.testing.expectEqual(File.G.ep_square_for(.White), EnPassantSquare.G3);
+        try std.testing.expectEqual(File.A.ep_square_for(.white), EnPassantSquare.A3);
+        try std.testing.expectEqual(File.B.ep_square_for(.white), EnPassantSquare.B3);
+        try std.testing.expectEqual(File.C.ep_square_for(.white), EnPassantSquare.C3);
+        try std.testing.expectEqual(File.D.ep_square_for(.white), EnPassantSquare.D3);
+        try std.testing.expectEqual(File.E.ep_square_for(.white), EnPassantSquare.E3);
+        try std.testing.expectEqual(File.F.ep_square_for(.white), EnPassantSquare.F3);
+        try std.testing.expectEqual(File.G.ep_square_for(.white), EnPassantSquare.G3);
         // Black
-        try std.testing.expectEqual(File.H.ep_square_for(.White), EnPassantSquare.H3);
-        try std.testing.expectEqual(File.A.ep_square_for(.Black), EnPassantSquare.A6);
-        try std.testing.expectEqual(File.B.ep_square_for(.Black), EnPassantSquare.B6);
-        try std.testing.expectEqual(File.C.ep_square_for(.Black), EnPassantSquare.C6);
-        try std.testing.expectEqual(File.D.ep_square_for(.Black), EnPassantSquare.D6);
-        try std.testing.expectEqual(File.E.ep_square_for(.Black), EnPassantSquare.E6);
-        try std.testing.expectEqual(File.F.ep_square_for(.Black), EnPassantSquare.F6);
-        try std.testing.expectEqual(File.G.ep_square_for(.Black), EnPassantSquare.G6);
-        try std.testing.expectEqual(File.H.ep_square_for(.Black), EnPassantSquare.H6);
+        try std.testing.expectEqual(File.H.ep_square_for(.white), EnPassantSquare.H3);
+        try std.testing.expectEqual(File.A.ep_square_for(.black), EnPassantSquare.A6);
+        try std.testing.expectEqual(File.B.ep_square_for(.black), EnPassantSquare.B6);
+        try std.testing.expectEqual(File.C.ep_square_for(.black), EnPassantSquare.C6);
+        try std.testing.expectEqual(File.D.ep_square_for(.black), EnPassantSquare.D6);
+        try std.testing.expectEqual(File.E.ep_square_for(.black), EnPassantSquare.E6);
+        try std.testing.expectEqual(File.F.ep_square_for(.black), EnPassantSquare.F6);
+        try std.testing.expectEqual(File.G.ep_square_for(.black), EnPassantSquare.G6);
+        try std.testing.expectEqual(File.H.ep_square_for(.black), EnPassantSquare.H6);
     }
 };
 
@@ -44,7 +44,7 @@ pub const Rank = enum(u3) {
 
     /// Returns the rank for the en passant square for the desired player
     pub fn ep_rank_for(player: Player) Rank {
-        if (player == .White) {
+        if (player == .white) {
             return ._3;
         } else {
             return ._6;
@@ -52,8 +52,8 @@ pub const Rank = enum(u3) {
     }
 
     test ep_rank_for {
-        try std.testing.expectEqual(Rank.ep_rank_for(.White), Rank._3);
-        try std.testing.expectEqual(Rank.ep_rank_for(.Black), Rank._6);
+        try std.testing.expectEqual(Rank.ep_rank_for(.white), Rank._3);
+        try std.testing.expectEqual(Rank.ep_rank_for(.black), Rank._6);
     }
 };
 

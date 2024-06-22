@@ -20,8 +20,8 @@ pub const Direction = enum(i5) {
     /// Returns north or south depending on the player.
     pub fn forward(player: Player) Direction {
         switch (player) {
-            .White => return .North,
-            .Black => return .South,
+            .white => return .North,
+            .black => return .South,
         }
     }
 
@@ -37,8 +37,8 @@ pub const Direction = enum(i5) {
     }
 
     test forward {
-        try std.testing.expectEqual(Direction.forward(.White), Direction.North);
-        try std.testing.expectEqual(Direction.forward(.Black), Direction.South);
+        try std.testing.expectEqual(Direction.forward(.white), Direction.North);
+        try std.testing.expectEqual(Direction.forward(.black), Direction.South);
     }
 };
 

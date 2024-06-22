@@ -43,11 +43,11 @@ pub const ZobristHash = struct {
         });
     /// Hash for one of 4 castle rights, white/black king-side/queen-side
     const CASTLE_KEYS: ByPlayer(ByCastleDirection(ZobristKey)) = ByPlayer(ByCastleDirection(ZobristKey)).init(.{
-        .White = ByCastleDirection(ZobristKey).init(.{
+        .white = ByCastleDirection(ZobristKey).init(.{
             .KingSide = 0x8499_3F26_2ABB_0E4A,
             .QueenSide = 0x49A6_17EA_01D9_B291,
         }),
-        .Black = ByCastleDirection(ZobristKey).init(.{
+        .black = ByCastleDirection(ZobristKey).init(.{
             .KingSide = 0xA0AC_B86F_0695_F023,
             .QueenSide = 0xE111_D878_8EEF_CFDE,
         }),
@@ -56,7 +56,7 @@ pub const ZobristHash = struct {
     const PIECE_SQUARE_KEYS: ByPlayer(ByPiece(BySquare(ZobristKey))) = blk: {
         @setEvalBranchQuota(100_000);
         break :blk ByPlayer(ByPiece(BySquare(ZobristKey))).init(.{
-            .White = ByPiece(BySquare(ZobristKey)).init(.{
+            .white = ByPiece(BySquare(ZobristKey)).init(.{
                 .Pawn = BySquare(ZobristKey).init(.{
                     .A1 = 0xBCBD_2C2F_7DAB_FCBE, .B1 = 0x8756_17FC_113F_9090, .C1 = 0x314A_7DFE_25D7_39E3, .D1 = 0x47F5_6D36_49FE_FA55, .E1 = 0x2276_E9C2_6AD3_4276, .F1 = 0x776F_E868_69DA_CEAD, .G1 = 0x4CDA_34E6_051B_A0AC, .H1 = 0x2580_0E89_C066_3865,
                     .A2 = 0x5634_EEDA_8F6E_658B, .B2 = 0x6947_845B_FD63_D7F7, .C2 = 0xE85B_94FA_9808_12E5, .D2 = 0x1F8D_1CF9_944F_D778, .E2 = 0x63E8_2D59_AE66_8F3A, .F2 = 0xFF82_9419_1FD1_2797, .G2 = 0xD3AF_0509_C345_130E, .H2 = 0x9018_4984_1E22_3B79,
@@ -118,7 +118,7 @@ pub const ZobristHash = struct {
                     .A8 = 0x93BE_14C8_EC83_DE40, .B8 = 0x583A_C4D4_4E26_A599, .C8 = 0x512D_8219_B155_5967, .D8 = 0xA780_9EF2_4AA6_0A5F, .E8 = 0x18A1_1322_AF27_7C22, .F8 = 0xD156_A4CB_B705_7B6A, .G8 = 0x04CB_C6A5_5E03_A50C, .H8 = 0x06A0_4602_EA6D_FA31,
                 }),
             }),
-            .Black = ByPiece(BySquare(ZobristKey)).init(.{
+            .black = ByPiece(BySquare(ZobristKey)).init(.{
                 .Pawn = BySquare(ZobristKey).init(.{
                     .A1 = 0x7834_6D76_0A10_BC4E, .B1 = 0x3895_E347_EBB4_0051, .C1 = 0x95A5_5214_9BE3_13B1, .D1 = 0x5914_96B9_3C30_45D3, .E1 = 0x01DA_809F_1834_D8AE, .F1 = 0x2393_2F68_2045_7419, .G1 = 0xD612_1C28_EFDD_CECE, .H1 = 0x5330_4B54_9791_1AB0,
                     .A2 = 0x9D7C_CEB7_AC2C_EE2E, .B2 = 0x769E_B8F9_A2E7_E6DF, .C2 = 0x76A8_01DD_90DA_E5C2, .D2 = 0x79C2_BDA0_17D2_5D01, .E2 = 0xC31D_87E2_B43E_BCAB, .F2 = 0x4A4B_22BA_DED0_3607, .G2 = 0xC05B_E87F_2289_50AB, .H2 = 0xBF31_B18C_6102_D07E,
@@ -189,12 +189,12 @@ pub const ZobristHash = struct {
 
     pub fn init(side_to_move: Player, king_squares: ByPlayer(Square), comptime castle_rights: CastleRights, comptime en_passant_square: ?EnPassantSquare) ZobristHash {
         var hash = EMPTY
-            .toggle_piece(.{ .player = .White, .piece = .King }, king_squares.get(.White))
-            .toggle_piece(.{ .player = .Black, .piece = .King }, king_squares.get(.Black))
+            .toggle_piece(.{ .player = .white, .piece = .King }, king_squares.get(.white))
+            .toggle_piece(.{ .player = .black, .piece = .King }, king_squares.get(.black))
             .toggle_castle_rights(castle_rights)
             .toggle_en_passant_square(en_passant_square);
 
-        if (side_to_move == .Black) {
+        if (side_to_move == .black) {
             hash = hash.switch_sides();
         }
         return hash;
@@ -290,25 +290,25 @@ pub const ZobristHash = struct {
         inline for (players) |starting_player| {
             inline for (players) |player| {
                 inline for (pieces) |piece| {
-                    const hash = comptime ZobristHash.init(starting_player, ByPlayer(Square).init(.{.White = .E1, .Black = .E8}), CastleRights.initFill(true), null);
+                    const hash = comptime ZobristHash.init(starting_player, ByPlayer(Square).init(.{.white = .E1, .black = .E8}), CastleRights.initFill(true), null);
                     for (std.enums.values(Square)) |square| {
-                        if (player == .White) {
+                        if (player == .white) {
                             switch (piece) {
-                                .King => try test_toggle_piece(hash, .{.piece = .King, .player = .White}, square),
-                                .Queen => try test_toggle_piece(hash, .{.piece = .Queen, .player = .White}, square),
-                                .Rook => try test_toggle_piece(hash, .{.piece = .Rook, .player = .White}, square),
-                                .Bishop => try test_toggle_piece(hash, .{.piece = .Bishop, .player = .White}, square),
-                                .Knight => try test_toggle_piece(hash, .{.piece = .Knight, .player = .White}, square),
-                                .Pawn => try test_toggle_piece(hash, .{.piece = .Pawn, .player = .White}, square),
+                                .King => try test_toggle_piece(hash, .{.piece = .King, .player = .white}, square),
+                                .Queen => try test_toggle_piece(hash, .{.piece = .Queen, .player = .white}, square),
+                                .Rook => try test_toggle_piece(hash, .{.piece = .Rook, .player = .white}, square),
+                                .Bishop => try test_toggle_piece(hash, .{.piece = .Bishop, .player = .white}, square),
+                                .Knight => try test_toggle_piece(hash, .{.piece = .Knight, .player = .white}, square),
+                                .Pawn => try test_toggle_piece(hash, .{.piece = .Pawn, .player = .white}, square),
                             }
                         } else {
                             switch (piece) {
-                                .King => try test_toggle_piece(hash, .{.piece = .King, .player = .Black}, square),
-                                .Queen => try test_toggle_piece(hash, .{.piece = .Queen, .player = .Black}, square),
-                                .Rook => try test_toggle_piece(hash, .{.piece = .Rook, .player = .Black}, square),
-                                .Bishop => try test_toggle_piece(hash, .{.piece = .Bishop, .player = .Black}, square),
-                                .Knight => try test_toggle_piece(hash, .{.piece = .Knight, .player = .Black}, square),
-                                .Pawn => try test_toggle_piece(hash, .{.piece = .Pawn, .player = .Black}, square),
+                                .King => try test_toggle_piece(hash, .{.piece = .King, .player = .black}, square),
+                                .Queen => try test_toggle_piece(hash, .{.piece = .Queen, .player = .black}, square),
+                                .Rook => try test_toggle_piece(hash, .{.piece = .Rook, .player = .black}, square),
+                                .Bishop => try test_toggle_piece(hash, .{.piece = .Bishop, .player = .black}, square),
+                                .Knight => try test_toggle_piece(hash, .{.piece = .Knight, .player = .black}, square),
+                                .Pawn => try test_toggle_piece(hash, .{.piece = .Pawn, .player = .black}, square),
                             }
                         }
                     }
