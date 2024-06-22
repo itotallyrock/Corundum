@@ -227,8 +227,3 @@ pub fn BySquare(comptime T: type) type {
 pub fn ByEnPassantSquare(comptime T: type) type {
     return std.EnumArray(EnPassantSquare, T);
 }
-
-/// A type that is indexed by `Direction`
-pub fn ByDirection(comptime T: type) type {
-    return std.EnumArray(Direction, T);
-}

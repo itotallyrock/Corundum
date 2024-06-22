@@ -41,3 +41,8 @@ pub const Direction = enum(i5) {
         try std.testing.expectEqual(Direction.forward(.Black), Direction.South);
     }
 };
+
+/// A type that is indexed by `Direction`
+pub fn ByDirection(comptime T: type) type {
+    return std.EnumArray(Direction, T);
+}
