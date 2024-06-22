@@ -127,7 +127,7 @@ pub const PieceArrangement = struct {
         // Check if piece is a king
         inline for (comptime std.enums.values(Player)) |player| {
             if (self.kings.get(player) == square) {
-                return .King;
+                return .king;
             }
         }
 
@@ -226,7 +226,7 @@ const PersistentBoardState = struct {
         const forward = comptime Direction.forward(side_to_move);
         const to_square = from_square.shift(forward).?;
         result.halfmove_clock = HalfMoveCount.reset();
-        result.key = result.key.move(.{ .player = side_to_move, .piece = .Pawn }, from_square, to_square);
+        result.key = result.key.move(.{ .player = side_to_move, .piece = .pawn }, from_square, to_square);
         // todo: update move generation masks
         return result;
     }
@@ -248,14 +248,14 @@ const PersistentBoardState = struct {
     }
 
     pub fn kingMoveWithRights(self: PersistentBoardState, comptime side_to_move: Player, from_square: Square, to_square: Square) PersistentBoardState {
-        var result = self.movePiece(.{ .player = side_to_move, .piece = .King }, from_square, to_square);
+        var result = self.movePiece(.{ .player = side_to_move, .piece = .king }, from_square, to_square);
         result.key = result.key.toggle_rights(side_to_move, CastleRights.forSide(side_to_move));
         // todo: update move generation masks
         return result;
     }
 
     pub fn kingMove(self: PersistentBoardState, comptime side_to_move: Player, from_square: Square, to_square: Square) PersistentBoardState {
-        return self.movePiece(.{ .player = side_to_move, .piece = .King }, from_square, to_square);
+        return self.movePiece(.{ .player = side_to_move, .piece = .king }, from_square, to_square);
         // todo: update move generation masks
     }
 
@@ -352,7 +352,7 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
 
         pub fn pawnPush(self: Board(side_to_move, en_passant_file, rights), from_square: Square) Board(side_to_move.opposite(), null, rights) {
             const to_square = from_square.shift(Direction.forward(side_to_move)).?;
-            var updated_board = self.movePiece(.{ .piece = .Pawn, .player = side_to_move }, from_square, to_square);
+            var updated_board = self.movePiece(.{ .piece = .pawn, .player = side_to_move }, from_square, to_square);
             updated_board.state = updated_board.state.pawnPush(side_to_move, from_square);
 
             return updated_board.next(null, rights);
@@ -362,7 +362,7 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
             const next_ep_square = file.epSquareFor(side_to_move).to_square();
             const from_square = next_ep_square.shift(Direction.forward(side_to_move).opposite()).?;
             const to_square = next_ep_square.shift(Direction.forward(side_to_move)).?;
-            var updated_board = self.movePiece(.{ .piece = .Pawn, .player = side_to_move }, from_square, to_square);
+            var updated_board = self.movePiece(.{ .piece = .pawn, .player = side_to_move }, from_square, to_square);
             updated_board.state = updated_board.state.doublePawnPush(side_to_move, file);
 
             return updated_board.next(file, rights);
@@ -372,14 +372,14 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
             const to_square = self.epSquare().?.to_square();
             const from_square = from_file.epSquareFor(side_to_move.opposite()).to_square().shift(Direction.forward(side_to_move.opposite())).?;
             const captured_pawn_square = to_square.shift(Direction.forward(side_to_move.opposite())).?;
-            var updated_board = self.removePiece(.{ .piece = .Pawn, .player = side_to_move.opposite() }, captured_pawn_square)
-                .movePiece(.{ .piece = .Pawn, .player = side_to_move }, from_square, to_square);
+            var updated_board = self.removePiece(.{ .piece = .pawn, .player = side_to_move.opposite() }, captured_pawn_square)
+                .movePiece(.{ .piece = .pawn, .player = side_to_move }, from_square, to_square);
             updated_board.state = updated_board.state.enPassantCapture(side_to_move, en_passant_file.?, from_square, to_square);
             return updated_board.next(null, rights);
         }
 
         pub fn kingMove(self: Board(side_to_move, en_passant_file, rights), from_square: Square, to_square: Square) Board(side_to_move.opposite(), null, rights.kingMove(side_to_move)) {
-            var updated_board = self.movePiece(.{ .piece = .King, .player = side_to_move }, from_square, to_square);
+            var updated_board = self.movePiece(.{ .piece = .king, .player = side_to_move }, from_square, to_square);
             updated_board.state = updated_board.state.kingMove(side_to_move, from_square, to_square);
             return updated_board.next(null, rights.kingMove(side_to_move));
         }
@@ -417,54 +417,54 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
 
 pub const DefaultBoard = Board(.white, null, CastleRights.initFill(true))
     .withKings(std.EnumArray(Player, Square).init(.{ .white = .E1, .black = .E8 }))
-    .addPiece(.{ .piece = .Pawn, .player = .white }, .A2)
-    .addPiece(.{ .piece = .Pawn, .player = .white }, .B2)
-    .addPiece(.{ .piece = .Pawn, .player = .white }, .C2)
-    .addPiece(.{ .piece = .Pawn, .player = .white }, .D2)
-    .addPiece(.{ .piece = .Pawn, .player = .white }, .E2)
-    .addPiece(.{ .piece = .Pawn, .player = .white }, .F2)
-    .addPiece(.{ .piece = .Pawn, .player = .white }, .G2)
-    .addPiece(.{ .piece = .Pawn, .player = .white }, .H2)
-    .addPiece(.{ .piece = .Rook, .player = .white }, .A1)
-    .addPiece(.{ .piece = .Knight, .player = .white }, .B1)
-    .addPiece(.{ .piece = .Bishop, .player = .white }, .C1)
-    .addPiece(.{ .piece = .Queen, .player = .white }, .D1)
-    .addPiece(.{ .piece = .Bishop, .player = .white }, .F1)
-    .addPiece(.{ .piece = .Knight, .player = .white }, .G1)
-    .addPiece(.{ .piece = .Rook, .player = .white }, .H1)
+    .addPiece(.{ .piece = .pawn, .player = .white }, .A2)
+    .addPiece(.{ .piece = .pawn, .player = .white }, .B2)
+    .addPiece(.{ .piece = .pawn, .player = .white }, .C2)
+    .addPiece(.{ .piece = .pawn, .player = .white }, .D2)
+    .addPiece(.{ .piece = .pawn, .player = .white }, .E2)
+    .addPiece(.{ .piece = .pawn, .player = .white }, .F2)
+    .addPiece(.{ .piece = .pawn, .player = .white }, .G2)
+    .addPiece(.{ .piece = .pawn, .player = .white }, .H2)
+    .addPiece(.{ .piece = .rook, .player = .white }, .A1)
+    .addPiece(.{ .piece = .knight, .player = .white }, .B1)
+    .addPiece(.{ .piece = .bishop, .player = .white }, .C1)
+    .addPiece(.{ .piece = .queen, .player = .white }, .D1)
+    .addPiece(.{ .piece = .bishop, .player = .white }, .F1)
+    .addPiece(.{ .piece = .knight, .player = .white }, .G1)
+    .addPiece(.{ .piece = .rook, .player = .white }, .H1)
     // black pieces
-    .addPiece(.{ .piece = .Pawn, .player = .black }, .A7)
-    .addPiece(.{ .piece = .Pawn, .player = .black }, .B7)
-    .addPiece(.{ .piece = .Pawn, .player = .black }, .C7)
-    .addPiece(.{ .piece = .Pawn, .player = .black }, .D7)
-    .addPiece(.{ .piece = .Pawn, .player = .black }, .E7)
-    .addPiece(.{ .piece = .Pawn, .player = .black }, .F7)
-    .addPiece(.{ .piece = .Pawn, .player = .black }, .G7)
-    .addPiece(.{ .piece = .Pawn, .player = .black }, .H7)
-    .addPiece(.{ .piece = .Rook, .player = .black }, .A8)
-    .addPiece(.{ .piece = .Knight, .player = .black }, .B8)
-    .addPiece(.{ .piece = .Bishop, .player = .black }, .C8)
-    .addPiece(.{ .piece = .Queen, .player = .black }, .D8)
-    .addPiece(.{ .piece = .Bishop, .player = .black }, .F8)
-    .addPiece(.{ .piece = .Knight, .player = .black }, .G8)
-    .addPiece(.{ .piece = .Rook, .player = .black }, .H8);
+    .addPiece(.{ .piece = .pawn, .player = .black }, .A7)
+    .addPiece(.{ .piece = .pawn, .player = .black }, .B7)
+    .addPiece(.{ .piece = .pawn, .player = .black }, .C7)
+    .addPiece(.{ .piece = .pawn, .player = .black }, .D7)
+    .addPiece(.{ .piece = .pawn, .player = .black }, .E7)
+    .addPiece(.{ .piece = .pawn, .player = .black }, .F7)
+    .addPiece(.{ .piece = .pawn, .player = .black }, .G7)
+    .addPiece(.{ .piece = .pawn, .player = .black }, .H7)
+    .addPiece(.{ .piece = .rook, .player = .black }, .A8)
+    .addPiece(.{ .piece = .knight, .player = .black }, .B8)
+    .addPiece(.{ .piece = .bishop, .player = .black }, .C8)
+    .addPiece(.{ .piece = .queen, .player = .black }, .D8)
+    .addPiece(.{ .piece = .bishop, .player = .black }, .F8)
+    .addPiece(.{ .piece = .knight, .player = .black }, .G8)
+    .addPiece(.{ .piece = .rook, .player = .black }, .H8);
 
 test "some basic moves on the start board" {
     const board = DefaultBoard;
 
-    try std.testing.expectEqual(board.pieces.pieceOn(.E2), .Pawn);
+    try std.testing.expectEqual(board.pieces.pieceOn(.E2), .pawn);
     try std.testing.expectEqual(board.pieces.pieceOn(.E3), null);
     try std.testing.expectEqualDeep(board.halfmove_count, HalfMoveCount.reset());
     const pawn_e2e3 = board.pawnPush(.E2);
     try std.testing.expectEqual(pawn_e2e3.pieces.pieceOn(.E2), null);
-    try std.testing.expectEqual(pawn_e2e3.pieces.pieceOn(.E3), .Pawn);
+    try std.testing.expectEqual(pawn_e2e3.pieces.pieceOn(.E3), .pawn);
     try std.testing.expectEqual(pawn_e2e3.halfmove_count, HalfMoveCount.reset());
 
-    try std.testing.expectEqual(pawn_e2e3.pieces.pieceOn(.E7), .Pawn);
+    try std.testing.expectEqual(pawn_e2e3.pieces.pieceOn(.E7), .pawn);
     try std.testing.expectEqual(pawn_e2e3.pieces.pieceOn(.E5), null);
     const pawn_e7e5 = pawn_e2e3.doublePawnPush(.e);
     try std.testing.expectEqual(pawn_e7e5.pieces.pieceOn(.E7), null);
-    try std.testing.expectEqual(pawn_e7e5.pieces.pieceOn(.E5), .Pawn);
+    try std.testing.expectEqual(pawn_e7e5.pieces.pieceOn(.E5), .pawn);
     try std.testing.expectEqual(pawn_e7e5.halfmove_count, HalfMoveCount.reset());
     try std.testing.expectEqual(pawn_e7e5.epSquare(), .E6);
 }

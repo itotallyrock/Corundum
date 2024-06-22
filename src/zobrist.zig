@@ -56,7 +56,7 @@ pub const ZobristHash = struct {
         @setEvalBranchQuota(100_000);
         break :blk ByPlayer(ByPiece(BySquare(ZobristKey))).init(.{
             .white = ByPiece(BySquare(ZobristKey)).init(.{
-                .Pawn = BySquare(ZobristKey).init(.{
+                .pawn = BySquare(ZobristKey).init(.{
                     .A1 = 0xBCBD_2C2F_7DAB_FCBE,
                     .B1 = 0x8756_17FC_113F_9090,
                     .C1 = 0x314A_7DFE_25D7_39E3,
@@ -122,7 +122,7 @@ pub const ZobristHash = struct {
                     .G8 = 0x6E49_1ABA_0ADD_400E,
                     .H8 = 0x23BD_B00C_D3F3_6FF4,
                 }),
-                .Knight = BySquare(ZobristKey).init(.{
+                .knight = BySquare(ZobristKey).init(.{
                     .A1 = 0x1514_F499_4C36_AFCA,
                     .B1 = 0xF17B_6E98_6095_EF04,
                     .C1 = 0xCC25_705F_DD21_9642,
@@ -188,7 +188,7 @@ pub const ZobristHash = struct {
                     .G8 = 0x7014_FB42_774D_7625,
                     .H8 = 0x1DFF_3BFD_08C3_DC62,
                 }),
-                .Bishop = BySquare(ZobristKey).init(.{
+                .bishop = BySquare(ZobristKey).init(.{
                     .A1 = 0x9CAB_AF2E_3D29_C6B1,
                     .B1 = 0xCBC2_9465_4083_87AA,
                     .C1 = 0x14F5_9282_CF4F_79F3,
@@ -254,7 +254,7 @@ pub const ZobristHash = struct {
                     .G8 = 0x50D3_E1B5_912B_9061,
                     .H8 = 0x0A64_5200_E06D_B27A,
                 }),
-                .Rook = BySquare(ZobristKey).init(.{
+                .rook = BySquare(ZobristKey).init(.{
                     .A1 = 0x7E17_D334_A661_F5EC,
                     .B1 = 0x16F0_477A_6FDE_45FE,
                     .C1 = 0x6616_DBB4_D84F_9C0A,
@@ -320,7 +320,7 @@ pub const ZobristHash = struct {
                     .G8 = 0x49A8_0235_5C11_589F,
                     .H8 = 0x61C0_5FA2_E8A6_7086,
                 }),
-                .Queen = BySquare(ZobristKey).init(.{
+                .queen = BySquare(ZobristKey).init(.{
                     .A1 = 0x2187_6737_12C2_D996,
                     .B1 = 0xA71F_B671_3031_131C,
                     .C1 = 0x2A4B_A1F7_F524_6A3B,
@@ -386,7 +386,7 @@ pub const ZobristHash = struct {
                     .G8 = 0xD131_0EC1_D930_507A,
                     .H8 = 0x1DB3_A5A8_4E13_48F9,
                 }),
-                .King = BySquare(ZobristKey).init(.{
+                .king = BySquare(ZobristKey).init(.{
                     .A1 = 0xD1A0_1829_0F41_C4CE,
                     .B1 = 0xC7AE_F088_55AA_3294,
                     .C1 = 0xD9BD_3B50_46D2_4BE9,
@@ -454,7 +454,7 @@ pub const ZobristHash = struct {
                 }),
             }),
             .black = ByPiece(BySquare(ZobristKey)).init(.{
-                .Pawn = BySquare(ZobristKey).init(.{
+                .pawn = BySquare(ZobristKey).init(.{
                     .A1 = 0x7834_6D76_0A10_BC4E,
                     .B1 = 0x3895_E347_EBB4_0051,
                     .C1 = 0x95A5_5214_9BE3_13B1,
@@ -520,7 +520,7 @@ pub const ZobristHash = struct {
                     .G8 = 0x31DE_32D9_D2F1_F8AF,
                     .H8 = 0x3455_FCE9_5157_184F,
                 }),
-                .Knight = BySquare(ZobristKey).init(.{
+                .knight = BySquare(ZobristKey).init(.{
                     .A1 = 0xABFB_8C41_9D44_127B,
                     .B1 = 0xCE65_235B_E7B6_C7B4,
                     .C1 = 0x3DD3_8B3A_F071_8F2D,
@@ -586,7 +586,7 @@ pub const ZobristHash = struct {
                     .G8 = 0x6651_7572_2167_26FB,
                     .H8 = 0x9FEC_8FFF_B076_A76A,
                 }),
-                .Bishop = BySquare(ZobristKey).init(.{
+                .bishop = BySquare(ZobristKey).init(.{
                     .A1 = 0x1503_9581_F573_8DA8,
                     .B1 = 0xE1EC_A975_7797_4D32,
                     .C1 = 0xE4C5_F6CB_1B93_AF6D,
@@ -652,7 +652,7 @@ pub const ZobristHash = struct {
                     .G8 = 0x9CC2_92EA_CDBC_DE84,
                     .H8 = 0x14EB_650B_AAC9_A27F,
                 }),
-                .Rook = BySquare(ZobristKey).init(.{
+                .rook = BySquare(ZobristKey).init(.{
                     .A1 = 0x6D58_F6EA_A5B9_EEDC,
                     .B1 = 0xBEBC_9E6C_7236_45C3,
                     .C1 = 0xC430_AF2D_D2A1_02B8,
@@ -718,7 +718,7 @@ pub const ZobristHash = struct {
                     .G8 = 0xFA1B_BB96_AD88_5511,
                     .H8 = 0x0D70_0106_4A53_E328,
                 }),
-                .Queen = BySquare(ZobristKey).init(.{
+                .queen = BySquare(ZobristKey).init(.{
                     .A1 = 0x6B6A_5C53_B375_A3BA,
                     .B1 = 0xA0AA_B8AC_AF62_B833,
                     .C1 = 0x9D65_EB0A_9708_270C,
@@ -784,7 +784,7 @@ pub const ZobristHash = struct {
                     .G8 = 0xE2B7_DF81_01CB_B76F,
                     .H8 = 0x1FC6_DD4C_EF2B_520D,
                 }),
-                .King = BySquare(ZobristKey).init(.{
+                .king = BySquare(ZobristKey).init(.{
                     .A1 = 0xE123_37D7_9D74_E9FE,
                     .B1 = 0xC759_B24F_504A_A46F,
                     .C1 = 0xFF52_78C0_8C30_80F6,
@@ -860,8 +860,8 @@ pub const ZobristHash = struct {
 
     pub fn init(side_to_move: Player, king_squares: ByPlayer(Square), comptime castle_rights: CastleRights, comptime en_passant_square: ?EnPassantSquare) ZobristHash {
         var hash = EMPTY
-            .toggle_piece(.{ .player = .white, .piece = .King }, king_squares.get(.white))
-            .toggle_piece(.{ .player = .black, .piece = .King }, king_squares.get(.black))
+            .toggle_piece(.{ .player = .white, .piece = .king }, king_squares.get(.white))
+            .toggle_piece(.{ .player = .black, .piece = .king }, king_squares.get(.black))
             .toggle_castle_rights(castle_rights)
             .toggle_en_passant_square(en_passant_square);
 
@@ -892,7 +892,7 @@ pub const ZobristHash = struct {
         const from = .A2;
         const to = .A4;
         return self
-            .move(.{ .player = player, .piece = .Pawn }, from, to)
+            .move(.{ .player = player, .piece = .pawn }, from, to)
             .toggle_en_passant_square(en_passant_square);
     }
 
@@ -904,21 +904,21 @@ pub const ZobristHash = struct {
     pub fn enPassantCapture(self: ZobristHash, comptime player: Player, comptime en_passant_file: File, from: Square, to: Square) ZobristHash {
         const en_passant_square = comptime en_passant_file.epSquareFor(player);
         return self
-            .move(.{ .player = player, .piece = .Pawn }, from, to)
-            .toggle_piece(.{ .player = player.opposite(), .piece = .Pawn }, en_passant_square.to_square())
+            .move(.{ .player = player, .piece = .pawn }, from, to)
+            .toggle_piece(.{ .player = player.opposite(), .piece = .pawn }, en_passant_square.to_square())
             .toggle_en_passant_square(en_passant_square);
     }
 
     pub fn promote(self: ZobristHash, comptime player: Player, comptime promotion: PromotionPiece, from: Square, to: Square) ZobristHash {
         return self
-            .toggle_piece(.{ .Player = player, .Piece = .Pawn }, from)
+            .toggle_piece(.{ .Player = player, .Piece = .pawn }, from)
             .toggle_piece(.{ .Player = player, .Piece = promotion.to_piece() }, to);
     }
 
     pub fn promote_capture(self: ZobristHash, comptime player: Player, comptime captured_piece: OwnedNonKingPiece, comptime promotion: PromotionPiece, from: Square, to: Square) ZobristHash {
         return self
             .toggle_piece(captured_piece.to_owned(), to)
-            .toggle_piece(.{ .Player = player, .Piece = .Pawn }, from)
+            .toggle_piece(.{ .Player = player, .Piece = .pawn }, from)
             .toggle_piece(.{ .Player = player, .Piece = promotion.to_piece() }, to);
     }
 
@@ -965,21 +965,21 @@ pub const ZobristHash = struct {
                     for (std.enums.values(Square)) |square| {
                         if (player == .white) {
                             switch (piece) {
-                                .King => try test_toggle_piece(hash, .{ .piece = .King, .player = .white }, square),
-                                .Queen => try test_toggle_piece(hash, .{ .piece = .Queen, .player = .white }, square),
-                                .Rook => try test_toggle_piece(hash, .{ .piece = .Rook, .player = .white }, square),
-                                .Bishop => try test_toggle_piece(hash, .{ .piece = .Bishop, .player = .white }, square),
-                                .Knight => try test_toggle_piece(hash, .{ .piece = .Knight, .player = .white }, square),
-                                .Pawn => try test_toggle_piece(hash, .{ .piece = .Pawn, .player = .white }, square),
+                                .king => try test_toggle_piece(hash, .{ .piece = .king, .player = .white }, square),
+                                .queen => try test_toggle_piece(hash, .{ .piece = .queen, .player = .white }, square),
+                                .rook => try test_toggle_piece(hash, .{ .piece = .rook, .player = .white }, square),
+                                .bishop => try test_toggle_piece(hash, .{ .piece = .bishop, .player = .white }, square),
+                                .knight => try test_toggle_piece(hash, .{ .piece = .knight, .player = .white }, square),
+                                .pawn => try test_toggle_piece(hash, .{ .piece = .pawn, .player = .white }, square),
                             }
                         } else {
                             switch (piece) {
-                                .King => try test_toggle_piece(hash, .{ .piece = .King, .player = .black }, square),
-                                .Queen => try test_toggle_piece(hash, .{ .piece = .Queen, .player = .black }, square),
-                                .Rook => try test_toggle_piece(hash, .{ .piece = .Rook, .player = .black }, square),
-                                .Bishop => try test_toggle_piece(hash, .{ .piece = .Bishop, .player = .black }, square),
-                                .Knight => try test_toggle_piece(hash, .{ .piece = .Knight, .player = .black }, square),
-                                .Pawn => try test_toggle_piece(hash, .{ .piece = .Pawn, .player = .black }, square),
+                                .king => try test_toggle_piece(hash, .{ .piece = .king, .player = .black }, square),
+                                .queen => try test_toggle_piece(hash, .{ .piece = .queen, .player = .black }, square),
+                                .rook => try test_toggle_piece(hash, .{ .piece = .rook, .player = .black }, square),
+                                .bishop => try test_toggle_piece(hash, .{ .piece = .bishop, .player = .black }, square),
+                                .knight => try test_toggle_piece(hash, .{ .piece = .knight, .player = .black }, square),
+                                .pawn => try test_toggle_piece(hash, .{ .piece = .pawn, .player = .black }, square),
                             }
                         }
                     }

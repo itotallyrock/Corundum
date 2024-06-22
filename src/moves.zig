@@ -22,7 +22,7 @@ pub const MakeMoveType = enum {
 
     pub fn to_zobrist_move_type(self: MakeMoveType) ZobristMoveType {
         return switch (self) {
-            .Quiet, .PawnPush => .Quiet,
+            .Quiet, .pawnPush => .Quiet,
             .DoublePawnPush => .DoublePawnPush,
             .Capture, .EnPassantCapture => .Capture,
             .Castle => .Castle,
