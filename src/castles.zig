@@ -18,28 +18,28 @@ pub fn ByCastleDirection(comptime T: type) type {
 /// Represents the rights to castle for each player and direction.
 pub const CastleRights = struct {
     /// All possible castle rights.
-    pub const All = CastleRights.init(ByPlayer(ByCastleDirection(bool)).initFill(ByCastleDirection(bool).initFill(true)));
+    pub const all = CastleRights.init(ByPlayer(ByCastleDirection(bool)).initFill(ByCastleDirection(bool).initFill(true)));
     /// No castle rights.
-    pub const None = CastleRights.init(ByPlayer(ByCastleDirection(bool)).initFill(ByCastleDirection(bool).initFill(false)));
+    pub const none = CastleRights.init(ByPlayer(ByCastleDirection(bool)).initFill(ByCastleDirection(bool).initFill(false)));
     /// All rights for white.
-    pub const WhiteAll = CastleRights.None.add_right(.white, .king_side).add_right(.white, .queen_side);
+    pub const white_all = CastleRights.none.add_right(.white, .king_side).add_right(.white, .queen_side);
     /// All rights for black.
-    pub const BlackAll = CastleRights.None.add_right(.black, .king_side).add_right(.black, .queen_side);
+    pub const black_all = CastleRights.none.add_right(.black, .king_side).add_right(.black, .queen_side);
     /// All rights for white on the king side.
-    pub const WhiteKingSide = CastleRights.None.add_right(.white, .king_side);
+    pub const white_king_side = CastleRights.none.add_right(.white, .king_side);
     /// All rights for white on the queen side.
-    pub const WhiteQueenSide = CastleRights.None.add_right(.white, .queen_side);
+    pub const white_queen_side = CastleRights.none.add_right(.white, .queen_side);
     /// All rights for black on the king side.
-    pub const BlackKingSide = CastleRights.None.add_right(.black, .king_side);
+    pub const black_king_side = CastleRights.none.add_right(.black, .king_side);
     /// All rights for black on the queen side.
-    pub const BlackQueenSide = CastleRights.None.add_right(.black, .queen_side);
+    pub const black_queen_side = CastleRights.none.add_right(.black, .queen_side);
 
     /// The underlying rights flags for each player and direction.
     rights: ByPlayer(ByCastleDirection(bool)),
 
     /// Get all rights for a given player.
     pub fn forSide(comptime player: Player) CastleRights {
-        return if (player == .white) CastleRights.whiteAll else CastleRights.blackAll;
+        return if (player == .white) CastleRights.white_all else CastleRights.black_all;
     }
 
     /// Initialize the castle rights with the given rights.
