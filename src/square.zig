@@ -11,7 +11,7 @@ pub const File = enum(u3) {
 
     /// Returns the en passant square on the given file for the desired player
     pub fn epSquareFor(self: File, player: Player) EnPassantSquare {
-        return @enumFromInt(@as(u6, @intFromEnum(self)) + @as(u6, @intFromEnum(Rank.ep_rank_for(player))) * 8);
+        return @enumFromInt(@as(u6, @intFromEnum(self)) + @as(u6, @intFromEnum(Rank.epRankFor(player))) * 8);
     }
 
     test epSquareFor {
@@ -43,7 +43,7 @@ pub const Rank = enum(u3) {
     // zig fmt: on
 
     /// Returns the rank for the en passant square for the desired player
-    pub fn ep_rank_for(player: Player) Rank {
+    pub fn epRankFor(player: Player) Rank {
         if (player == .white) {
             return ._3;
         } else {
@@ -51,9 +51,9 @@ pub const Rank = enum(u3) {
         }
     }
 
-    test ep_rank_for {
-        try std.testing.expectEqual(Rank.ep_rank_for(.white), Rank._3);
-        try std.testing.expectEqual(Rank.ep_rank_for(.black), Rank._6);
+    test epRankFor {
+        try std.testing.expectEqual(Rank.epRankFor(.white), Rank._3);
+        try std.testing.expectEqual(Rank.epRankFor(.black), Rank._6);
     }
 };
 
