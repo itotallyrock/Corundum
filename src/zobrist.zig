@@ -912,14 +912,14 @@ pub const ZobristHash = struct {
     pub fn promote(self: ZobristHash, comptime player: Player, comptime promotion: PromotionPiece, from: Square, to: Square) ZobristHash {
         return self
             .toggle_piece(.{ .Player = player, .Piece = .pawn }, from)
-            .toggle_piece(.{ .Player = player, .Piece = promotion.to_piece() }, to);
+            .toggle_piece(.{ .Player = player, .Piece = promotion.toPiece() }, to);
     }
 
     pub fn promote_capture(self: ZobristHash, comptime player: Player, comptime captured_piece: OwnedNonKingPiece, comptime promotion: PromotionPiece, from: Square, to: Square) ZobristHash {
         return self
             .toggle_piece(captured_piece.to_owned(), to)
             .toggle_piece(.{ .Player = player, .Piece = .pawn }, from)
-            .toggle_piece(.{ .Player = player, .Piece = promotion.to_piece() }, to);
+            .toggle_piece(.{ .Player = player, .Piece = promotion.toPiece() }, to);
     }
 
     fn toggle_castle_rights(self: ZobristHash, comptime castle_rights: CastleRights) ZobristHash {

@@ -9,14 +9,6 @@ pub const Piece = enum(u3) {
     bishop,
     queen,
     king,
-
-    /// Create an `OwnedPiece` from this piece given an owning `Player`.
-    pub fn owned_by(self: Piece, player: Player) OwnedPiece {
-        return OwnedPiece{
-            .player = player,
-            .piece = self,
-        };
-    }
 };
 
 /// A piece that is not a king.
@@ -28,33 +20,33 @@ pub const NonKingPiece = enum(u3) {
     queen = @intFromEnum(Piece.queen),
 
     /// Convert to the corresponding vanilla `Piece`.
-    pub fn to_piece(self: NonKingPiece) Piece {
+    pub fn toPiece(self: NonKingPiece) Piece {
         return @enumFromInt(@intFromEnum(self));
     }
 
     /// Try to convert from a vanilla `Piece`.
-    pub fn from_piece(piece: Piece) !NonKingPiece {
+    pub fn fromPiece(piece: Piece) !NonKingPiece {
         return switch (piece) {
             .pawn, .rook, .knight, .bishop, .queen => @enumFromInt(@intFromEnum(piece)),
             .king => error.InvalidPiece,
         };
     }
 
-    test to_piece {
-        try std.testing.expectEqual(NonKingPiece.rook.to_piece(), Piece.rook);
-        try std.testing.expectEqual(NonKingPiece.queen.to_piece(), Piece.queen);
-        try std.testing.expectEqual(NonKingPiece.pawn.to_piece(), Piece.pawn);
-        try std.testing.expectEqual(NonKingPiece.knight.to_piece(), Piece.knight);
-        try std.testing.expectEqual(NonKingPiece.bishop.to_piece(), Piece.bishop);
+    test toPiece {
+        try std.testing.expectEqual(NonKingPiece.rook.toPiece(), Piece.rook);
+        try std.testing.expectEqual(NonKingPiece.queen.toPiece(), Piece.queen);
+        try std.testing.expectEqual(NonKingPiece.pawn.toPiece(), Piece.pawn);
+        try std.testing.expectEqual(NonKingPiece.knight.toPiece(), Piece.knight);
+        try std.testing.expectEqual(NonKingPiece.bishop.toPiece(), Piece.bishop);
     }
 
-    test from_piece {
-        try std.testing.expectEqual(NonKingPiece.from_piece(Piece.rook), NonKingPiece.rook);
-        try std.testing.expectEqual(NonKingPiece.from_piece(Piece.queen), NonKingPiece.queen);
-        try std.testing.expectEqual(NonKingPiece.from_piece(Piece.pawn), NonKingPiece.pawn);
-        try std.testing.expectEqual(NonKingPiece.from_piece(Piece.knight), NonKingPiece.knight);
-        try std.testing.expectEqual(NonKingPiece.from_piece(Piece.bishop), NonKingPiece.bishop);
-        try std.testing.expectError(error.InvalidPiece, NonKingPiece.from_piece(Piece.king));
+    test fromPiece {
+        try std.testing.expectEqual(NonKingPiece.fromPiece(Piece.rook), NonKingPiece.rook);
+        try std.testing.expectEqual(NonKingPiece.fromPiece(Piece.queen), NonKingPiece.queen);
+        try std.testing.expectEqual(NonKingPiece.fromPiece(Piece.pawn), NonKingPiece.pawn);
+        try std.testing.expectEqual(NonKingPiece.fromPiece(Piece.knight), NonKingPiece.knight);
+        try std.testing.expectEqual(NonKingPiece.fromPiece(Piece.bishop), NonKingPiece.bishop);
+        try std.testing.expectError(error.InvalidPiece, NonKingPiece.fromPiece(Piece.king));
     }
 };
 
@@ -66,32 +58,32 @@ pub const PromotionPiece = enum(u3) {
     queen = @intFromEnum(Piece.queen),
 
     /// Convert to the corresponding vanilla `Piece`.
-    pub fn to_piece(self: PromotionPiece) Piece {
+    pub fn toPiece(self: PromotionPiece) Piece {
         return @enumFromInt(@intFromEnum(self));
     }
 
     /// Try to convert from a vanilla `Piece`.
-    pub fn from_piece(piece: Piece) !PromotionPiece {
+    pub fn fromPiece(piece: Piece) !PromotionPiece {
         return switch (piece) {
             .rook, .knight, .bishop, .queen => @enumFromInt(@intFromEnum(piece)),
             .pawn, .king => error.InvalidPiece,
         };
     }
 
-    test to_piece {
-        try std.testing.expectEqual(PromotionPiece.rook.to_piece(), Piece.rook);
-        try std.testing.expectEqual(PromotionPiece.queen.to_piece(), Piece.queen);
-        try std.testing.expectEqual(PromotionPiece.knight.to_piece(), Piece.knight);
-        try std.testing.expectEqual(PromotionPiece.bishop.to_piece(), Piece.bishop);
+    test toPiece {
+        try std.testing.expectEqual(PromotionPiece.rook.toPiece(), Piece.rook);
+        try std.testing.expectEqual(PromotionPiece.queen.toPiece(), Piece.queen);
+        try std.testing.expectEqual(PromotionPiece.knight.toPiece(), Piece.knight);
+        try std.testing.expectEqual(PromotionPiece.bishop.toPiece(), Piece.bishop);
     }
 
-    test from_piece {
-        try std.testing.expectEqual(PromotionPiece.from_piece(Piece.rook), PromotionPiece.rook);
-        try std.testing.expectEqual(PromotionPiece.from_piece(Piece.queen), PromotionPiece.queen);
-        try std.testing.expectEqual(PromotionPiece.from_piece(Piece.knight), PromotionPiece.knight);
-        try std.testing.expectEqual(PromotionPiece.from_piece(Piece.bishop), PromotionPiece.bishop);
-        try std.testing.expectError(error.InvalidPiece, PromotionPiece.from_piece(Piece.pawn));
-        try std.testing.expectError(error.InvalidPiece, PromotionPiece.from_piece(Piece.king));
+    test fromPiece {
+        try std.testing.expectEqual(PromotionPiece.fromPiece(Piece.rook), PromotionPiece.rook);
+        try std.testing.expectEqual(PromotionPiece.fromPiece(Piece.queen), PromotionPiece.queen);
+        try std.testing.expectEqual(PromotionPiece.fromPiece(Piece.knight), PromotionPiece.knight);
+        try std.testing.expectEqual(PromotionPiece.fromPiece(Piece.bishop), PromotionPiece.bishop);
+        try std.testing.expectError(error.InvalidPiece, PromotionPiece.fromPiece(Piece.pawn));
+        try std.testing.expectError(error.InvalidPiece, PromotionPiece.fromPiece(Piece.king));
     }
 };
 
@@ -104,33 +96,33 @@ pub const NonPawnPiece = enum(u3) {
     king = @intFromEnum(Piece.king),
 
     /// Convert to the corresponding vanilla `Piece`.
-    pub fn to_piece(self: NonPawnPiece) Piece {
+    pub fn toPiece(self: NonPawnPiece) Piece {
         return @enumFromInt(@intFromEnum(self));
     }
 
     /// Try to convert from a vanilla `Piece`.
-    pub fn from_piece(piece: Piece) !NonPawnPiece {
+    pub fn fromPiece(piece: Piece) !NonPawnPiece {
         return switch (piece) {
             .rook, .knight, .bishop, .queen, .king => @enumFromInt(@intFromEnum(piece)),
             .pawn => error.InvalidPiece,
         };
     }
 
-    test to_piece {
-        try std.testing.expectEqual(NonPawnPiece.rook.to_piece(), Piece.rook);
-        try std.testing.expectEqual(NonPawnPiece.queen.to_piece(), Piece.queen);
-        try std.testing.expectEqual(NonPawnPiece.knight.to_piece(), Piece.knight);
-        try std.testing.expectEqual(NonPawnPiece.bishop.to_piece(), Piece.bishop);
-        try std.testing.expectEqual(NonPawnPiece.king.to_piece(), Piece.king);
+    test toPiece {
+        try std.testing.expectEqual(NonPawnPiece.rook.toPiece(), Piece.rook);
+        try std.testing.expectEqual(NonPawnPiece.queen.toPiece(), Piece.queen);
+        try std.testing.expectEqual(NonPawnPiece.knight.toPiece(), Piece.knight);
+        try std.testing.expectEqual(NonPawnPiece.bishop.toPiece(), Piece.bishop);
+        try std.testing.expectEqual(NonPawnPiece.king.toPiece(), Piece.king);
     }
 
-    test from_piece {
-        try std.testing.expectEqual(NonPawnPiece.from_piece(Piece.rook), NonPawnPiece.rook);
-        try std.testing.expectEqual(NonPawnPiece.from_piece(Piece.queen), NonPawnPiece.queen);
-        try std.testing.expectEqual(NonPawnPiece.from_piece(Piece.knight), NonPawnPiece.knight);
-        try std.testing.expectEqual(NonPawnPiece.from_piece(Piece.bishop), NonPawnPiece.bishop);
-        try std.testing.expectEqual(NonPawnPiece.from_piece(Piece.king), NonPawnPiece.king);
-        try std.testing.expectError(error.InvalidPiece, NonPawnPiece.from_piece(Piece.pawn));
+    test fromPiece {
+        try std.testing.expectEqual(NonPawnPiece.fromPiece(Piece.rook), NonPawnPiece.rook);
+        try std.testing.expectEqual(NonPawnPiece.fromPiece(Piece.queen), NonPawnPiece.queen);
+        try std.testing.expectEqual(NonPawnPiece.fromPiece(Piece.knight), NonPawnPiece.knight);
+        try std.testing.expectEqual(NonPawnPiece.fromPiece(Piece.bishop), NonPawnPiece.bishop);
+        try std.testing.expectEqual(NonPawnPiece.fromPiece(Piece.king), NonPawnPiece.king);
+        try std.testing.expectError(error.InvalidPiece, NonPawnPiece.fromPiece(Piece.pawn));
     }
 };
 
@@ -166,7 +158,7 @@ pub const OwnedNonKingPiece = struct {
     pub fn to_owned(self: OwnedNonKingPiece) OwnedPiece {
         return OwnedPiece{
             .player = self.player,
-            .piece = self.piece.to_piece(),
+            .piece = self.piece.toPiece(),
         };
     }
 };
@@ -180,7 +172,7 @@ pub const OwnedNonPawnPiece = struct {
     pub fn to_owned(self: OwnedNonKingPiece) OwnedPiece {
         return OwnedPiece{
             .player = self.player,
-            .piece = self.piece.to_piece(),
+            .piece = self.piece.toPiece(),
         };
     }
 };

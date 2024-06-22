@@ -92,7 +92,7 @@ pub const PieceArrangement = struct {
 
     /// Remove a non-king piece from the board from a given square
     pub fn removePiece(self: PieceArrangement, comptime piece: OwnedNonKingPiece, square: Square) PieceArrangement {
-        std.debug.assert(self.sideOn(square).? == piece.player and self.pieceOn(square).? == piece.piece.to_piece());
+        std.debug.assert(self.sideOn(square).? == piece.player and self.pieceOn(square).? == piece.piece.toPiece());
 
         var result = self;
         const square_bitboard = square.toBitboard();
@@ -110,7 +110,7 @@ pub const PieceArrangement = struct {
         const from_square_bitboard = from_square.toBitboard();
         const to_square_bitboard = to_square.toBitboard();
         const from_to_square_bitboard = from_square_bitboard.logicalOr(to_square_bitboard);
-        const non_king_piece = NonKingPiece.from_piece(piece.piece) catch null;
+        const non_king_piece = NonKingPiece.fromPiece(piece.piece) catch null;
 
         if (non_king_piece) |p| {
             result.piece_masks.set(p, result.piece_masks.get(p).logicalXor(from_to_square_bitboard));
@@ -135,7 +135,7 @@ pub const PieceArrangement = struct {
         const square_mask = square.toBitboard();
         inline for (comptime std.enums.values(NonKingPiece)) |piece| {
             if (!self.piece_masks.get(piece).logicalAnd(square_mask).isEmpty()) {
-                return piece.to_piece();
+                return piece.toPiece();
             }
         }
 
