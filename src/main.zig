@@ -12,6 +12,7 @@ pub const NonKingPiece = @import("pieces.zig").NonKingPiece;
 pub const OwnedPiece = @import("pieces.zig").OwnedPiece;
 pub const OwnedNonKingPiece = @import("pieces.zig").OwnedNonKingPiece;
 pub const ByPlayer = @import("players.zig").ByPlayer;
+pub const BoardMove = @import("moves.zig").BoardMove;
 
 test {
     std.testing.refAllDeclsRecursive(@This());
