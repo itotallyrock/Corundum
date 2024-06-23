@@ -3,6 +3,7 @@ const Square = @import("square.zig").Square;
 const ByRank = @import("square.zig").ByRank;
 const ByFile = @import("square.zig").ByFile;
 const BoardDirection = @import("directions.zig").BoardDirection;
+const SlidingPieceRayDirections = @import("directions.zig").SlidingPieceRayDirections;
 
 /// A board mask that represents a set of squares on a chess board.
 /// The mask is a 64-bit integer where each bit represents a square on the board.
@@ -39,6 +40,84 @@ pub const Bitboard = struct {
         .g = Bitboard{ .mask = 0x4040_4040_4040_4040 },
         .h = Bitboard{ .mask = 0x8080_8080_8080_8080 },
     });
+
+    pub const lines = struct {
+        pub fn alignedAlong(from: Square, to: Square, comptime alignment: SlidingPieceRayDirections) bool {
+            if (from == to) return false;
+            if (alignment == .cardinal) {
+                return from.file() == to.file() or from.rank() == to.rank();
+            } else {
+                const rankDiff: u8 = @intFromFloat(@abs(@as(f32, @floatFromInt(@as(i32, @intFromEnum(from.rank())) - @as(i32, @intFromEnum(to.rank()))))));
+                const fileDiff: u8 = @intFromFloat(@abs(@as(f32, @floatFromInt(@as(i32, @intFromEnum(from.file())) - @as(i32, @intFromEnum(to.file()))))));
+                return rankDiff == fileDiff;
+            }
+        }
+        pub fn aligned(from: Square, to: Square) bool {
+            return alignedAlong(from, to, .cardinal) or alignedAlong(from, to, .diagonal);
+        }
+        pub fn areAligned(a: Square, b: Square, c: Square) bool {
+            return !through(a, b).logicalAnd(c.toBitboard()).isEmpty();
+        }
+
+        /// Full board crossing line through two aligned squares
+        const through_lookup = blk: {
+            const squares = std.enums.values(Square);
+            const num_squares = squares.len;
+            var result: [num_squares][num_squares]Bitboard = undefined;
+            for (squares, 0..) |a, i| {
+                for (squares, 0..) |b, j| {
+                    result[i][j] = through(a, b);
+                }
+            }
+
+            break :blk result;
+        };
+        pub fn through(from: Square, to: Square) Bitboard {
+            @setEvalBranchQuota(100000);
+            if (!@inComptime()) {
+                return through_lookup[@intFromEnum(from)][@intFromEnum(to)];
+            }
+            for (std.enums.values(SlidingPieceRayDirections)) |direction| {
+                if (alignedAlong(from, to, direction)) {
+                    return from.toBitboard()
+                        .rayAttacks(Bitboard.empty, direction)
+                        .logicalAnd(to.toBitboard().rayAttacks(Bitboard.empty, direction))
+                        .logicalOr(to.toBitboard())
+                        .logicalOr(from.toBitboard());
+                }
+            }
+
+            return Bitboard.empty;
+        }
+        /// The intersection between two aligned squares (not including the end square, move gen should add it to this mask for pin blocking/killing)
+        const between_lookup = blk: {
+            const squares = std.enums.values(Square);
+            const num_squares = squares.len;
+            var result: [num_squares][numSquares]Bitboard = undefined;
+            for (squares, 0..) |a, i| {
+                for (squares, 0..) |b, j| {
+                    result[i][j] = between(a, b);
+                }
+            }
+
+            break :blk result;
+        };
+        pub fn between(from: Square, to: Square) Bitboard {
+            @setEvalBranchQuota(1000000);
+            if (!@inComptime()) {
+                return between_lookup[@intFromEnum(from)][@intFromEnum(to)];
+            }
+            for (.{ .cardinal, .diagonal }) |direction| {
+                if (alignedAlong(from, to, direction)) {
+                    return from.toBitboard()
+                        .rayAttacks(to.toBitboard(), direction)
+                        .logicalAnd(to.toBitboard().rayAttacks(from.toBitboard(), direction));
+                }
+            }
+
+            return Bitboard.empty;
+        }
+    };
 
     /// The underlying mask that represents the set of squares.
     mask: u64 = 0,

@@ -107,3 +107,11 @@ pub const PawnAttackDirection = enum(u3) {
         try std.testing.expectEqual(PawnAttackDirection.forward_right.toRelativeDirection(), RelativeDirection.forward_right);
     }
 };
+
+/// Represents the two types of sliding piece directions.
+pub const SlidingPieceRayDirections = enum(u1) {
+    /// Represents straight vertical or horizontal sliding (Rooks and Queens).
+    cardinal,
+    /// Represents diagonal sliding (Bishops and Queens).
+    diagonal,
+};
