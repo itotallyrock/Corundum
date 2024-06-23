@@ -139,27 +139,27 @@ pub const Bitboard = struct {
     }
 
     test contains {
-        try std.testing.expect(!Bitboard.empty.contains(.A1));
-        try std.testing.expect(!Bitboard.empty.contains(.H8));
-        try std.testing.expect(!Bitboard.empty.contains(.D4));
-        try std.testing.expect(!Bitboard.empty.contains(.G7));
-        try std.testing.expect(Bitboard.all.contains(.A1));
-        try std.testing.expect(Bitboard.all.contains(.H8));
-        try std.testing.expect(Bitboard.all.contains(.D4));
-        try std.testing.expect(Bitboard.all.contains(.G7));
-        try std.testing.expect(!(Bitboard{ .mask = 0x12300 }).contains(.A1));
-        try std.testing.expect((Bitboard{ .mask = 0x12300 }).contains(.A2));
-        try std.testing.expect((Bitboard{ .mask = 0x12300 }).contains(.A3));
-        try std.testing.expect(!(Bitboard{ .mask = 0x12300 }).contains(.G7));
-        try std.testing.expect((Bitboard{ .mask = 0x8400400004000 }).contains(.C5));
-        try std.testing.expect((Bitboard{ .mask = 0x8400400004000 }).contains(.D7));
-        try std.testing.expect((Bitboard{ .mask = 0x8400400004000 }).contains(.G6));
-        try std.testing.expect((Bitboard{ .mask = 0x8400400004000 }).contains(.G2));
-        try std.testing.expect((Bitboard{ .mask = 0x400200000012200 }).contains(.B2));
-        try std.testing.expect((Bitboard{ .mask = 0x400200000012200 }).contains(.F2));
-        try std.testing.expect((Bitboard{ .mask = 0x400200000012200 }).contains(.A3));
-        try std.testing.expect((Bitboard{ .mask = 0x400200000012200 }).contains(.F6));
-        try std.testing.expect((Bitboard{ .mask = 0x400200000012200 }).contains(.C8));
+        try std.testing.expect(!Bitboard.empty.contains(.a1));
+        try std.testing.expect(!Bitboard.empty.contains(.h8));
+        try std.testing.expect(!Bitboard.empty.contains(.d4));
+        try std.testing.expect(!Bitboard.empty.contains(.g7));
+        try std.testing.expect(Bitboard.all.contains(.a1));
+        try std.testing.expect(Bitboard.all.contains(.h8));
+        try std.testing.expect(Bitboard.all.contains(.d4));
+        try std.testing.expect(Bitboard.all.contains(.g7));
+        try std.testing.expect(!(Bitboard{ .mask = 0x12300 }).contains(.a1));
+        try std.testing.expect((Bitboard{ .mask = 0x12300 }).contains(.a2));
+        try std.testing.expect((Bitboard{ .mask = 0x12300 }).contains(.a3));
+        try std.testing.expect(!(Bitboard{ .mask = 0x12300 }).contains(.g7));
+        try std.testing.expect((Bitboard{ .mask = 0x8400400004000 }).contains(.c5));
+        try std.testing.expect((Bitboard{ .mask = 0x8400400004000 }).contains(.d7));
+        try std.testing.expect((Bitboard{ .mask = 0x8400400004000 }).contains(.g6));
+        try std.testing.expect((Bitboard{ .mask = 0x8400400004000 }).contains(.g2));
+        try std.testing.expect((Bitboard{ .mask = 0x400200000012200 }).contains(.b2));
+        try std.testing.expect((Bitboard{ .mask = 0x400200000012200 }).contains(.f2));
+        try std.testing.expect((Bitboard{ .mask = 0x400200000012200 }).contains(.a3));
+        try std.testing.expect((Bitboard{ .mask = 0x400200000012200 }).contains(.f6));
+        try std.testing.expect((Bitboard{ .mask = 0x400200000012200 }).contains(.c8));
     }
 
     test ranks {
@@ -262,26 +262,26 @@ pub const Bitboard = struct {
 
     test getSquare {
         try std.testing.expectEqual(Bitboard.empty.getSquare(), null);
-        try std.testing.expectEqual(Bitboard.all.getSquare().?, .A1);
-        try std.testing.expectEqual(Bitboard.a1.getSquare().?, .A1);
-        try std.testing.expectEqual((Bitboard{ .mask = 0x400200000012200 }).getSquare().?, .B2);
-        try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).getSquare().?, .A2);
-        try std.testing.expectEqual((Bitboard{ .mask = 0x100000000000000 }).getSquare().?, .A8);
-        try std.testing.expectEqual((Bitboard{ .mask = 0x8000000000000000 }).getSquare().?, .H8);
-        try std.testing.expectEqual((Bitboard{ .mask = 0x80 }).getSquare().?, .H1);
-        try std.testing.expectEqual((Bitboard{ .mask = 0x2000000400 }).getSquare().?, .C2);
-        try std.testing.expectEqual((Bitboard{ .mask = 0xfe00000000000000 }).getSquare().?, .B8);
-        try std.testing.expectEqual((Bitboard{ .mask = 0xfe28000000000000 }).getSquare().?, .D7);
-        try std.testing.expectEqual((Bitboard{ .mask = 0xf628022000000000 }).getSquare().?, .F5);
+        try std.testing.expectEqual(Bitboard.all.getSquare().?, .a1);
+        try std.testing.expectEqual(Bitboard.a1.getSquare().?, .a1);
+        try std.testing.expectEqual((Bitboard{ .mask = 0x400200000012200 }).getSquare().?, .b2);
+        try std.testing.expectEqual((Bitboard{ .mask = 0x12300 }).getSquare().?, .a2);
+        try std.testing.expectEqual((Bitboard{ .mask = 0x100000000000000 }).getSquare().?, .a8);
+        try std.testing.expectEqual((Bitboard{ .mask = 0x8000000000000000 }).getSquare().?, .h8);
+        try std.testing.expectEqual((Bitboard{ .mask = 0x80 }).getSquare().?, .h1);
+        try std.testing.expectEqual((Bitboard{ .mask = 0x2000000400 }).getSquare().?, .c2);
+        try std.testing.expectEqual((Bitboard{ .mask = 0xfe00000000000000 }).getSquare().?, .b8);
+        try std.testing.expectEqual((Bitboard{ .mask = 0xfe28000000000000 }).getSquare().?, .d7);
+        try std.testing.expectEqual((Bitboard{ .mask = 0xf628022000000000 }).getSquare().?, .f5);
     }
 
     test popSquare {
         var bb = Bitboard{ .mask = 0x400200000012200 };
-        try std.testing.expectEqual(bb.popSquare().?, .B2);
-        try std.testing.expectEqual(bb.popSquare().?, .F2);
-        try std.testing.expectEqual(bb.popSquare().?, .A3);
-        try std.testing.expectEqual(bb.popSquare().?, .F6);
-        try std.testing.expectEqual(bb.popSquare().?, .C8);
+        try std.testing.expectEqual(bb.popSquare().?, .b2);
+        try std.testing.expectEqual(bb.popSquare().?, .f2);
+        try std.testing.expectEqual(bb.popSquare().?, .a3);
+        try std.testing.expectEqual(bb.popSquare().?, .f6);
+        try std.testing.expectEqual(bb.popSquare().?, .c8);
         try std.testing.expectEqual(bb.popSquare(), null);
     }
 

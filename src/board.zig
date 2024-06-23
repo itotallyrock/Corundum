@@ -416,55 +416,55 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
 }
 
 pub const DefaultBoard = Board(.white, null, CastleRights.initFill(true))
-    .withKings(std.EnumArray(Player, Square).init(.{ .white = .E1, .black = .E8 }))
-    .addPiece(.{ .piece = .pawn, .player = .white }, .A2)
-    .addPiece(.{ .piece = .pawn, .player = .white }, .B2)
-    .addPiece(.{ .piece = .pawn, .player = .white }, .C2)
-    .addPiece(.{ .piece = .pawn, .player = .white }, .D2)
-    .addPiece(.{ .piece = .pawn, .player = .white }, .E2)
-    .addPiece(.{ .piece = .pawn, .player = .white }, .F2)
-    .addPiece(.{ .piece = .pawn, .player = .white }, .G2)
-    .addPiece(.{ .piece = .pawn, .player = .white }, .H2)
-    .addPiece(.{ .piece = .rook, .player = .white }, .A1)
-    .addPiece(.{ .piece = .knight, .player = .white }, .B1)
-    .addPiece(.{ .piece = .bishop, .player = .white }, .C1)
-    .addPiece(.{ .piece = .queen, .player = .white }, .D1)
-    .addPiece(.{ .piece = .bishop, .player = .white }, .F1)
-    .addPiece(.{ .piece = .knight, .player = .white }, .G1)
-    .addPiece(.{ .piece = .rook, .player = .white }, .H1)
+    .withKings(std.EnumArray(Player, Square).init(.{ .white = .e1, .black = .e8 }))
+    .addPiece(.{ .piece = .pawn, .player = .white }, .a2)
+    .addPiece(.{ .piece = .pawn, .player = .white }, .b2)
+    .addPiece(.{ .piece = .pawn, .player = .white }, .c2)
+    .addPiece(.{ .piece = .pawn, .player = .white }, .d2)
+    .addPiece(.{ .piece = .pawn, .player = .white }, .e2)
+    .addPiece(.{ .piece = .pawn, .player = .white }, .f2)
+    .addPiece(.{ .piece = .pawn, .player = .white }, .g2)
+    .addPiece(.{ .piece = .pawn, .player = .white }, .h2)
+    .addPiece(.{ .piece = .rook, .player = .white }, .a1)
+    .addPiece(.{ .piece = .knight, .player = .white }, .b1)
+    .addPiece(.{ .piece = .bishop, .player = .white }, .c1)
+    .addPiece(.{ .piece = .queen, .player = .white }, .d1)
+    .addPiece(.{ .piece = .bishop, .player = .white }, .f1)
+    .addPiece(.{ .piece = .knight, .player = .white }, .g1)
+    .addPiece(.{ .piece = .rook, .player = .white }, .h1)
     // black pieces
-    .addPiece(.{ .piece = .pawn, .player = .black }, .A7)
-    .addPiece(.{ .piece = .pawn, .player = .black }, .B7)
-    .addPiece(.{ .piece = .pawn, .player = .black }, .C7)
-    .addPiece(.{ .piece = .pawn, .player = .black }, .D7)
-    .addPiece(.{ .piece = .pawn, .player = .black }, .E7)
-    .addPiece(.{ .piece = .pawn, .player = .black }, .F7)
-    .addPiece(.{ .piece = .pawn, .player = .black }, .G7)
-    .addPiece(.{ .piece = .pawn, .player = .black }, .H7)
-    .addPiece(.{ .piece = .rook, .player = .black }, .A8)
-    .addPiece(.{ .piece = .knight, .player = .black }, .B8)
-    .addPiece(.{ .piece = .bishop, .player = .black }, .C8)
-    .addPiece(.{ .piece = .queen, .player = .black }, .D8)
-    .addPiece(.{ .piece = .bishop, .player = .black }, .F8)
-    .addPiece(.{ .piece = .knight, .player = .black }, .G8)
-    .addPiece(.{ .piece = .rook, .player = .black }, .H8);
+    .addPiece(.{ .piece = .pawn, .player = .black }, .a7)
+    .addPiece(.{ .piece = .pawn, .player = .black }, .b7)
+    .addPiece(.{ .piece = .pawn, .player = .black }, .c7)
+    .addPiece(.{ .piece = .pawn, .player = .black }, .d7)
+    .addPiece(.{ .piece = .pawn, .player = .black }, .e7)
+    .addPiece(.{ .piece = .pawn, .player = .black }, .f7)
+    .addPiece(.{ .piece = .pawn, .player = .black }, .g7)
+    .addPiece(.{ .piece = .pawn, .player = .black }, .h7)
+    .addPiece(.{ .piece = .rook, .player = .black }, .a8)
+    .addPiece(.{ .piece = .knight, .player = .black }, .b8)
+    .addPiece(.{ .piece = .bishop, .player = .black }, .c8)
+    .addPiece(.{ .piece = .queen, .player = .black }, .d8)
+    .addPiece(.{ .piece = .bishop, .player = .black }, .f8)
+    .addPiece(.{ .piece = .knight, .player = .black }, .g8)
+    .addPiece(.{ .piece = .rook, .player = .black }, .h8);
 
 test "some basic moves on the start board" {
     const board = DefaultBoard;
 
-    try std.testing.expectEqual(board.pieces.pieceOn(.E2), .pawn);
-    try std.testing.expectEqual(board.pieces.pieceOn(.E3), null);
+    try std.testing.expectEqual(board.pieces.pieceOn(.e2), .pawn);
+    try std.testing.expectEqual(board.pieces.pieceOn(.e3), null);
     try std.testing.expectEqualDeep(board.halfmove_count, HalfMoveCount.reset());
-    const pawn_e2e3 = board.pawnPush(.E2);
-    try std.testing.expectEqual(pawn_e2e3.pieces.pieceOn(.E2), null);
-    try std.testing.expectEqual(pawn_e2e3.pieces.pieceOn(.E3), .pawn);
+    const pawn_e2e3 = board.pawnPush(.e2);
+    try std.testing.expectEqual(pawn_e2e3.pieces.pieceOn(.e2), null);
+    try std.testing.expectEqual(pawn_e2e3.pieces.pieceOn(.e3), .pawn);
     try std.testing.expectEqual(pawn_e2e3.halfmove_count, HalfMoveCount.reset());
 
-    try std.testing.expectEqual(pawn_e2e3.pieces.pieceOn(.E7), .pawn);
-    try std.testing.expectEqual(pawn_e2e3.pieces.pieceOn(.E5), null);
+    try std.testing.expectEqual(pawn_e2e3.pieces.pieceOn(.e7), .pawn);
+    try std.testing.expectEqual(pawn_e2e3.pieces.pieceOn(.e5), null);
     const pawn_e7e5 = pawn_e2e3.doublePawnPush(.e);
-    try std.testing.expectEqual(pawn_e7e5.pieces.pieceOn(.E7), null);
-    try std.testing.expectEqual(pawn_e7e5.pieces.pieceOn(.E5), .pawn);
+    try std.testing.expectEqual(pawn_e7e5.pieces.pieceOn(.e7), null);
+    try std.testing.expectEqual(pawn_e7e5.pieces.pieceOn(.e5), .pawn);
     try std.testing.expectEqual(pawn_e7e5.halfmove_count, HalfMoveCount.reset());
-    try std.testing.expectEqual(pawn_e7e5.epSquare(), .E6);
+    try std.testing.expectEqual(pawn_e7e5.epSquare(), .e6);
 }

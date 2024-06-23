@@ -21,10 +21,10 @@ pub fn main() !void {
     @import("board.zig")
         .DefaultBoard
         .doublePawnPush(.e)
-        .pawnPush(.E7)
-        .pawnPush(.E4)
+        .pawnPush(.e7)
+        .pawnPush(.e4)
         .doublePawnPush(.f)
         .enPassantCapture(.e)
-        .kingMove(.E8, .E7)
+        .kingMove(.e8, .e7)
         .debugPrint();
 }

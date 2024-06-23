@@ -16,23 +16,23 @@ pub const File = enum(u3) {
 
     test epSquareFor {
         // White
-        try std.testing.expectEqual(File.a.epSquareFor(.white), EnPassantSquare.A3);
-        try std.testing.expectEqual(File.b.epSquareFor(.white), EnPassantSquare.B3);
-        try std.testing.expectEqual(File.c.epSquareFor(.white), EnPassantSquare.C3);
-        try std.testing.expectEqual(File.d.epSquareFor(.white), EnPassantSquare.D3);
-        try std.testing.expectEqual(File.e.epSquareFor(.white), EnPassantSquare.E3);
-        try std.testing.expectEqual(File.f.epSquareFor(.white), EnPassantSquare.F3);
-        try std.testing.expectEqual(File.g.epSquareFor(.white), EnPassantSquare.G3);
+        try std.testing.expectEqual(File.a.epSquareFor(.white), EnPassantSquare.a3);
+        try std.testing.expectEqual(File.b.epSquareFor(.white), EnPassantSquare.b3);
+        try std.testing.expectEqual(File.c.epSquareFor(.white), EnPassantSquare.c3);
+        try std.testing.expectEqual(File.d.epSquareFor(.white), EnPassantSquare.d3);
+        try std.testing.expectEqual(File.e.epSquareFor(.white), EnPassantSquare.e3);
+        try std.testing.expectEqual(File.f.epSquareFor(.white), EnPassantSquare.f3);
+        try std.testing.expectEqual(File.g.epSquareFor(.white), EnPassantSquare.g3);
         // Black
-        try std.testing.expectEqual(File.h.epSquareFor(.white), EnPassantSquare.H3);
-        try std.testing.expectEqual(File.a.epSquareFor(.black), EnPassantSquare.A6);
-        try std.testing.expectEqual(File.b.epSquareFor(.black), EnPassantSquare.B6);
-        try std.testing.expectEqual(File.c.epSquareFor(.black), EnPassantSquare.C6);
-        try std.testing.expectEqual(File.d.epSquareFor(.black), EnPassantSquare.D6);
-        try std.testing.expectEqual(File.e.epSquareFor(.black), EnPassantSquare.E6);
-        try std.testing.expectEqual(File.f.epSquareFor(.black), EnPassantSquare.F6);
-        try std.testing.expectEqual(File.g.epSquareFor(.black), EnPassantSquare.G6);
-        try std.testing.expectEqual(File.h.epSquareFor(.black), EnPassantSquare.H6);
+        try std.testing.expectEqual(File.h.epSquareFor(.white), EnPassantSquare.h3);
+        try std.testing.expectEqual(File.a.epSquareFor(.black), EnPassantSquare.a6);
+        try std.testing.expectEqual(File.b.epSquareFor(.black), EnPassantSquare.b6);
+        try std.testing.expectEqual(File.c.epSquareFor(.black), EnPassantSquare.c6);
+        try std.testing.expectEqual(File.d.epSquareFor(.black), EnPassantSquare.d6);
+        try std.testing.expectEqual(File.e.epSquareFor(.black), EnPassantSquare.e6);
+        try std.testing.expectEqual(File.f.epSquareFor(.black), EnPassantSquare.f6);
+        try std.testing.expectEqual(File.g.epSquareFor(.black), EnPassantSquare.g6);
+        try std.testing.expectEqual(File.h.epSquareFor(.black), EnPassantSquare.h6);
     }
 };
 
@@ -60,14 +60,14 @@ pub const Rank = enum(u3) {
 /// A location for a single tile on the board.
 pub const Square = enum(u6) {
     // zig fmt: off
-    A1, B1, C1, D1, E1, F1, G1, H1,
-    A2, B2, C2, D2, E2, F2, G2, H2,
-    A3, B3, C3, D3, E3, F3, G3, H3,
-    A4, B4, C4, D4, E4, F4, G4, H4,
-    A5, B5, C5, D5, E5, F5, G5, H5,
-    A6, B6, C6, D6, E6, F6, G6, H6,
-    A7, B7, C7, D7, E7, F7, G7, H7,
-    A8, B8, C8, D8, E8, F8, G8, H8,
+    a1, b1, c1, d1, e1, f1, g1, h1,
+    a2, b2, c2, d2, e2, f2, g2, h2,
+    a3, b3, c3, d3, e3, f3, g3, h3,
+    a4, b4, c4, d4, e4, f4, g4, h4,
+    a5, b5, c5, d5, e5, f5, g5, h5,
+    a6, b6, c6, d6, e6, f6, g6, h6,
+    a7, b7, c7, d7, e7, f7, g7, h7,
+    a8, b8, c8, d8, e8, f8, g8, h8,
     // zig fmt: on
 
     /// Creates a square from a file and rank.
@@ -100,98 +100,98 @@ pub const Square = enum(u6) {
     }
 
     test fromFileAndRank {
-        try std.testing.expectEqual(Square.fromFileAndRank(File.a, Rank._1), Square.A1);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.b, Rank._4), Square.B4);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.c, Rank._8), Square.C8);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.d, Rank._3), Square.D3);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.e, Rank._6), Square.E6);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.f, Rank._2), Square.F2);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.g, Rank._7), Square.G7);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.h, Rank._5), Square.H5);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.a, Rank._5), Square.A5);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.b, Rank._2), Square.B2);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.c, Rank._7), Square.C7);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.d, Rank._1), Square.D1);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.e, Rank._8), Square.E8);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.f, Rank._4), Square.F4);
-        try std.testing.expectEqual(Square.fromFileAndRank(File.g, Rank._1), Square.G1);
+        try std.testing.expectEqual(Square.fromFileAndRank(.a, ._1), .a1);
+        try std.testing.expectEqual(Square.fromFileAndRank(.b, ._4), .b4);
+        try std.testing.expectEqual(Square.fromFileAndRank(.c, ._8), .c8);
+        try std.testing.expectEqual(Square.fromFileAndRank(.d, ._3), .d3);
+        try std.testing.expectEqual(Square.fromFileAndRank(.e, ._6), .e6);
+        try std.testing.expectEqual(Square.fromFileAndRank(.f, ._2), .f2);
+        try std.testing.expectEqual(Square.fromFileAndRank(.g, ._7), .g7);
+        try std.testing.expectEqual(Square.fromFileAndRank(.h, ._5), .h5);
+        try std.testing.expectEqual(Square.fromFileAndRank(.a, ._5), .a5);
+        try std.testing.expectEqual(Square.fromFileAndRank(.b, ._2), .b2);
+        try std.testing.expectEqual(Square.fromFileAndRank(.c, ._7), .c7);
+        try std.testing.expectEqual(Square.fromFileAndRank(.d, ._1), .d1);
+        try std.testing.expectEqual(Square.fromFileAndRank(.e, ._8), .e8);
+        try std.testing.expectEqual(Square.fromFileAndRank(.f, ._4), .f4);
+        try std.testing.expectEqual(Square.fromFileAndRank(.g, ._1), .g1);
     }
 
     test fileOf {
-        try std.testing.expectEqual(Square.A1.fileOf(), File.a);
-        try std.testing.expectEqual(Square.B4.fileOf(), File.b);
-        try std.testing.expectEqual(Square.C5.fileOf(), File.c);
-        try std.testing.expectEqual(Square.D8.fileOf(), File.d);
-        try std.testing.expectEqual(Square.E2.fileOf(), File.e);
-        try std.testing.expectEqual(Square.G5.fileOf(), File.g);
-        try std.testing.expectEqual(Square.H8.fileOf(), File.h);
-        try std.testing.expectEqual(Square.A8.fileOf(), File.a);
-        try std.testing.expectEqual(Square.H1.fileOf(), File.h);
-        try std.testing.expectEqual(Square.F7.fileOf(), File.f);
+        try std.testing.expectEqual(Square.a1.fileOf(), .a);
+        try std.testing.expectEqual(Square.b4.fileOf(), .b);
+        try std.testing.expectEqual(Square.c5.fileOf(), .c);
+        try std.testing.expectEqual(Square.d8.fileOf(), .d);
+        try std.testing.expectEqual(Square.e2.fileOf(), .e);
+        try std.testing.expectEqual(Square.g5.fileOf(), .g);
+        try std.testing.expectEqual(Square.h8.fileOf(), .h);
+        try std.testing.expectEqual(Square.a8.fileOf(), .a);
+        try std.testing.expectEqual(Square.h1.fileOf(), .h);
+        try std.testing.expectEqual(Square.f7.fileOf(), .f);
     }
 
     test rankOf {
-        try std.testing.expectEqual(Square.A1.rankOf(), Rank._1);
-        try std.testing.expectEqual(Square.B4.rankOf(), Rank._4);
-        try std.testing.expectEqual(Square.C5.rankOf(), Rank._5);
-        try std.testing.expectEqual(Square.D8.rankOf(), Rank._8);
-        try std.testing.expectEqual(Square.E2.rankOf(), Rank._2);
-        try std.testing.expectEqual(Square.G5.rankOf(), Rank._5);
-        try std.testing.expectEqual(Square.H8.rankOf(), Rank._8);
-        try std.testing.expectEqual(Square.A8.rankOf(), Rank._8);
-        try std.testing.expectEqual(Square.H1.rankOf(), Rank._1);
-        try std.testing.expectEqual(Square.F7.rankOf(), Rank._7);
+        try std.testing.expectEqual(Square.a1.rankOf(), ._1);
+        try std.testing.expectEqual(Square.b4.rankOf(), ._4);
+        try std.testing.expectEqual(Square.c5.rankOf(), ._5);
+        try std.testing.expectEqual(Square.d8.rankOf(), ._8);
+        try std.testing.expectEqual(Square.e2.rankOf(), ._2);
+        try std.testing.expectEqual(Square.g5.rankOf(), ._5);
+        try std.testing.expectEqual(Square.h8.rankOf(), ._8);
+        try std.testing.expectEqual(Square.a8.rankOf(), ._8);
+        try std.testing.expectEqual(Square.h1.rankOf(), ._1);
+        try std.testing.expectEqual(Square.f7.rankOf(), ._7);
     }
 
     test toBitboard {
-        try std.testing.expectEqual(Square.A1.toBitboard(), Bitboard.a1);
-        try std.testing.expectEqual(Square.B4.toBitboard(), Bitboard{ .mask = 0x2000000 });
-        try std.testing.expectEqual(Square.G5.toBitboard(), Bitboard{ .mask = 0x4000000000 });
-        try std.testing.expectEqual(Square.H8.toBitboard(), Bitboard{ .mask = 0x8000000000000000 });
-        try std.testing.expectEqual(Square.A8.toBitboard(), Bitboard{ .mask = 0x100000000000000 });
-        try std.testing.expectEqual(Square.H1.toBitboard(), Bitboard{ .mask = 0x80 });
-        try std.testing.expectEqual(Square.F7.toBitboard(), Bitboard{ .mask = 0x20000000000000 });
-        try std.testing.expectEqual(Square.C2.toBitboard(), Bitboard{ .mask = 0x400 });
-        try std.testing.expectEqual(Square.D3.toBitboard(), Bitboard{ .mask = 0x80000 });
-        try std.testing.expectEqual(Square.E6.toBitboard(), Bitboard{ .mask = 0x100000000000 });
+        try std.testing.expectEqual(Square.a1.toBitboard(), Bitboard.a1);
+        try std.testing.expectEqual(Square.b4.toBitboard(), Bitboard{ .mask = 0x2000000 });
+        try std.testing.expectEqual(Square.g5.toBitboard(), Bitboard{ .mask = 0x4000000000 });
+        try std.testing.expectEqual(Square.h8.toBitboard(), Bitboard{ .mask = 0x8000000000000000 });
+        try std.testing.expectEqual(Square.a8.toBitboard(), Bitboard{ .mask = 0x100000000000000 });
+        try std.testing.expectEqual(Square.h1.toBitboard(), Bitboard{ .mask = 0x80 });
+        try std.testing.expectEqual(Square.f7.toBitboard(), Bitboard{ .mask = 0x20000000000000 });
+        try std.testing.expectEqual(Square.c2.toBitboard(), Bitboard{ .mask = 0x400 });
+        try std.testing.expectEqual(Square.d3.toBitboard(), Bitboard{ .mask = 0x80000 });
+        try std.testing.expectEqual(Square.e6.toBitboard(), Bitboard{ .mask = 0x100000000000 });
     }
 
     test shift {
         // Test A1 (bottom left corner)
-        try std.testing.expectEqual(Square.A1.shift(.north), .A2);
-        try std.testing.expectEqual(Square.A1.shift(.north_east), .B2);
-        try std.testing.expectEqual(Square.A1.shift(.east), .B1);
-        try std.testing.expectEqual(Square.A1.shift(.south_east), null);
-        try std.testing.expectEqual(Square.A1.shift(.south), null);
-        try std.testing.expectEqual(Square.A1.shift(.south_west), null);
-        try std.testing.expectEqual(Square.A1.shift(.west), null);
+        try std.testing.expectEqual(Square.a1.shift(.north), .a2);
+        try std.testing.expectEqual(Square.a1.shift(.north_east), .b2);
+        try std.testing.expectEqual(Square.a1.shift(.east), .b1);
+        try std.testing.expectEqual(Square.a1.shift(.south_east), null);
+        try std.testing.expectEqual(Square.a1.shift(.south), null);
+        try std.testing.expectEqual(Square.a1.shift(.south_west), null);
+        try std.testing.expectEqual(Square.a1.shift(.west), null);
 
         // Test H8 (top right corner)
-        try std.testing.expectEqual(Square.H8.shift(.north), null);
-        try std.testing.expectEqual(Square.H8.shift(.north_east), null);
-        try std.testing.expectEqual(Square.H8.shift(.east), null);
-        try std.testing.expectEqual(Square.H8.shift(.south_east), null);
-        try std.testing.expectEqual(Square.H8.shift(.south), .H7);
-        try std.testing.expectEqual(Square.H8.shift(.south_west), .G7);
-        try std.testing.expectEqual(Square.H8.shift(.west), .G8);
+        try std.testing.expectEqual(Square.h8.shift(.north), null);
+        try std.testing.expectEqual(Square.h8.shift(.north_east), null);
+        try std.testing.expectEqual(Square.h8.shift(.east), null);
+        try std.testing.expectEqual(Square.h8.shift(.south_east), null);
+        try std.testing.expectEqual(Square.h8.shift(.south), .h7);
+        try std.testing.expectEqual(Square.h8.shift(.south_west), .g7);
+        try std.testing.expectEqual(Square.h8.shift(.west), .g8);
 
         // Test E4 (middle)
-        try std.testing.expectEqual(Square.E4.shift(.north), .E5);
-        try std.testing.expectEqual(Square.E4.shift(.north_east), .F5);
-        try std.testing.expectEqual(Square.E4.shift(.north_west), .D5);
-        try std.testing.expectEqual(Square.E4.shift(.east), .F4);
-        try std.testing.expectEqual(Square.E4.shift(.south_east), .F3);
-        try std.testing.expectEqual(Square.E4.shift(.south), .E3);
-        try std.testing.expectEqual(Square.E4.shift(.south_west), .D3);
-        try std.testing.expectEqual(Square.E4.shift(.west), .D4);
+        try std.testing.expectEqual(Square.e4.shift(.north), .e5);
+        try std.testing.expectEqual(Square.e4.shift(.north_east), .f5);
+        try std.testing.expectEqual(Square.e4.shift(.north_west), .d5);
+        try std.testing.expectEqual(Square.e4.shift(.east), .f4);
+        try std.testing.expectEqual(Square.e4.shift(.south_east), .f3);
+        try std.testing.expectEqual(Square.e4.shift(.south), .e3);
+        try std.testing.expectEqual(Square.e4.shift(.south_west), .d3);
+        try std.testing.expectEqual(Square.e4.shift(.west), .d4);
     }
 };
 
 /// A subset of `Square` used only for en passant tiles.
 pub const EnPassantSquare = enum(u6) {
     // zig fmt: off
-    A3 = @intFromEnum(Square.A3), B3 = @intFromEnum(Square.B3), C3 = @intFromEnum(Square.C3), D3 = @intFromEnum(Square.D3), E3 = @intFromEnum(Square.E3), F3 = @intFromEnum(Square.F3), G3 = @intFromEnum(Square.G3), H3 = @intFromEnum(Square.H3),
-    A6 = @intFromEnum(Square.A6), B6 = @intFromEnum(Square.B6), C6 = @intFromEnum(Square.C6), D6 = @intFromEnum(Square.D6), E6 = @intFromEnum(Square.E6), F6 = @intFromEnum(Square.F6), G6 = @intFromEnum(Square.G6), H6 = @intFromEnum(Square.H6),
+    a3 = @intFromEnum(Square.a3), b3 = @intFromEnum(Square.b3), c3 = @intFromEnum(Square.c3), d3 = @intFromEnum(Square.d3), e3 = @intFromEnum(Square.e3), f3 = @intFromEnum(Square.f3), g3 = @intFromEnum(Square.g3), h3 = @intFromEnum(Square.h3),
+    a6 = @intFromEnum(Square.a6), b6 = @intFromEnum(Square.b6), c6 = @intFromEnum(Square.c6), d6 = @intFromEnum(Square.d6), e6 = @intFromEnum(Square.e6), f6 = @intFromEnum(Square.f6), g6 = @intFromEnum(Square.g6), h6 = @intFromEnum(Square.h6),
     // zig fmt: on
 
     /// Create a normal `Square` from an `EnPassantSquare`
@@ -202,7 +202,7 @@ pub const EnPassantSquare = enum(u6) {
     /// Create an `EnPassantSquare` from a `Square`
     pub fn from_square(square: Square) !EnPassantSquare {
         return switch (square) {
-            .A3, .B3, .C3, .D3, .E3, .F3, .G3, .H3, .A6, .B6, .C6, .D6, .E6, .F6, .G6, .H6 => @enumFromInt(@intFromEnum(square)),
+            .a3, .b3, .c3, .d3, .e3, .f3, .g3, .h3, .a6, .b6, .c6, .d6, .e6, .f6, .g6, .h6 => @enumFromInt(@intFromEnum(square)),
             else => error.InvalidEnPassantSquare,
         };
     }
