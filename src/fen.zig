@@ -56,7 +56,7 @@ pub fn parse_fen(fen: []const u8) !Board(side_to_move_from_fen(fen), en_passant_
     const en_passant_square = comptime try en_passant_square_from_fen(fen);
 
     var pieces = PieceArrangement.init(std.EnumArray(Player, Square).initUndefined());
-    return Board(side_to_move, en_passant_square, castle_rights) {
+    return Board(side_to_move, en_passant_square, castle_rights){
         .pieces = pieces,
     };
 }

@@ -45,7 +45,6 @@ pub fn build(b: *std.Build) void {
     const test_step = b.step("test", "Run library tests");
     test_step.dependOn(&run_main_tests.step);
 
-
     const exe = b.addExecutable(.{
         .name = "corundum",
         // In this case the main source file is merely a path, however, in more
