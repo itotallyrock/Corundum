@@ -41,7 +41,10 @@ pub const Bitboard = struct {
         .h = Bitboard{ .mask = 0x8080_8080_8080_8080 },
     });
 
+    /// Methods for dealing with line masks on the board
+    /// Typically used for sliding piece attacks and move generation
     pub const lines = struct {
+        /// Whether two squares are aligned with eachother in a given cardinal or diagonal direction
         pub fn alignedAlong(from: Square, to: Square, comptime alignment: SlidingPieceRayDirections) bool {
             if (from == to) return false;
             if (alignment == .cardinal) {
@@ -52,9 +55,13 @@ pub const Bitboard = struct {
                 return rankDiff == fileDiff;
             }
         }
+
+        /// Whether two squares are aligned with eachother in either a cardinal or diagonal direction
         pub fn aligned(from: Square, to: Square) bool {
             return alignedAlong(from, to, .cardinal) or alignedAlong(from, to, .diagonal);
         }
+
+        /// Whether three squares are aligned with eachother in either a cardinal or diagonal direction
         pub fn areAligned(a: Square, b: Square, c: Square) bool {
             return !through(a, b).logicalAnd(c.toBitboard()).isEmpty();
         }
@@ -72,6 +79,9 @@ pub const Bitboard = struct {
 
             break :blk result;
         };
+
+        /// The full board-spanning line that crosses through two aligned squares
+        /// If the squares are not aligned, the result is an empty bitboard.
         pub fn through(from: Square, to: Square) Bitboard {
             @setEvalBranchQuota(100000);
             if (!@inComptime()) {
@@ -82,6 +92,7 @@ pub const Bitboard = struct {
                     return from.toBitboard()
                         .rayAttacks(Bitboard.empty, direction)
                         .logicalAnd(to.toBitboard().rayAttacks(Bitboard.empty, direction))
+                    // Because each ray attack doesn't include its starting square, we need to add it back in
                         .logicalOr(to.toBitboard())
                         .logicalOr(from.toBitboard());
                 }
@@ -89,7 +100,8 @@ pub const Bitboard = struct {
 
             return Bitboard.empty;
         }
-        /// The intersection between two aligned squares (not including the end square, move gen should add it to this mask for pin blocking/killing)
+
+        /// Lookup table for the squares between two aligned squares
         const between_lookup = blk: {
             const squares = std.enums.values(Square);
             const num_squares = squares.len;
@@ -102,6 +114,10 @@ pub const Bitboard = struct {
 
             break :blk result;
         };
+
+        /// The intersection *between* two aligned squares, i.e. the squares that a sliding piece would cross if it moved from `from` to `to`.
+        /// If the squares are not aligned, the result is an empty bitboard.
+        /// This does not include either end square (move gen should add the end piece's square to this mask for pin killing)
         pub fn between(from: Square, to: Square) Bitboard {
             @setEvalBranchQuota(1000000);
             if (!@inComptime()) {
