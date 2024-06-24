@@ -3,6 +3,7 @@ const Square = @import("square.zig").Square;
 const ByRank = @import("square.zig").ByRank;
 const ByFile = @import("square.zig").ByFile;
 const BoardDirection = @import("directions.zig").BoardDirection;
+const NonPawnPiece = @import("pieces.zig").NonPawnPiece;
 const SlidingPieceRayDirections = @import("directions.zig").SlidingPieceRayDirections;
 
 /// A board mask that represents a set of squares on a chess board.
@@ -40,100 +41,6 @@ pub const Bitboard = struct {
         .g = Bitboard{ .mask = 0x4040_4040_4040_4040 },
         .h = Bitboard{ .mask = 0x8080_8080_8080_8080 },
     });
-
-    /// Methods for dealing with line masks on the board
-    /// Typically used for sliding piece attacks and move generation
-    pub const lines = struct {
-        /// Whether two squares are aligned with eachother in a given cardinal or diagonal direction
-        pub fn alignedAlong(from: Square, to: Square, comptime alignment: SlidingPieceRayDirections) bool {
-            if (from == to) return false;
-            if (alignment == .cardinal) {
-                return from.file() == to.file() or from.rank() == to.rank();
-            } else {
-                const rankDiff: u8 = @intFromFloat(@abs(@as(f32, @floatFromInt(@as(i32, @intFromEnum(from.rank())) - @as(i32, @intFromEnum(to.rank()))))));
-                const fileDiff: u8 = @intFromFloat(@abs(@as(f32, @floatFromInt(@as(i32, @intFromEnum(from.file())) - @as(i32, @intFromEnum(to.file()))))));
-                return rankDiff == fileDiff;
-            }
-        }
-
-        /// Whether two squares are aligned with eachother in either a cardinal or diagonal direction
-        pub fn aligned(from: Square, to: Square) bool {
-            return alignedAlong(from, to, .cardinal) or alignedAlong(from, to, .diagonal);
-        }
-
-        /// Whether three squares are aligned with eachother in either a cardinal or diagonal direction
-        pub fn areAligned(a: Square, b: Square, c: Square) bool {
-            return !through(a, b).logicalAnd(c.toBitboard()).isEmpty();
-        }
-
-        /// Full board crossing line through two aligned squares
-        const through_lookup = blk: {
-            const squares = std.enums.values(Square);
-            const num_squares = squares.len;
-            var result: [num_squares][num_squares]Bitboard = undefined;
-            for (squares, 0..) |a, i| {
-                for (squares, 0..) |b, j| {
-                    result[i][j] = through(a, b);
-                }
-            }
-
-            break :blk result;
-        };
-
-        /// The full board-spanning line that crosses through two aligned squares
-        /// If the squares are not aligned, the result is an empty bitboard.
-        pub fn through(from: Square, to: Square) Bitboard {
-            @setEvalBranchQuota(100000);
-            if (!@inComptime()) {
-                return through_lookup[@intFromEnum(from)][@intFromEnum(to)];
-            }
-            for (std.enums.values(SlidingPieceRayDirections)) |direction| {
-                if (alignedAlong(from, to, direction)) {
-                    return from.toBitboard()
-                        .rayAttacks(Bitboard.empty, direction)
-                        .logicalAnd(to.toBitboard().rayAttacks(Bitboard.empty, direction))
-                    // Because each ray attack doesn't include its starting square, we need to add it back in
-                        .logicalOr(to.toBitboard())
-                        .logicalOr(from.toBitboard());
-                }
-            }
-
-            return Bitboard.empty;
-        }
-
-        /// Lookup table for the squares between two aligned squares
-        const between_lookup = blk: {
-            const squares = std.enums.values(Square);
-            const num_squares = squares.len;
-            var result: [num_squares][numSquares]Bitboard = undefined;
-            for (squares, 0..) |a, i| {
-                for (squares, 0..) |b, j| {
-                    result[i][j] = between(a, b);
-                }
-            }
-
-            break :blk result;
-        };
-
-        /// The intersection *between* two aligned squares, i.e. the squares that a sliding piece would cross if it moved from `from` to `to`.
-        /// If the squares are not aligned, the result is an empty bitboard.
-        /// This does not include either end square (move gen should add the end piece's square to this mask for pin killing)
-        pub fn between(from: Square, to: Square) Bitboard {
-            @setEvalBranchQuota(1000000);
-            if (!@inComptime()) {
-                return between_lookup[@intFromEnum(from)][@intFromEnum(to)];
-            }
-            for (.{ .cardinal, .diagonal }) |direction| {
-                if (alignedAlong(from, to, direction)) {
-                    return from.toBitboard()
-                        .rayAttacks(to.toBitboard(), direction)
-                        .logicalAnd(to.toBitboard().rayAttacks(from.toBitboard(), direction));
-                }
-            }
-
-            return Bitboard.empty;
-        }
-    };
 
     /// The underlying mask that represents the set of squares.
     mask: u64 = 0,
@@ -215,6 +122,77 @@ pub const Bitboard = struct {
         return self
             .logicalAnd(shiftable_squares_mask)
             .logicalShift(@intFromEnum(direction));
+    }
+
+    pub fn occludedFill(self: Bitboard, occluded: Bitboard, comptime direction: BoardDirection) Bitboard {
+        if (self.isEmpty()) {
+            return Bitboard.empty;
+        }
+
+        var filled = Bitboard.empty;
+        var source = self;
+        // TODO: Compute hardcoded hex masks from rank/file masks
+        const empty_squares_mask = occluded.logicalNot().logicalAnd(comptime switch (direction) {
+            .north => Bitboard{ .mask = 0xFFFFFFFFFFFFFF00 }, // NOT_1
+            .south => Bitboard{ .mask = 0x00FFFFFFFFFFFFFF }, // NOT_8
+            .east => Bitboard{ .mask = 0xFEFEFEFEFEFEFEFE }, // NOT_A
+            .west => Bitboard{ .mask = 0x7F7F7F7F7F7F7F7F }, // NOT_H
+            .north_west => Bitboard{ .mask = 0x7F7F7F7F7F7F7F00 }, // NOT_1_OR_H
+            .north_east => Bitboard{ .mask = 0xFEFEFEFEFEFEFE00 }, // NOT_1_OR_A
+            .south_east => Bitboard{ .mask = 0x007F7F7F7F7F7F7F }, // NOT_8_OR_H
+            .south_west => Bitboard{ .mask = 0x00FEFEFEFEFEFEFE }, // NOT_8_OR_A
+        });
+
+        while (!source.isEmpty()) {
+            filled = filled.logicalOr(source);
+            source = source.shift(direction).logicalAnd(empty_squares_mask);
+        }
+
+        return filled;
+    }
+
+    fn rayAttack(self: Bitboard, occupied: Bitboard, comptime direction: BoardDirection) Bitboard {
+        return self.occludedFill(occupied, direction).shift(direction);
+    }
+
+    pub fn rayAttacks(self: Bitboard, comptime direction: SlidingPieceRayDirections, occupied: Bitboard) Bitboard {
+        // TODO: Use comptime inspection to use pext/pdep based lookup at runtime
+        if (direction == .cardinal) {
+            return self.rayAttack(occupied, .north).logicalOr(self.rayAttack(occupied, .south)).logicalOr(self.rayAttack(occupied, .east)).logicalOr(self.rayAttack(occupied, .west));
+        } else {
+            return self.rayAttack(occupied, .north_west).logicalOr(self.rayAttack(occupied, .north_east)).logicalOr(self.rayAttack(occupied, .south_east)).logicalOr(self.rayAttack(occupied, .south_west));
+        }
+    }
+
+    fn kingAttacks(self: Bitboard) Bitboard {
+        const eastWestAttacks = self.shift(.east).logicalOr(self.shift(.west));
+        const kingRow = self.logicalOr(eastWestAttacks);
+
+        return eastWestAttacks.logicalOr(kingRow.shift(.south)).logicalOr(kingRow.shift(.north));
+    }
+
+    fn knightAttacks(self: Bitboard) Bitboard {
+        // TODO: Compute hardcoded hex masks from file masks
+        // TODO: Use logicalShift or shift instead of bitshifting
+        const l1 = Bitboard{ .mask = self.mask >> 1 & 0x7F7F7F7F7F7F7F7F }; // NOT_H
+        const l2 = Bitboard{ .mask = self.mask >> 2 & 0x3F3F3F3F3F3F3F3F }; // NOT_H_OR_G
+        const r1 = Bitboard{ .mask = self.mask << 1 & 0xFEFEFEFEFEFEFEFE }; // NOT_A
+        const r2 = Bitboard{ .mask = self.mask << 2 & 0xFCFCFCFCFCFCFCFC }; // NOT_A_OR_B
+        const h1 = l1.logicalOr(r1);
+        const h2 = l2.logicalOr(r2);
+
+        // TODO: Use logicalShift or shift instead of bitshifting
+        return Bitboard{ .mask = h1.mask << 16 | h1.mask >> 16 | h2.mask << 8 | h2.mask >> 8 };
+    }
+
+    pub fn attacks(self: Bitboard, comptime piece: NonPawnPiece, occupied: Bitboard) Bitboard {
+        switch (piece) {
+            .king => return self.kingAttacks(),
+            .knight => return self.knightAttacks(),
+            .bishop => return self.rayAttacks(.diagonal, occupied),
+            .rook => return self.rayAttacks(.cardinal, occupied),
+            .queen => return self.rayAttacks(.cardinal, occupied).logicalOr(self.rayAttacks(.diagonal, occupied)),
+        }
     }
 
     test isEmpty {
@@ -397,5 +375,74 @@ pub const Bitboard = struct {
         try std.testing.expectEqual((Bitboard{ .mask = 0x8001d00400002208 }).shift(.north_west), Bitboard{ .mask = 0x68020000110400 });
         try std.testing.expectEqual((Bitboard{ .mask = 0x8001d00400002208 }).shift(.south_east), Bitboard{ .mask = 0x2a008000044 });
         try std.testing.expectEqual((Bitboard{ .mask = 0x8001d00400002208 }).shift(.south_west), Bitboard{ .mask = 0x40006802000011 });
+    }
+
+    test rayAttack {
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x8040_2010_0804_0200 }, Square.a1.toBitboard().rayAttack(Bitboard.empty, .north_east));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x100 }, Square.a1.toBitboard().rayAttack(Bitboard{ .mask = 0xffff }, .north));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x8000 }, Square.h1.toBitboard().rayAttack(Bitboard{ .mask = 0xffff }, .north));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x1010_1010_0000_0000 }, Square.e4.toBitboard().rayAttack(Square.e4.toBitboard(), .north));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0010_1010 }, Square.e4.toBitboard().rayAttack(Square.e4.toBitboard(), .south));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0xE000_0000 }, Square.e4.toBitboard().rayAttack(Square.e4.toBitboard(), .east));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0F00_0000 }, Square.e4.toBitboard().rayAttack(Square.e4.toBitboard(), .west));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0080_4020_0000_0000 }, Square.e4.toBitboard().rayAttack(Square.e4.toBitboard(), .north_east));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x80402 }, Square.e4.toBitboard().rayAttack(Square.e4.toBitboard(), .south_west));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0102_0408_0000_0000 }, Square.e4.toBitboard().rayAttack(Square.e4.toBitboard(), .north_west));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0020_4080 }, Square.e4.toBitboard().rayAttack(Square.e4.toBitboard(), .south_east));
+    }
+
+    test rayAttacks {
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0101_0101_0101_01FE }, (Bitboard{ .mask = 0x1 }).rayAttacks(.cardinal, .{ .mask = 0x1 }));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x8080_8080_8080_807F }, (Bitboard{ .mask = 0x80 }).rayAttacks(.cardinal, .{ .mask = 0x80 }));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x2020_DF20_2020_2020 }, (Bitboard{ .mask = 0x2000_0000_0000 }).rayAttacks(.cardinal, .{ .mask = 0x2000_0000_0000 }));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x2424_DF24_24FB_2424 }, (Bitboard{ .mask = 0x2000_0004_0000 }).rayAttacks(.cardinal, .{ .mask = 0x2000_0004_0000 }));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0426_DF2D_3B26_2622 }, (Bitboard{ .mask = 0x2002_0400_0000 }).rayAttacks(.cardinal, .{ .mask = 0x0022_200a_1400_0400 }));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x52BA_521D_122F_1212 }, (Bitboard{ .mask = 0x0040_0002_0010_0000 }).rayAttacks(.cardinal, .{ .mask = 0x0048_400a_0130_0000 }));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x2214_0014_2241_8000 }, (Bitboard{ .mask = 0x0800_0000_0000 }).rayAttacks(.diagonal, .{ .mask = 0x0800_0000_0000 }));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x2214_0814_A241_A010 }, (Bitboard{ .mask = 0x0800_0040_0000 }).rayAttacks(.diagonal, .{ .mask = 0x0800_0040_0000 }));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x158B_520E_D9D0_0050 }, (Bitboard{ .mask = 0x0420_0000_2000 }).rayAttacks(.diagonal, .{ .mask = 0x0010_0420_1100_2020 }));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x2800_2D40_8528_4000 }, (Bitboard{ .mask = 0x0010_0002_0000_0080 }).rayAttacks(.diagonal, .{ .mask = 0x2010_0c06_01a8_0080 }));
+    }
+
+    test "Bitboard King attacks works" {
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x302 }, (Bitboard{ .mask = 1 }).attacks(.king, undefined));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x7050_7000_0000 }, (Bitboard{ .mask = 0x0020_0000_0000 }).attacks(.king, undefined));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0xC040_C000_0000_0000 }, (Bitboard{ .mask = 0x0080_0000_0000_0000 }).attacks(.king, undefined));
+    }
+
+    test "Bitboard Knight attacks work" {
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0A11_0011_0A00_0000 }, (Bitboard{ .mask = 0x0400_0000_0000 }).attacks(.knight, undefined));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0050_8800_8850_0000 }, (Bitboard{ .mask = 0x0020_0000_0000 }).attacks(.knight, undefined));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0040_2000 }, (Bitboard{ .mask = 0x80 }).attacks(.knight, undefined));
+    }
+
+    test "Bitboard Rook attacks works" {
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0101_0101_0101_01FE }, Square.a1.toBitboard().attacks(.rook, Bitboard.empty));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x8080_8080_8080_807F }, Square.h1.toBitboard().attacks(.rook, Bitboard.empty));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x102 }, Square.a1.toBitboard().attacks(.rook, .{ .mask = 0xFFFF }));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x8040 }, Square.h1.toBitboard().attacks(.rook, .{ .mask = 0xFFFF }));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0202_1D02_0202 }, Square.b4.toBitboard().attacks(.rook, .{ .mask = 0x2200_3300_0802 }));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0008_1408_0000 }, Square.d4.toBitboard().attacks(.rook, Bitboard.all));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x2020_DF20_2020_2020 }, Square.f6.toBitboard().attacks(.rook, .{ .mask = 0x2000_0000_0000 }));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x8080_8080_8080_807F }, Square.h1.toBitboard().attacks(.rook, .{ .mask = 0x80 }));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0004_3B04_0404 }, Square.c4.toBitboard().attacks(.rook, .{ .mask = 0x0004_2500_1000 }));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x4040_BF40_4000_0000 }, Square.g6.toBitboard().attacks(.rook, .{ .mask = 0x4000_F800_0000 }));
+    }
+
+    test "Bitboard Bishop attacks works" {
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x8040_2010_0804_0200 }, Square.a1.toBitboard().attacks(.bishop, Bitboard.empty));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0014_0014_0000 }, Square.d4.toBitboard().attacks(.bishop, Bitboard.all));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x8850_0050_8804_0201 }, Square.f6.toBitboard().attacks(.bishop, .{ .mask = 0x2000_0000_0000 }));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0102_0408_1020_4000 }, Square.h1.toBitboard().attacks(.bishop, .{ .mask = 0x80 }));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0020_110A_000A_1020 }, Square.c4.toBitboard().attacks(.bishop, .{ .mask = 0x0020_0140_0402_4004 }));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x10A0_00A0_1000_0000 }, Square.g6.toBitboard().attacks(.bishop, .{ .mask = 0x4000_F800_0000 }));
+    }
+
+    test "Bitboard Queen attacks works" {
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x001C_141C_0000 }, Square.d4.toBitboard().attacks(.queen, Bitboard.all));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0809_2A1C_F71C_2A49 }, Square.d4.toBitboard().attacks(.queen, .{ .mask = 0x2000_0000_0000 }));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x8182_8488_90A0_C07F }, Square.h1.toBitboard().attacks(.queen, .{ .mask = 0x80 }));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x00A8_705E_7088 }, Square.f3.toBitboard().attacks(.queen, .{ .mask = 0x0038_0062_2000 }));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x50E0_BFE0_5000_0000 }, Square.g6.toBitboard().attacks(.queen, .{ .mask = 0x4000_F800_0000 }));
     }
 };
