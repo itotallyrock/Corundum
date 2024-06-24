@@ -70,7 +70,7 @@ pub const Bitboard = struct {
     }
 
     /// Shift the bits of the bitboard to the left or right.
-    pub fn logicalShift(self: Bitboard, offset: i8) Bitboard {
+    pub fn logicalShift(self: Bitboard, offset: i7) Bitboard {
         if (offset < 0) {
             return Bitboard{ .mask = self.mask >> @intCast(-offset) };
         }
