@@ -10,8 +10,13 @@ pub const File = enum(u3) {
     // zig fmt: on
 
     /// Returns the en passant square on the given file for the desired player
-    pub fn epSquareFor(self: File, player: Player) EnPassantSquare {
-        return @enumFromInt(@as(u6, @intFromEnum(self)) + @as(u6, @intFromEnum(Rank.epRankFor(player))) * 8);
+    pub fn epSquareFor(self: File, comptime player: Player) EnPassantSquare {
+        return EnPassantSquare.from_square(Square.fromFileAndRank(self, Rank.epRankFor(player))) catch unreachable;
+    }
+
+    /// Returns the promotion square on the given file for the desired player
+    pub fn promotionSquareFor(self: File, comptime player: Player) Square {
+        return Square.fromFileAndRank(self, Rank.promotionRankFor(player));
     }
 
     test epSquareFor {
@@ -34,6 +39,25 @@ pub const File = enum(u3) {
         try std.testing.expectEqual(File.g.epSquareFor(.black), EnPassantSquare.g6);
         try std.testing.expectEqual(File.h.epSquareFor(.black), EnPassantSquare.h6);
     }
+
+    test promotionSquareFor {
+        try std.testing.expectEqual(File.a.promotionSquareFor(.white), Square.a8);
+        try std.testing.expectEqual(File.b.promotionSquareFor(.white), Square.b8);
+        try std.testing.expectEqual(File.c.promotionSquareFor(.white), Square.c8);
+        try std.testing.expectEqual(File.d.promotionSquareFor(.white), Square.d8);
+        try std.testing.expectEqual(File.e.promotionSquareFor(.white), Square.e8);
+        try std.testing.expectEqual(File.f.promotionSquareFor(.white), Square.f8);
+        try std.testing.expectEqual(File.g.promotionSquareFor(.white), Square.g8);
+        try std.testing.expectEqual(File.h.promotionSquareFor(.white), Square.h8);
+        try std.testing.expectEqual(File.a.promotionSquareFor(.black), Square.a1);
+        try std.testing.expectEqual(File.b.promotionSquareFor(.black), Square.b1);
+        try std.testing.expectEqual(File.c.promotionSquareFor(.black), Square.c1);
+        try std.testing.expectEqual(File.d.promotionSquareFor(.black), Square.d1);
+        try std.testing.expectEqual(File.e.promotionSquareFor(.black), Square.e1);
+        try std.testing.expectEqual(File.f.promotionSquareFor(.black), Square.f1);
+        try std.testing.expectEqual(File.g.promotionSquareFor(.black), Square.g1);
+        try std.testing.expectEqual(File.h.promotionSquareFor(.black), Square.h1);
+    }
 };
 
 /// A row index for the board
@@ -51,9 +75,23 @@ pub const Rank = enum(u3) {
         }
     }
 
+    /// Returns the rank for a pawn promotion of the desired player
+    pub fn promotionRankFor(comptime player: Player) Rank {
+        if (player == .white) {
+            return ._8;
+        } else {
+            return ._1;
+        }
+    }
+
     test epRankFor {
         try std.testing.expectEqual(Rank.epRankFor(.white), Rank._3);
         try std.testing.expectEqual(Rank.epRankFor(.black), Rank._6);
+    }
+
+    test promotionRankFor {
+        try std.testing.expectEqual(Rank.promotionRankFor(.white), Rank._8);
+        try std.testing.expectEqual(Rank.promotionRankFor(.black), Rank._1);
     }
 };
 

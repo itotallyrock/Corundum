@@ -375,6 +375,31 @@ pub const Bitboard = struct {
         try std.testing.expectEqual((Bitboard{ .mask = 0x8001d00400002208 }).shift(.north_west), Bitboard{ .mask = 0x68020000110400 });
         try std.testing.expectEqual((Bitboard{ .mask = 0x8001d00400002208 }).shift(.south_east), Bitboard{ .mask = 0x2a008000044 });
         try std.testing.expectEqual((Bitboard{ .mask = 0x8001d00400002208 }).shift(.south_west), Bitboard{ .mask = 0x40006802000011 });
+        // from re-design
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x040A_1024_4088_0000 }, (Bitboard{ .mask = 0x0304_0A10_2440_8800 }).shift(.north));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0xFFFF_FFFF_FFFF_FF00 }, (Bitboard{ .mask = 0xFFFF_FFFF_FFFF_FFFF }).shift(.north));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0 }, (Bitboard{ .mask = 0x0 }).shift(.north));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0003_040A_1024_4088 }, (Bitboard{ .mask = 0x0304_0A10_2440_8800 }).shift(.south));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x00FF_FFFF_FFFF_FFFF }, (Bitboard{ .mask = 0xFFFF_FFFF_FFFF_FFFF }).shift(.south));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0 }, (Bitboard{ .mask = 0x0 }).shift(.south));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0608_1420_4880_1000 }, (Bitboard{ .mask = 0x0304_0A10_2440_8800 }).shift(.east));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0xFEFE_FEFE_FEFE_FEFE }, (Bitboard{ .mask = 0xFFFF_FFFF_FFFF_FFFF }).shift(.east));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0 }, (Bitboard{ .mask = 0x0 }).shift(.east));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0102_0508_1220_4400 }, (Bitboard{ .mask = 0x0304_0A10_2440_8800 }).shift(.west));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x7F7F_7F7F_7F7F_7F7F }, (Bitboard{ .mask = 0xFFFF_FFFF_FFFF_FFFF }).shift(.west));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0 }, (Bitboard{ .mask = 0x0 }).shift(.west));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0814_2048_8010_0000 }, (Bitboard{ .mask = 0x0304_0A10_2440_8800 }).shift(.north_east));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0xFEFE_FEFE_FEFE_FE00 }, (Bitboard{ .mask = 0xFFFF_FFFF_FFFF_FFFF }).shift(.north_east));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0 }, (Bitboard{ .mask = 0x0 }).shift(.north_east));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0205_0812_2044_0000 }, (Bitboard{ .mask = 0x0304_0A10_2440_8800 }).shift(.north_west));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x7F7F_7F7F_7F7F_7F00 }, (Bitboard{ .mask = 0xFFFF_FFFF_FFFF_FFFF }).shift(.north_west));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0 }, (Bitboard{ .mask = 0x0 }).shift(.north_west));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0006_0814_2048_8010 }, (Bitboard{ .mask = 0x0304_0A10_2440_8800 }).shift(.south_east));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x00FE_FEFE_FEFE_FEFE }, (Bitboard{ .mask = 0xFFFF_FFFF_FFFF_FFFF }).shift(.south_east));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0 }, (Bitboard{ .mask = 0x0 }).shift(.south_east));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0001_0205_0812_2044 }, (Bitboard{ .mask = 0x0304_0A10_2440_8800 }).shift(.south_west));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x007F_7F7F_7F7F_7F7F }, (Bitboard{ .mask = 0xFFFF_FFFF_FFFF_FFFF }).shift(.south_west));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0 }, (Bitboard{ .mask = 0x0 }).shift(.south_west));
     }
 
     test rayAttack {
