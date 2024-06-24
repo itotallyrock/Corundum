@@ -131,16 +131,15 @@ pub const Bitboard = struct {
 
         var filled = Bitboard.empty;
         var source = self;
-        // TODO: Compute hardcoded hex masks from rank/file masks
         const empty_squares_mask = occluded.logicalNot().logicalAnd(comptime switch (direction) {
-            .north => Bitboard{ .mask = 0xFFFFFFFFFFFFFF00 }, // NOT_1
-            .south => Bitboard{ .mask = 0x00FFFFFFFFFFFFFF }, // NOT_8
-            .east => Bitboard{ .mask = 0xFEFEFEFEFEFEFEFE }, // NOT_A
-            .west => Bitboard{ .mask = 0x7F7F7F7F7F7F7F7F }, // NOT_H
-            .north_west => Bitboard{ .mask = 0x7F7F7F7F7F7F7F00 }, // NOT_1_OR_H
-            .north_east => Bitboard{ .mask = 0xFEFEFEFEFEFEFE00 }, // NOT_1_OR_A
-            .south_east => Bitboard{ .mask = 0x007F7F7F7F7F7F7F }, // NOT_8_OR_H
-            .south_west => Bitboard{ .mask = 0x00FEFEFEFEFEFEFE }, // NOT_8_OR_A
+            .north => ranks.get(._1).logicalNot(),
+            .south => ranks.get(._8).logicalNot(),
+            .east => files.get(.a).logicalNot(),
+            .west => files.get(.h).logicalNot(),
+            .north_west => ranks.get(._1).logicalOr(files.get(.h)).logicalNot(),
+            .north_east => ranks.get(._8).logicalOr(files.get(.a)).logicalNot(),
+            .south_east => ranks.get(._1).logicalOr(files.get(.h)).logicalNot(),
+            .south_west => ranks.get(._8).logicalOr(files.get(.a)).logicalNot(),
         });
 
         while (!source.isEmpty()) {
@@ -172,12 +171,11 @@ pub const Bitboard = struct {
     }
 
     fn knightAttacks(self: Bitboard) Bitboard {
-        // TODO: Compute hardcoded hex masks from file masks
         // TODO: Use logicalShift or shift instead of bitshifting
-        const l1 = Bitboard{ .mask = self.mask >> 1 & 0x7F7F7F7F7F7F7F7F }; // NOT_H
-        const l2 = Bitboard{ .mask = self.mask >> 2 & 0x3F3F3F3F3F3F3F3F }; // NOT_H_OR_G
-        const r1 = Bitboard{ .mask = self.mask << 1 & 0xFEFEFEFEFEFEFEFE }; // NOT_A
-        const r2 = Bitboard{ .mask = self.mask << 2 & 0xFCFCFCFCFCFCFCFC }; // NOT_A_OR_B
+        const l1 = (Bitboard{ .mask = self.mask >> 1 }).logicalAnd(files.get(.h).logicalNot());
+        const l2 = (Bitboard{ .mask = self.mask >> 2 }).logicalAnd(files.get(.h).logicalOr(files.get(.g)).logicalNot());
+        const r1 = (Bitboard{ .mask = self.mask << 1 }).logicalAnd(files.get(.a).logicalNot());
+        const r2 = (Bitboard{ .mask = self.mask << 2 }).logicalAnd(files.get(.a).logicalOr(files.get(.b)).logicalNot());
         const h1 = l1.logicalOr(r1);
         const h2 = l2.logicalOr(r2);
 
@@ -433,12 +431,14 @@ pub const Bitboard = struct {
         try std.testing.expectEqualDeep(Bitboard{ .mask = 0x302 }, (Bitboard{ .mask = 1 }).attacks(.king, undefined));
         try std.testing.expectEqualDeep(Bitboard{ .mask = 0x7050_7000_0000 }, (Bitboard{ .mask = 0x0020_0000_0000 }).attacks(.king, undefined));
         try std.testing.expectEqualDeep(Bitboard{ .mask = 0xC040_C000_0000_0000 }, (Bitboard{ .mask = 0x0080_0000_0000_0000 }).attacks(.king, undefined));
+        // TODO: Test a lot more king attacks
     }
 
     test "Bitboard Knight attacks work" {
         try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0A11_0011_0A00_0000 }, (Bitboard{ .mask = 0x0400_0000_0000 }).attacks(.knight, undefined));
         try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0050_8800_8850_0000 }, (Bitboard{ .mask = 0x0020_0000_0000 }).attacks(.knight, undefined));
         try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0040_2000 }, (Bitboard{ .mask = 0x80 }).attacks(.knight, undefined));
+        // TODO: Test a lot more knight attacks
     }
 
     test "Bitboard Rook attacks works" {
@@ -452,6 +452,7 @@ pub const Bitboard = struct {
         try std.testing.expectEqualDeep(Bitboard{ .mask = 0x8080_8080_8080_807F }, Square.h1.toBitboard().attacks(.rook, .{ .mask = 0x80 }));
         try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0004_3B04_0404 }, Square.c4.toBitboard().attacks(.rook, .{ .mask = 0x0004_2500_1000 }));
         try std.testing.expectEqualDeep(Bitboard{ .mask = 0x4040_BF40_4000_0000 }, Square.g6.toBitboard().attacks(.rook, .{ .mask = 0x4000_F800_0000 }));
+        // TODO: Test a lot more rook attacks
     }
 
     test "Bitboard Bishop attacks works" {
@@ -461,6 +462,7 @@ pub const Bitboard = struct {
         try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0102_0408_1020_4000 }, Square.h1.toBitboard().attacks(.bishop, .{ .mask = 0x80 }));
         try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0020_110A_000A_1020 }, Square.c4.toBitboard().attacks(.bishop, .{ .mask = 0x0020_0140_0402_4004 }));
         try std.testing.expectEqualDeep(Bitboard{ .mask = 0x10A0_00A0_1000_0000 }, Square.g6.toBitboard().attacks(.bishop, .{ .mask = 0x4000_F800_0000 }));
+        // TODO: Test a lot more bishop attacks
     }
 
     test "Bitboard Queen attacks works" {
@@ -469,5 +471,6 @@ pub const Bitboard = struct {
         try std.testing.expectEqualDeep(Bitboard{ .mask = 0x8182_8488_90A0_C07F }, Square.h1.toBitboard().attacks(.queen, .{ .mask = 0x80 }));
         try std.testing.expectEqualDeep(Bitboard{ .mask = 0x00A8_705E_7088 }, Square.f3.toBitboard().attacks(.queen, .{ .mask = 0x0038_0062_2000 }));
         try std.testing.expectEqualDeep(Bitboard{ .mask = 0x50E0_BFE0_5000_0000 }, Square.g6.toBitboard().attacks(.queen, .{ .mask = 0x4000_F800_0000 }));
+        // TODO: Test a lot more queen attacks
     }
 };
