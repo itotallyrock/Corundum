@@ -20,7 +20,7 @@ test {
 }
 
 pub fn main() !void {
-    @import("board.zig")
+    _ = @import("board.zig")
         .DefaultBoard
         .doublePawnPush(.e)
         .pawnPush(.e7)

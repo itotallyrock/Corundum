@@ -384,7 +384,7 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
             return updated_board.next(null, rights.kingMove(side_to_move));
         }
 
-        pub fn debugPrint(self: Board(side_to_move, en_passant_file, rights)) void {
+        pub fn debugPrint(self: Board(side_to_move, en_passant_file, rights)) Board(side_to_move, en_passant_file, rights) {
             const line = "  +---+---+---+---+---+---+---+---+";
             std.debug.print("    A   B   C   D   E   F   G   H\n{s}\n", .{line});
             inline for (comptime .{ Rank._8, Rank._7, Rank._6, Rank._5, Rank._4, Rank._3, Rank._2, Rank._1 }) |rank| {
@@ -411,6 +411,8 @@ pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, com
                     ._1 => std.debug.print("|\n{s}\n", .{line}),
                 }
             }
+
+            return self;
         }
     };
 }
