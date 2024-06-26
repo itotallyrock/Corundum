@@ -166,22 +166,28 @@ pub const PieceArrangement = struct {
         // No piece on square
         return null;
     }
+
+    // TODO: Write unit tests for PieceArrangement
 };
 
 const PersistentBoardState = struct {
     // Non-recoverable state
     key: ZobristHash,
     halfmove_clock: HalfMoveCount = HalfMoveCount.reset(),
+    castle_rights: CastleRights,
+    en_passant_square: ?EnPassantSquare,
     // Move generation state to avoid recomputing
     checkers: Bitboard,
     pinners: ByPlayer(Bitboard),
     blockers: ByPlayer(Bitboard),
     check_squares: ByNonKingPiece(Bitboard),
 
-    pub fn init(comptime side_to_move: Player, comptime en_passant_file: ?File, comptime rights: CastleRights, king_squares: ByPlayer(Square)) PersistentBoardState {
+    pub fn init(comptime side_to_move: Player, en_passant_file: ?File, rights: CastleRights, king_squares: ByPlayer(Square)) PersistentBoardState {
         const ep_square = if (en_passant_file) |*ep_file| ep_file.epSquareFor(side_to_move) else null;
         return PersistentBoardState{
             .key = ZobristHash.init(side_to_move, king_squares, rights, ep_square),
+            .castle_rights = rights,
+            .en_passant_square = ep_square,
             // todo: compute move generation masks
             .checkers = Bitboard.empty,
             .pinners = ByPlayer(Bitboard).initFill(Bitboard.empty),
@@ -263,6 +269,7 @@ const PersistentBoardState = struct {
     // todo: consider adding moves that could be used to more optimally compute move generation masks (capture?)
 };
 
+// TODO: Remove these comptime values and simply use them as fields & pass them as arguments to the constructor
 pub fn Board(comptime side_to_move: Player, comptime en_passant_file: ?File, comptime rights: CastleRights) type {
     return struct {
         /// The arrangement of pieces on the board.
