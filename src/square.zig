@@ -10,12 +10,12 @@ pub const File = enum(u3) {
     // zig fmt: on
 
     /// Returns the en passant square on the given file for the desired player
-    pub fn epSquareFor(self: File, comptime player: Player) EnPassantSquare {
+    pub fn epSquareFor(self: File, player: Player) EnPassantSquare {
         return EnPassantSquare.from_square(Square.fromFileAndRank(self, Rank.epRankFor(player))) catch unreachable;
     }
 
     /// Returns the promotion square on the given file for the desired player
-    pub fn promotionSquareFor(self: File, comptime player: Player) Square {
+    pub fn promotionSquareFor(self: File, player: Player) Square {
         return Square.fromFileAndRank(self, Rank.promotionRankFor(player));
     }
 
@@ -76,7 +76,7 @@ pub const Rank = enum(u3) {
     }
 
     /// Returns the rank for a pawn promotion of the desired player
-    pub fn promotionRankFor(comptime player: Player) Rank {
+    pub fn promotionRankFor(player: Player) Rank {
         if (player == .white) {
             return ._8;
         } else {
@@ -130,7 +130,7 @@ pub const Square = enum(u6) {
 
     /// Try to shift/move the square in the given direction.
     /// Returns null if the slided square would be out of bounds.
-    pub fn shift(self: Square, comptime direction: BoardDirection) ?Square {
+    pub fn shift(self: Square, direction: BoardDirection) ?Square {
         return self
             .toBitboard()
             .shift(direction)

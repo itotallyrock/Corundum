@@ -21,7 +21,7 @@ test {
 
 pub fn main() !void {
     _ = @import("board.zig")
-        .DefaultBoard
+        .Board.start_position
         .doublePawnPush(.e)
         .pawnPush(.e7)
         .pawnPush(.e4)

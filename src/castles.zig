@@ -55,31 +55,31 @@ pub const CastleRights = struct {
     }
 
     /// Check if a player has the rights to castle in a given direction.
-    pub fn hasRights(self: CastleRights, comptime player: Player, comptime direction: CastleDirection) bool {
+    pub fn hasRights(self: CastleRights, player: Player, direction: CastleDirection) bool {
         return self.rights.get(player).get(direction);
     }
 
     /// Remove the rights to castle in a given direction for a player and return it.
-    pub fn removeRight(self: CastleRights, comptime player: Player, comptime direction: CastleDirection) CastleRights {
+    pub fn removeRight(self: CastleRights, player: Player, direction: CastleDirection) CastleRights {
         var result = self;
         result.rights.getPtr(player).set(direction, false);
         return result;
     }
 
     /// Add the rights to castle in a given direction for a player and return it.
-    pub fn addRight(self: CastleRights, comptime player: Player, comptime direction: CastleDirection) CastleRights {
+    pub fn addRight(self: CastleRights, player: Player, direction: CastleDirection) CastleRights {
         var result = self;
         result.rights.getPtr(player).set(direction, true);
         return result;
     }
 
     /// Remove all rights for a player and return it.
-    pub fn kingMove(self: CastleRights, comptime player: Player) CastleRights {
+    pub fn kingMove(self: CastleRights, player: Player) CastleRights {
         return self.removeRight(player, .king_side).removeRight(player, .queen_side);
     }
 
     /// Remove the rights for a specific castle direction based on which rook moved and return it.
-    pub fn rookMove(self: CastleRights, comptime player: Player, comptime direction: CastleDirection) CastleRights {
+    pub fn rookMove(self: CastleRights, player: Player, direction: CastleDirection) CastleRights {
         return self.removeRight(player, direction);
     }
 

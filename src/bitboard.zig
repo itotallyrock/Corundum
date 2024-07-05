@@ -113,8 +113,8 @@ pub const Bitboard = struct {
         return null;
     }
 
-    pub fn shift(self: Bitboard, comptime direction: BoardDirection) Bitboard {
-        const shiftable_squares_mask = comptime switch (direction) {
+    pub fn shift(self: Bitboard, direction: BoardDirection) Bitboard {
+        const shiftable_squares_mask = switch (direction) {
             .north, .south => Bitboard.all,
             .east, .north_east, .south_east => Bitboard.files.get(.h).logicalNot(),
             .west, .north_west, .south_west => Bitboard.files.get(.a).logicalNot(),
@@ -124,14 +124,14 @@ pub const Bitboard = struct {
             .logicalShift(@intFromEnum(direction));
     }
 
-    pub fn occludedFill(self: Bitboard, occluded: Bitboard, comptime direction: BoardDirection) Bitboard {
+    pub fn occludedFill(self: Bitboard, occluded: Bitboard, direction: BoardDirection) Bitboard {
         if (self.isEmpty()) {
             return Bitboard.empty;
         }
 
         var filled = Bitboard.empty;
         var source = self;
-        const empty_squares_mask = occluded.logicalNot().logicalAnd(comptime switch (direction) {
+        const empty_squares_mask = occluded.logicalNot().logicalAnd(switch (direction) {
             .north => ranks.get(._1).logicalNot(),
             .south => ranks.get(._8).logicalNot(),
             .east => files.get(.a).logicalNot(),
@@ -150,11 +150,11 @@ pub const Bitboard = struct {
         return filled;
     }
 
-    fn rayAttack(self: Bitboard, occupied: Bitboard, comptime direction: BoardDirection) Bitboard {
+    fn rayAttack(self: Bitboard, occupied: Bitboard, direction: BoardDirection) Bitboard {
         return self.occludedFill(occupied, direction).shift(direction);
     }
 
-    pub fn rayAttacks(self: Bitboard, comptime direction: SlidingPieceRayDirections, occupied: Bitboard) Bitboard {
+    pub fn rayAttacks(self: Bitboard, direction: SlidingPieceRayDirections, occupied: Bitboard) Bitboard {
         // TODO: Use comptime inspection to use pext/pdep based lookup at runtime
         if (direction == .cardinal) {
             return self.rayAttack(occupied, .north).logicalOr(self.rayAttack(occupied, .south)).logicalOr(self.rayAttack(occupied, .east)).logicalOr(self.rayAttack(occupied, .west));
@@ -183,7 +183,7 @@ pub const Bitboard = struct {
         return Bitboard{ .mask = h1.mask << 16 | h1.mask >> 16 | h2.mask << 8 | h2.mask >> 8 };
     }
 
-    pub fn attacks(self: Bitboard, comptime piece: NonPawnPiece, occupied: Bitboard) Bitboard {
+    pub fn attacks(self: Bitboard, piece: NonPawnPiece, occupied: Bitboard) Bitboard {
         switch (piece) {
             .king => return self.kingAttacks(),
             .knight => return self.knightAttacks(),

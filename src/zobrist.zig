@@ -858,7 +858,7 @@ pub const ZobristHash = struct {
 
     key: ZobristKey,
 
-    pub fn init(side_to_move: Player, king_squares: ByPlayer(Square), comptime castle_rights: CastleRights, comptime en_passant_square: ?EnPassantSquare) ZobristHash {
+    pub fn init(side_to_move: Player, king_squares: ByPlayer(Square), castle_rights: CastleRights, en_passant_square: ?EnPassantSquare) ZobristHash {
         var hash = EMPTY
             .toggle_piece(.{ .player = .white, .piece = .king }, king_squares.get(.white))
             .toggle_piece(.{ .player = .black, .piece = .king }, king_squares.get(.black))
@@ -875,20 +875,20 @@ pub const ZobristHash = struct {
         return ZobristHash{ .key = self.key ^ SIDE_KEY };
     }
 
-    pub fn capture(self: ZobristHash, comptime piece: OwnedPiece, comptime captured_piece: OwnedNonKingPiece, from: Square, to: Square) ZobristHash {
+    pub fn capture(self: ZobristHash, piece: OwnedPiece, captured_piece: OwnedNonKingPiece, from: Square, to: Square) ZobristHash {
         return self
             .move(piece, from, to)
             .toggle_piece(captured_piece.to_owned(), to);
     }
 
-    pub fn move(self: ZobristHash, comptime piece: OwnedPiece, from: Square, to: Square) ZobristHash {
+    pub fn move(self: ZobristHash, piece: OwnedPiece, from: Square, to: Square) ZobristHash {
         return self
             .toggle_piece(piece, from)
             .toggle_piece(piece, to);
     }
 
-    pub fn doublePawnPush(self: ZobristHash, comptime player: Player, comptime en_passant_file: File) ZobristHash {
-        const en_passant_square = comptime en_passant_file.epSquareFor(player);
+    pub fn doublePawnPush(self: ZobristHash, player: Player, en_passant_file: File) ZobristHash {
+        const en_passant_square = en_passant_file.epSquareFor(player);
         const from = .a2; // TODO: Get from file/en_passant_square
         const to = .a4; // TODO: Get from file/en_passant_square
         return self
@@ -896,33 +896,36 @@ pub const ZobristHash = struct {
             .toggle_en_passant_square(en_passant_square);
     }
 
-    pub fn clear_en_passant(self: ZobristHash, comptime en_passant_file: File, comptime player: Player) ZobristHash {
+    pub fn clear_en_passant(self: ZobristHash, en_passant_file: File, player: Player) ZobristHash {
         const en_passant_square = en_passant_file.epSquareFor(player);
         return self.toggle_en_passant_square(en_passant_square);
     }
 
-    pub fn enPassantCapture(self: ZobristHash, comptime player: Player, comptime en_passant_file: File, from: Square, to: Square) ZobristHash {
-        const en_passant_square = comptime en_passant_file.epSquareFor(player);
+    pub fn enPassantCapture(self: ZobristHash, player: Player, en_passant_square: EnPassantSquare, from: Square, to: Square) ZobristHash {
         return self
             .move(.{ .player = player, .piece = .pawn }, from, to)
             .toggle_piece(.{ .player = player.opposite(), .piece = .pawn }, en_passant_square.to_square())
             .toggle_en_passant_square(en_passant_square);
     }
 
-    pub fn promote(self: ZobristHash, comptime player: Player, comptime promotion: PromotionPiece, from: Square, to: Square) ZobristHash {
+    pub fn promote(self: ZobristHash, player: Player, promotion: PromotionPiece, from: Square, to: Square) ZobristHash {
         return self
             .toggle_piece(.{ .Player = player, .Piece = .pawn }, from)
             .toggle_piece(.{ .Player = player, .Piece = promotion.toPiece() }, to);
     }
 
-    pub fn promote_capture(self: ZobristHash, comptime player: Player, comptime captured_piece: OwnedNonKingPiece, comptime promotion: PromotionPiece, from: Square, to: Square) ZobristHash {
+    pub fn promote_capture(self: ZobristHash, player: Player, captured_piece: OwnedNonKingPiece, promotion: PromotionPiece, from: Square, to: Square) ZobristHash {
         return self
             .toggle_piece(captured_piece.to_owned(), to)
             .toggle_piece(.{ .Player = player, .Piece = .pawn }, from)
             .toggle_piece(.{ .Player = player, .Piece = promotion.toPiece() }, to);
     }
 
-    fn toggle_castle_rights(self: ZobristHash, comptime castle_rights: CastleRights) ZobristHash {
+    pub fn toggle_castle_right(self: ZobristHash, player: Player, castle_direction: CastleDirection) ZobristHash {
+        return ZobristHash{ .key = self.key ^ CASTLE_KEYS.get(player).get(castle_direction) };
+    }
+
+    fn toggle_castle_rights(self: ZobristHash, castle_rights: CastleRights) ZobristHash {
         var result = self;
         inline for (comptime std.enums.values(Player)) |player| {
             inline for (comptime std.enums.values(CastleDirection)) |castle_direction| {
@@ -934,19 +937,19 @@ pub const ZobristHash = struct {
         return result;
     }
 
-    fn toggle_en_passant_square(self: ZobristHash, comptime en_passant_square: ?EnPassantSquare) ZobristHash {
+    fn toggle_en_passant_square(self: ZobristHash, en_passant_square: ?EnPassantSquare) ZobristHash {
         if (en_passant_square) |square| {
             return ZobristHash{ .key = self.key ^ EN_PASSANT_KEYS.get(square) };
         }
         return self;
     }
 
-    pub fn toggle_piece(self: ZobristHash, comptime piece: OwnedPiece, square: Square) ZobristHash {
+    pub fn toggle_piece(self: ZobristHash, piece: OwnedPiece, square: Square) ZobristHash {
         const square_lookup = PIECE_SQUARE_KEYS.get(piece.player).get(piece.piece);
         return ZobristHash{ .key = self.key ^ square_lookup.get(square) };
     }
 
-    fn test_toggle_piece(hash: ZobristHash, comptime piece: OwnedPiece, square: Square) !void {
+    fn test_toggle_piece(hash: ZobristHash, piece: OwnedPiece, square: Square) !void {
         const toggled_once = hash.toggle_piece(piece, square);
         try std.testing.expect(hash.key != toggled_once.key);
         const toggled_twice = toggled_once.toggle_piece(piece, square);
@@ -961,27 +964,14 @@ pub const ZobristHash = struct {
         inline for (players) |starting_player| {
             inline for (players) |player| {
                 inline for (pieces) |piece| {
-                    const hash = comptime ZobristHash.init(starting_player, ByPlayer(Square).init(.{ .white = .e1, .black = .e8 }), CastleRights.initFill(true), null);
+                    const owned_piece = OwnedPiece{ .piece = piece, .player = player };
+                    const hash = comptime ZobristHash.init(starting_player, ByPlayer(Square).init(.{ .white = .e1, .black = .e8 }), CastleRights.all, null);
                     for (std.enums.values(Square)) |square| {
-                        if (player == .white) {
-                            switch (piece) {
-                                .king => try test_toggle_piece(hash, .{ .piece = .king, .player = .white }, square),
-                                .queen => try test_toggle_piece(hash, .{ .piece = .queen, .player = .white }, square),
-                                .rook => try test_toggle_piece(hash, .{ .piece = .rook, .player = .white }, square),
-                                .bishop => try test_toggle_piece(hash, .{ .piece = .bishop, .player = .white }, square),
-                                .knight => try test_toggle_piece(hash, .{ .piece = .knight, .player = .white }, square),
-                                .pawn => try test_toggle_piece(hash, .{ .piece = .pawn, .player = .white }, square),
-                            }
-                        } else {
-                            switch (piece) {
-                                .king => try test_toggle_piece(hash, .{ .piece = .king, .player = .black }, square),
-                                .queen => try test_toggle_piece(hash, .{ .piece = .queen, .player = .black }, square),
-                                .rook => try test_toggle_piece(hash, .{ .piece = .rook, .player = .black }, square),
-                                .bishop => try test_toggle_piece(hash, .{ .piece = .bishop, .player = .black }, square),
-                                .knight => try test_toggle_piece(hash, .{ .piece = .knight, .player = .black }, square),
-                                .pawn => try test_toggle_piece(hash, .{ .piece = .pawn, .player = .black }, square),
-                            }
-                        }
+                        const toggled_once = hash.toggle_piece(owned_piece, square);
+                        try std.testing.expect(hash.key != toggled_once.key);
+                        const toggled_twice = toggled_once.toggle_piece(owned_piece, square);
+                        try std.testing.expect(toggled_once.key != toggled_twice.key);
+                        try std.testing.expect(hash.key == toggled_twice.key);
                     }
                 }
             }
