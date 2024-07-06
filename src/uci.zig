@@ -1,4 +1,5 @@
 const std = @import("std");
+const build_options = @import("build_options");
 
 /// A parsed incoming UCI command
 pub const UciCommand = union(enum) {
@@ -44,7 +45,7 @@ pub const UciCommand = union(enum) {
         later,
     },
 
-    pub fn tryParse(line: []const u8) ?UciCommand {
+    pub fn tryParse(line: []const u8) !UciCommand {
         if (std.mem.eql(u8, line, "uci")) {
             return .uci;
         } else if (std.mem.eql(u8, line, "isready")) {
@@ -59,16 +60,38 @@ pub const UciCommand = union(enum) {
             return .stop;
         }
         // TODO: The rest
-        return null;
+        return error.UnrecognizedCommand;
     }
 };
 
-pub const UciCommandError = error{UciNotImplemented};
+pub const UciCommandParseError = error{ UnrecognizedCommand, UciNotImplemented };
 
 pub fn parse(command: []const u8) !UciCommand {
     _ = command;
     return error.UciNotImplemented;
 }
+
+pub const UciOptionConfig = struct {
+    name: []const u8,
+    config: union(enum) {
+        check: struct {
+            default: bool = false,
+        },
+        spin: struct {
+            default: u32,
+            min: u32,
+            max: u32,
+        },
+        combo: struct {
+            default: []const u8,
+            options: []const []const u8,
+        },
+        string: struct {
+            default: []const u8,
+        },
+        button,
+    },
+};
 
 pub const UciResponse = union(enum) {
     id: union(enum) {
@@ -90,6 +113,7 @@ pub const UciResponse = union(enum) {
         nodes: ?u32,
         pv: ?[]const []const u8,
         multipv: ?u32,
+        // TODO: Account for upper/lowerbound scores
         score: ?union(enum) { mate: i32, depth: u32 },
         hashfull: ?u32,
         nps: ?u32,
@@ -97,27 +121,7 @@ pub const UciResponse = union(enum) {
         cpuload: ?u32,
         string: ?[]const u8,
     },
-    option: struct {
-        name: []const u8,
-        config: union(enum) {
-            check: struct {
-                default: bool = false,
-            },
-            spin: struct {
-                default: u32,
-                min: u32,
-                max: u32,
-            },
-            combo: struct {
-                default: []const u8,
-                options: []const []const u8,
-            },
-            string: struct {
-                default: []const u8,
-            },
-            button,
-        },
-    },
+    option: UciOptionConfig,
 };
 
 pub const PerfCommand = struct {
@@ -138,33 +142,51 @@ pub const CliState = union(enum) {
 
 pub const CliCommand = union(enum) {
     bench,
+    help,
     perft: PerfCommand,
     uci: UciCommand,
 
-    pub fn tryParse(line: []const u8) CliCommandError!CliCommand {
+    pub fn tryParse(line: []const u8) CliCommandParseError!CliCommand {
+        // TODO: Consider lowercasing the input for case-insensitivity
         if (std.mem.eql(u8, line, "bench")) {
             return .bench;
         } else if (std.mem.eql(u8, line, "perft")) {
             // TODO: Parse FEN and depth
             return .{ .perft = .{ .fen = undefined, .depth = 0 } };
-        } else if (UciCommand.tryParse(line)) |uci_command| {
-            return .{ .uci = uci_command };
-        } else {
-            return error.UnrecognizedCommand;
         }
+
+        return .{ .uci = try UciCommand.tryParse(line) };
     }
 };
 
-pub const CliCommandError = UciCommandError || error{
-    UnrecognizedCommand,
+pub const CliCommandParseError = UciCommandParseError || error{
+    HelpNotImplemented,
+    BenchNotImplemented,
+    PerftNotImplemented,
+    InvalidPerftCommand,
 };
 
 pub const CliManager = struct {
     const base_buffer_size: usize = 1024;
     const engine_name = "Corundum";
     const engine_authors = "Jeffrey Meyer <itotallyrock>";
+    const engine_options = [_]UciOptionConfig{ .{
+        .name = "Hash",
+        .config = .{ .spin = .{ .default = 16, .min = 1, .max = 1024 } },
+    }, .{
+        .name = "Threads",
+        .config = .{ .spin = .{ .default = 1, .min = 1, .max = 64 } },
+    }, .{
+        .name = "MultiPV",
+        .config = .{ .spin = .{ .default = 1, .min = 1, .max = 5 } },
+    }, .{
+        .name = "Clear Hash",
+        .config = .button,
+    }, .{
+        .name = "Ponder",
+        .config = .{ .check = .{ .default = false } },
+    } };
 
-    input_buffer: [base_buffer_size]u8 = undefined,
     state: CliState = .none,
     input_stream: std.io.AnyReader,
     output_stream: std.io.AnyWriter,
@@ -177,27 +199,50 @@ pub const CliManager = struct {
     }
 
     pub fn run(self: *CliManager) !void {
-        while (try self.readCommand()) |command| {
+        try self.output_stream.print("{s} v{s} by {s}\n", .{ engine_name, build_options.version, engine_authors });
+        while (true) {
+            const line = try self.readLine();
+            const command = CliCommand.tryParse(line) catch |err| switch (err) {
+                UciCommandParseError.UnrecognizedCommand => {
+                    try self.output_stream.print("Unknown command: '{s}'. Type help for more information.\n", .{line});
+                    continue;
+                },
+                else => return err,
+            };
             switch (command) {
+                .help => {
+                    // TODO: Implement help
+                    try self.output_stream.print("Help is not implemented.\n", .{});
+                },
                 .bench => {
-                    @panic("Bench not implemented");
+                    // TODO: Implement bench
+                    try self.output_stream.print("Bench is not implemented.\n", .{});
                 },
                 .perft => {
-                    @panic("Perft not implemented");
+                    // TODO: Implement perft
+                    try self.output_stream.print("Perft is not implemented.\n", .{});
                 },
                 .uci => |uci_command| {
                     switch (uci_command) {
                         .uci => {
-                            // TODO: Use UciResponse
-                            try self.output_stream.print("id name {s}\n", .{engine_name});
-                            try self.output_stream.print("id author {s}\n", .{engine_authors});
-                            // TODO: Print options
-                            try self.output_stream.print("uciok\n", .{});
+                            try self.writeResponse(.{ .id = .{ .name = engine_name } });
+                            try self.writeResponse(.{ .id = .{ .author = engine_authors } });
+                            try self.output_stream.print("\n", .{});
+                            for (engine_options) |option| {
+                                try self.writeResponse(.{ .option = option });
+                            }
+                            try self.writeResponse(.uciok);
                             self.state = .{ .uci = .uninitialized };
                         },
+                        .isready => {
+                            // TODO: Initialize the engine
+                            try self.writeResponse(.readyok);
+                            self.state = .{ .uci = .initialized };
+                        },
+                        // TODO: The rest of the UCI commands
                         .quit => break,
                         else => {
-                            return error.UciNotImplemented;
+                            try self.output_stream.print("Unsupported UCI command.\n", .{});
                         },
                     }
                 },
@@ -205,30 +250,94 @@ pub const CliManager = struct {
         }
     }
 
-    fn readCommand(self: *CliManager) !?CliCommand {
-        // var buffer = self.input_buffer;
-        // var i: usize = 0;
-        // while (true) {
-        //     const n = self.input_stream.read(buffer[i..]) catch return null;
-        //     if (n == 0) {
-        //         break;
-        //     }
-        //     i += n;
-        //     if (buffer[i - 1] == '\n') {
-        //         break;
-        //     }
-        // }
-        var line = try std.ArrayList(u8).initCapacity(std.heap.page_allocator, base_buffer_size);
-        // _ = self;
-        // defer line.deinit();
-        // _ = try line.writer().write("bench\r\n");
-        try self.input_stream.streamUntilDelimiter(line.writer(), '\n', null);
-        const trimmed = std.mem.trim(u8, line.items, "\n\t\u{0}\r ");
-        std.debug.print("Read line: {s}\n", .{trimmed});
+    fn writeResponse(self: *CliManager, response: UciResponse) !void {
+        switch (response) {
+            .id => |id_response| switch (id_response) {
+                .name => |name| try self.output_stream.print("id name {s}\n", .{name}),
+                .author => |author| try self.output_stream.print("id author {s}\n", .{author}),
+            },
+            .uciok => try self.output_stream.print("uciok\n", .{}),
+            .readyok => try self.output_stream.print("readyok\n", .{}),
+            .copyprotection => |state| try self.output_stream.print("copyprotection {s}\n", .{@tagName(state)}),
+            .registration => |state| try self.output_stream.print("registration {s}\n", .{@tagName(state)}),
+            .info => |info| {
+                try self.output_stream.print("info", .{});
+                if (info.depth) |depth| {
+                    try self.output_stream.print(" depth {d}", .{depth});
+                }
+                if (info.seldepth) |seldepth| {
+                    try self.output_stream.print(" seldepth {d}", .{seldepth});
+                }
+                if (info.time) |time| {
+                    try self.output_stream.print(" time {d}", .{time});
+                }
+                if (info.nodes) |nodes| {
+                    try self.output_stream.print(" nodes {d}", .{nodes});
+                }
+                if (info.pv) |pv| {
+                    try self.output_stream.print(" pv", .{});
+                    for (pv) |line| {
+                        try self.output_stream.print(" {s}", .{line});
+                    }
+                }
+                if (info.multipv) |multipv| {
+                    try self.output_stream.print(" multipv {d}", .{multipv});
+                }
+                if (info.score) |score| {
+                    try self.output_stream.print(" score", .{});
+                    switch (score) {
+                        .mate => |mate| try self.output_stream.print(" mate {d}", .{mate}),
+                        .depth => |depth| try self.output_stream.print(" cp {d}", .{depth}),
+                    }
+                }
+                if (info.hashfull) |hashfull| {
+                    try self.output_stream.print(" hashfull {d}", .{hashfull});
+                }
+                if (info.nps) |nps| {
+                    try self.output_stream.print(" nps {d}", .{nps});
+                }
+                if (info.tbhits) |tbhits| {
+                    try self.output_stream.print(" tbhits {d}", .{tbhits});
+                }
+                if (info.cpuload) |cpuload| {
+                    try self.output_stream.print(" cpuload {d}", .{cpuload});
+                }
+                if (info.string) |string| {
+                    try self.output_stream.print(" string {s}", .{string});
+                }
+                try self.output_stream.print("\n", .{});
+            },
+            .bestmove => |bestmove| {
+                try self.output_stream.print("bestmove {s}", .{bestmove.move});
+                if (bestmove.ponder) |ponder_move| {
+                    try self.output_stream.print(" ponder {s}\n", .{ponder_move});
+                } else {
+                    try self.output_stream.print("\n", .{});
+                }
+            },
+            .option => |option| {
+                switch (option.config) {
+                    .string => |string_option| try self.output_stream.print("option name {s} type string default {s}\n", .{ option.name, string_option.default }),
+                    .spin => |spin_option| try self.output_stream.print("option name {s} type spin default {d} min {d} max {d}\n", .{ option.name, spin_option.default, spin_option.min, spin_option.max }),
+                    .check => |check_option| try self.output_stream.print("option name {s} type check default {s}\n", .{ option.name, if (check_option.default) "true" else "false" }),
+                    .combo => |combo_option| {
+                        try self.output_stream.print("option name {s} type combo default {s}", .{ option.name, combo_option.default });
+                        for (combo_option.options) |combo_choice| {
+                            try self.output_stream.print(" var {s}", .{combo_choice});
+                        }
+                        try self.output_stream.print("\n", .{});
+                    },
+                    .button => try self.output_stream.print("option name {s} type button\n", .{option.name}),
+                }
+            },
+        }
+    }
 
-        return CliCommand.tryParse(trimmed) catch {
-            std.debug.print("Invalid command: \"{s}\"\n", .{trimmed});
-            return null;
-        };
+    fn readLine(self: *CliManager) ![]const u8 {
+        var line = std.BoundedArray(u8, base_buffer_size).init(0) catch unreachable;
+        try self.input_stream.streamUntilDelimiter(line.writer(), '\n', base_buffer_size);
+        const trimmed = std.mem.trim(u8, line.slice(), &std.ascii.whitespace);
+
+        return trimmed;
     }
 };
