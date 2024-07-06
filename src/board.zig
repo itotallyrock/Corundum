@@ -473,7 +473,11 @@ pub const Board = struct {
                     line,
                     self.state.castle_rights.getUciString(),
                 }),
-                ._6 => std.debug.print("|      En Passant: {s}\n{s}  Halfmove Clock: {d}\n", .{ if (self.epSquare()) |sq| @tagName(sq) else "-", line, self.state.halfmove_clock }),
+                ._6 => std.debug.print("|      En Passant: {s}\n{s}  Halfmove Clock: {d}\n", .{
+                    if (self.epSquare()) |sq| @tagName(sq) else "-",
+                    line,
+                    self.state.halfmove_clock,
+                }),
                 ._5 => std.debug.print("|\n{s}    Zobrist Hash: 0x{X}\n", .{ line, self.state.key.key }),
                 ._4 => std.debug.print("|   Checkers Mask: 0x{X}\n{s}\n", .{ self.state.checkers.mask, line }),
                 ._3 => std.debug.print("|\n{s}\n", .{line}),

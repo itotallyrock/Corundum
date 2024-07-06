@@ -4,6 +4,7 @@ const ByPlayer = @import("players.zig").ByPlayer;
 const Square = @import("square.zig").Square;
 const File = @import("square.zig").File;
 const BySquare = @import("square.zig").BySquare;
+const BoardDirection = @import("directions.zig").BoardDirection;
 const EnPassantSquare = @import("square.zig").EnPassantSquare;
 const ByEnPassantSquare = @import("square.zig").ByEnPassantSquare;
 const OwnedPiece = @import("pieces.zig").OwnedPiece;
@@ -889,8 +890,10 @@ pub const ZobristHash = struct {
 
     pub fn doublePawnPush(self: ZobristHash, player: Player, en_passant_file: File) ZobristHash {
         const en_passant_square = en_passant_file.epSquareFor(player);
-        const from = .a2; // TODO: Get from file/en_passant_square
-        const to = .a4; // TODO: Get from file/en_passant_square
+        const en_passant_square_square = en_passant_square.to_square();
+        const forward = BoardDirection.forward(player);
+        const from = en_passant_square_square.shift(forward.opposite()).?;
+        const to = en_passant_square_square.shift(forward).?;
         return self
             .move(.{ .player = player, .piece = .pawn }, from, to)
             .toggle_en_passant_square(en_passant_square);
