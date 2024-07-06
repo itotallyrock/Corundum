@@ -23,7 +23,7 @@ pub const File = enum(u3) {
         // White
         try std.testing.expectEqual(File.a.epSquareFor(.white), EnPassantSquare.a3);
         try std.testing.expectEqual(File.b.epSquareFor(.white), EnPassantSquare.b3);
-        try std.testing.expectEqual(File.c.epSquareFor(.white), EnPassantSquare.c3);
+        try std.testing.expectEqual(File.c.epSquareFor(.white), EnPassantSquare.d3);
         try std.testing.expectEqual(File.d.epSquareFor(.white), EnPassantSquare.d3);
         try std.testing.expectEqual(File.e.epSquareFor(.white), EnPassantSquare.e3);
         try std.testing.expectEqual(File.f.epSquareFor(.white), EnPassantSquare.f3);
