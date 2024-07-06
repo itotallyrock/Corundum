@@ -39,6 +39,6 @@ jobs:
         with:
           version: ${{ matrix.zig }}
       - name: Build
-        run: zig build
+        run: zig build --verbose
       - name: Run Tests
-        run: zig build test
+        run: zig build test --verbose
