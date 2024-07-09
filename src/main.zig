@@ -1,5 +1,7 @@
 const std = @import("std");
 
+pub const UciParser = @import("uci_parser.zig").UciParser;
+
 pub const CliManager = @import("uci.zig").CliManager;
 pub const Square = @import("square.zig").Square;
 pub const EnPassantSquare = @import("square.zig").EnPassantSquare;
