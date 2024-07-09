@@ -68,16 +68,13 @@ pub const UciCommand = union(enum) {
             @panic("TODO: Parse register command");
         } else if (std.ascii.startsWithIgnoreCase(line, "setoption name ")) {
             const name_and_maybe_value = line[15..];
-            std.debug.print("WOWOWO '{s}' ''\n", .{line});
-            _ = name_and_maybe_value;
-            @panic("TODO");
-            // if (std.mem.lastIndexOf(u8, name_and_maybe_value, " value ")) |value_index| {
-            //     const name = name_and_maybe_value[0..value_index];
-            //     const value = name_and_maybe_value[value_index + 7 ..];
-            //     return .{ .setoption = .{ .name = name, .value = value } };
-            // } else {
-            //     return .{ .setoption = .{ .name = name_and_maybe_value, .value = null } };
-            // }
+            if (std.mem.lastIndexOf(u8, name_and_maybe_value, " value ")) |value_index| {
+                const name = name_and_maybe_value[0..value_index];
+                const value = name_and_maybe_value[value_index + 7 ..];
+                return .{ .setoption = .{ .name = name, .value = value } };
+            } else {
+                return .{ .setoption = .{ .name = name_and_maybe_value, .value = null } };
+            }
         } else if (std.ascii.startsWithIgnoreCase(line, "position ")) {
             @panic("TODO: Parse position command");
         } else if (std.ascii.startsWithIgnoreCase(line, "go ")) {
@@ -127,16 +124,15 @@ pub const UciOptionConfig = struct {
         button,
     },
 
+    /// Tries to parse the given value into the correct UciOptionValue
+    // Inline since this is often immediately switched on after calling, this switch can be combined with the switch in the caller
     pub fn tryParse(self: UciOptionConfig, value: ?[]const u8) !UciOptionValue {
-        // TODO: Move this to the caller of this method
-        // if (!std.ascii.eqlIgnoreCase(self.name, set_option.name)) {
-        //     return null;
-        // }
-
         switch (self.config) {
             .check => {
                 if (value) |v| {
-                    if (std.ascii.eqlIgnoreCase(v, "true")) {
+                    if (v.len == 0) {
+                        return .{ .check = self.config.check.default };
+                    } else if (std.ascii.eqlIgnoreCase(v, "true")) {
                         return .{ .check = true };
                     } else if (std.ascii.eqlIgnoreCase(v, "false")) {
                         return .{ .check = false };
@@ -149,21 +145,99 @@ pub const UciOptionConfig = struct {
             },
             .spin => {
                 if (value) |v| {
-                    const i = try std.fmt.parseInt(i32, v, 10);
-                    if (i < self.config.spin.min or i > self.config.spin.max) {
-                        return error.InvalidOptionValue;
+                    if (v.len > 0) {
+                        const i = std.fmt.parseInt(i32, v, 10) catch return error.InvalidOptionValue;
+                        if (i < self.config.spin.min or i > self.config.spin.max) {
+                            return error.InvalidOptionValue;
+                        }
+                        return .{ .spin = i };
+                    } else {
+                        return .{ .spin = self.config.spin.default };
                     }
-                    return .{ .spin = i };
                 } else {
                     return .{ .spin = self.config.spin.default };
                 }
             },
             .button => return .button,
-            else => @panic("TODO: Implement the rest of the option types"),
+            .combo => {
+                if (value) |v| {
+                    if (v.len == 0) {
+                        return .{ .combo = self.config.combo.default };
+                    }
+
+                    for (self.config.combo.options) |option| {
+                        if (std.mem.eql(u8, v, option)) {
+                            return .{ .combo = option };
+                        }
+                    }
+                    return error.InvalidOptionValue;
+                } else {
+                    return .{ .combo = self.config.combo.default };
+                }
+            },
+            .string => {
+                if (value) |v| {
+                    return .{ .string = v };
+                } else {
+                    return .{ .string = self.config.string.default };
+                }
+            },
         }
+    }
+
+    test tryParse {
+        const spin_config = UciOptionConfig{
+            .name = "test",
+            .config = .{ .spin = .{ .default = 10, .min = 0, .max = 100 } },
+        };
+        try std.testing.expectEqualDeep(UciOptionValue{ .spin = 10 }, try spin_config.tryParse(null));
+        try std.testing.expectEqualDeep(UciOptionValue{ .spin = 10 }, try spin_config.tryParse(""));
+        try std.testing.expectEqualDeep(UciOptionValue{ .spin = 20 }, try spin_config.tryParse("20"));
+        try std.testing.expectError(error.InvalidOptionValue, spin_config.tryParse("200"));
+        try std.testing.expectError(error.InvalidOptionValue, spin_config.tryParse("a"));
+
+        const check_config = UciOptionConfig{
+            .name = "test",
+            .config = .{ .check = .{ .default = true } },
+        };
+        try std.testing.expectEqualDeep(UciOptionValue{ .check = true }, try check_config.tryParse(null));
+        try std.testing.expectEqualDeep(UciOptionValue{ .check = true }, try check_config.tryParse(""));
+        try std.testing.expectEqualDeep(UciOptionValue{ .check = true }, try check_config.tryParse("true"));
+        try std.testing.expectEqualDeep(UciOptionValue{ .check = true }, try check_config.tryParse("tRuE"));
+        try std.testing.expectEqualDeep(UciOptionValue{ .check = false }, try check_config.tryParse("false"));
+        try std.testing.expectEqualDeep(UciOptionValue{ .check = false }, try check_config.tryParse("fAlSe"));
+        try std.testing.expectError(error.InvalidOptionValue, check_config.tryParse("a"));
+
+        const combo_config = UciOptionConfig{
+            .name = "test",
+            .config = .{ .combo = .{ .default = "a", .options = &[_][]const u8{ "a", "b", "c" } } },
+        };
+        try std.testing.expectEqualDeep(UciOptionValue{ .combo = "a" }, try combo_config.tryParse(null));
+        try std.testing.expectEqualDeep(UciOptionValue{ .combo = "a" }, try combo_config.tryParse(""));
+        try std.testing.expectEqualDeep(UciOptionValue{ .combo = "a" }, try combo_config.tryParse("a"));
+        try std.testing.expectEqualDeep(UciOptionValue{ .combo = "b" }, try combo_config.tryParse("b"));
+        try std.testing.expectEqualDeep(UciOptionValue{ .combo = "c" }, try combo_config.tryParse("c"));
+        try std.testing.expectError(error.InvalidOptionValue, combo_config.tryParse("d"));
+        try std.testing.expectError(error.InvalidOptionValue, combo_config.tryParse("C"));
+
+        const string_config = UciOptionConfig{
+            .name = "test",
+            .config = .{ .string = .{ .default = "a" } },
+        };
+        try std.testing.expectEqualDeep(UciOptionValue{ .string = "a" }, try string_config.tryParse(null));
+        try std.testing.expectEqualDeep(UciOptionValue{ .string = "" }, try string_config.tryParse(""));
+        try std.testing.expectEqualDeep(UciOptionValue{ .string = "lol" }, try string_config.tryParse("lol"));
+
+        const button_config = UciOptionConfig{
+            .name = "test",
+            .config = .button,
+        };
+        try std.testing.expectEqualDeep(UciOptionValue.button, try button_config.tryParse(null));
+        try std.testing.expectEqualDeep(UciOptionValue.button, try button_config.tryParse(""));
     }
 };
 
+/// A message sent from the engine to the GUI
 pub const UciResponse = union(enum) {
     id: union(enum) {
         name: []const u8,
@@ -195,11 +269,13 @@ pub const UciResponse = union(enum) {
     option: UciOptionConfig,
 };
 
-pub const PerfCommand = struct {
+/// A non-uci command sent to the engine to performance test, or [perft](https://www.chessprogramming.org/Perft), a given position to a certain depth
+pub const PerftCommand = struct {
     fen: []const u8,
     depth: u32,
 };
 
+/// The state of the CLI and UCI engine
 pub const CliState = union(enum) {
     none,
     bench,
@@ -214,7 +290,7 @@ pub const CliState = union(enum) {
 pub const CliCommand = union(enum) {
     bench,
     help,
-    perft: PerfCommand,
+    perft: PerftCommand,
     uci: UciCommand,
 
     pub fn tryParse(line: []const u8) CliCommandParseError!CliCommand {
@@ -236,6 +312,7 @@ pub const CliCommandParseError = UciCommandParseError || error{
     InvalidPerftCommand,
 };
 
+/// The CLI manager is responsible for parsing commands from the user and maintaining an engine state
 pub const CliManager = struct {
     const base_buffer_size: usize = 1024;
     const engine_name = "Corundum";
@@ -261,6 +338,7 @@ pub const CliManager = struct {
     input_stream: std.io.AnyReader,
     output_stream: std.io.AnyWriter,
 
+    /// Create a new CLI manager with the given input and output streams.
     pub fn init(input: std.io.AnyReader, output: std.io.AnyWriter) CliManager {
         return CliManager{
             .input_stream = input,
@@ -268,9 +346,11 @@ pub const CliManager = struct {
         };
     }
 
+    /// The main loop for the CLI manager.
+    /// Continuously reads input from the input stream and processes it as commands, mostly for running as a UCI engine.
     pub fn run(self: *CliManager) !void {
         try self.output_stream.print("{s} v{s} by {s}\n", .{ engine_name, build_options.version, engine_authors });
-        while (true) {
+        main_loop: while (true) {
             const line = try self.readLine();
             const command = CliCommand.tryParse(line) catch |err| switch (err) {
                 UciCommandParseError.UnrecognizedCommand => {
@@ -316,14 +396,31 @@ pub const CliManager = struct {
                                         try self.output_stream.print("Invalid value for option '{s}': {s}\n", .{ option.name, option.value orelse "" });
                                         continue;
                                     };
-                                    _ = value;
-                                    std.debug.print("Setting option {s}\n", .{option.name});
+                                    // _ = value;
+                                    std.debug.print("Setting option {s} {?}\n", .{ option.name, value });
                                     // TODO: Update engine with option
 
-                                    continue;
+                                    continue :main_loop;
                                 }
                             }
-                            try self.output_stream.print("Unknown option: '{s}'.\n", .{option.name});
+
+                            // Handle unknown option
+                            switch (engine_options.len) {
+                                0 => try self.output_stream.print("Unknown option: '{s}'", .{option.name}),
+                                1 => {
+                                    try self.output_stream.print("Unknown option: '{s}', supported option is:", .{ option.name, engine_options[1].name });
+                                },
+                                2 => {
+                                    try self.output_stream.print("Unknown option: '{s}', supported options are: {s} and {s}", .{ option.name, engine_options[0].name, engine_options[1].name });
+                                },
+                                else => {
+                                    try self.output_stream.print("Unknown option: {s}, supported options are: ", .{option.name});
+                                    inline for (comptime engine_options[1 .. engine_options.len - 1]) |engine_option| {
+                                        try self.output_stream.print("{s}, ", .{engine_option.name});
+                                    }
+                                    try self.output_stream.print("and {s}\n", .{engine_options[engine_options.len - 1].name});
+                                },
+                            }
                         },
                         .position => |position_and_moves| {
                             _ = position_and_moves;
@@ -347,6 +444,7 @@ pub const CliManager = struct {
         }
     }
 
+    /// Respond to the GUI with the given UCI response.
     fn writeResponse(self: *CliManager, response: UciResponse) !void {
         switch (response) {
             .id => |id_response| switch (id_response) {
@@ -430,7 +528,9 @@ pub const CliManager = struct {
         }
     }
 
-    fn readLine(self: *CliManager) ![]const u8 {
+    /// Read a single command line input
+    // NOTE: This must be inline in order for the "line" stack address to remain constant
+    inline fn readLine(self: *CliManager) ![]const u8 {
         var line = std.BoundedArray(u8, base_buffer_size).init(0) catch unreachable;
         try self.input_stream.streamUntilDelimiter(line.writer(), '\n', base_buffer_size);
         const trimmed = std.mem.trim(u8, line.slice(), &std.ascii.whitespace);
