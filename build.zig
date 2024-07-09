@@ -13,6 +13,12 @@ pub fn build(b: *std.Build) void {
     const build_options = b.addOptions();
     build_options.addOption([]const u8, "version", "0.0.1");
 
+    const mecha_dep = b.dependency("mecha", .{
+        .target = target,
+        .optimize = optimize,
+    });
+
+    // Add the main executable
     const exe = b.addExecutable(.{
         .name = exe_name,
         .root_source_file = b.path("src/main.zig"),
@@ -20,6 +26,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
     exe.root_module.addOptions("build_options", build_options);
+    exe.root_module.addImport("mecha", mecha_dep.module("mecha"));
 
     b.installArtifact(exe);
 
@@ -31,6 +38,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
     main_tests.root_module.addOptions("build_options", build_options);
+    main_tests.root_module.addImport("mecha", mecha_dep.module("mecha"));
 
     b.step("test", "Run tests").dependOn(&b.addRunArtifact(main_tests).step);
 }
