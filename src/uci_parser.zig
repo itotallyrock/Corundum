@@ -71,11 +71,25 @@ fn fullT(comptime T: type, parser: mecha.Parser(T)) mecha.Parser(T) {
 }
 
 const whitespace = mecha.many(mecha.ascii.whitespace, .{ .collect = false, .min = 1 });
-fn takeUntil(end: anytype) mecha.Parser([]const u8) {
-    return mecha.combine(.{
-        mecha.many(mecha.ascii.ascii, .{ .collect = false, .min = 1 }),
-        end.discard(),
-    });
+
+pub fn takeUntil(end_parser: anytype) mecha.Parser([]const u8) {
+    return .{
+        .parse = struct {
+            fn parse(allocator: std.mem.Allocator, s: []const u8) !mecha.Result([]const u8) {
+                var index: usize = 0;
+                while (index < s.len) {
+                    const end = end_parser.parse(allocator, s[index..]) catch |err| if (err == error.ParserFailed) {
+                        index += 1;
+                        continue;
+                    } else {
+                        return err;
+                    };
+                    return mecha.Result([]const u8){ .value = s[0 .. index - 1], .rest = end.rest };
+                }
+                return mecha.Result([]const u8){ .value = s, .rest = &[_]u8{} };
+            }
+        }.parse,
+    };
 }
 
 pub const UciParser = mecha.oneOf(.{
@@ -87,40 +101,38 @@ pub const UciParser = mecha.oneOf(.{
     full(mecha.string("ponderhit")).mapConst(UciCommand{ .ponderhit = .{} }),
     full(mecha.string("quit")).mapConst(UciCommand{ .quit = .{} }),
     // Debug
-    fullT(bool, mecha.combine(.{
+    fullT(UciCommand, mecha.combine(.{
         mecha.string("debug").discard(),
         whitespace.discard(),
         mecha.oneOf(.{
-            mecha.string("on").mapConst(true),
-            mecha.string("off").mapConst(false),
+            mecha.string("on").mapConst(UciCommand{ .debug = .{ .on = true } }),
+            mecha.string("off").mapConst(UciCommand{ .debug = .{ .on = false } }),
         }),
-    })).map(createDebug),
+    })),
     // SetOption
     mecha.combine(.{
         mecha.string("setoption").discard(),
         whitespace.discard(),
         mecha.string("name").discard(),
         whitespace.discard(),
-        takeUntil(mecha.oneOf(.{
-            mecha.string(" value ").discard(),
-            mecha.eos,
-        })),
-        mecha.opt(mecha.combine(.{
-            whitespace.discard(),
-            mecha.string("value").discard(),
-            whitespace.discard(),
-            takeUntil(mecha.eos),
-        })),
-    }).map(mecha.toStruct(SetOption)).map(createSetOption),
+        mecha.oneOf(.{
+            mecha.combine(.{
+                takeUntil(mecha.string("value").discard()),
+                whitespace.discard(),
+                takeUntil(mecha.eos),
+            }).map(mecha.toStruct(SetOption)),
+            takeUntil(mecha.eos).map(struct {
+                fn createSetOption(name: []const u8) SetOption {
+                    return SetOption{ .name = name, .value = null };
+                }
+            }.createSetOption),
+        }).map(struct {
+            fn createSetOption(value: SetOption) UciCommand {
+                return UciCommand{ .setoption = value };
+            }
+        }.createSetOption),
+    }),
 });
-
-fn createDebug(value: bool) UciCommand {
-    return UciCommand{ .debug = .{ .on = value } };
-}
-
-fn createSetOption(value: SetOption) UciCommand {
-    return UciCommand{ .setoption = value };
-}
 
 test "uci" {
     const input = "uci";
