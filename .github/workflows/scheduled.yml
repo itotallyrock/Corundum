@@ -5,7 +5,7 @@ permissions:
 on:
   workflow_dispatch:
   schedule:
-    - cron: '20 4 * * *'
+    - cron: "20 4 * * *"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
@@ -16,8 +16,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        zig: [ master ]
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        zig: [master]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     name: Zig ${{ matrix.zig }} on ${{ matrix.os }}
     steps:
@@ -26,6 +26,6 @@ jobs:
         with:
           version: ${{ matrix.zig }}
       - name: Build
-        run: zig build --verbose
+        run: zig build --verbose --summary all
       - name: Run Tests
-        run: zig build test --verbose
+        run: zig build test --verbose --summary all

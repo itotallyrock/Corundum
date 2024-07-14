@@ -5,9 +5,9 @@ permissions:
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 concurrency:
@@ -29,8 +29,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        zig: [ 0.13.0, 0.12.0, master ]
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        zig: [0.13.0, 0.12.0, master]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     name: Zig ${{ matrix.zig }} on ${{ matrix.os }}
     steps:
@@ -39,6 +39,6 @@ jobs:
         with:
           version: ${{ matrix.zig }}
       - name: Build
-        run: zig build --verbose
+        run: zig build --verbose --summary all
       - name: Run Tests
-        run: zig build test --verbose
+        run: zig build test --verbose --summary all
