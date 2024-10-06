@@ -38,9 +38,8 @@ pub fn main() !void {
 
     var buffered_stdin = std.io.bufferedReader(stdin.reader());
 
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 
-    var cli_manager = CliManager.init(arena.allocator(), buffered_stdin.reader().any(), stdout.writer().any());
+    var cli_manager = CliManager.init(gpa.allocator(), buffered_stdin.reader().any(), stdout.writer().any());
     try cli_manager.run();
 }
