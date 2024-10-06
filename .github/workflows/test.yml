@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   fmt:
-    name: Zig Format
+    name: Zig Format Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,16 +29,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        zig: [ 0.13.0, 0.12.0, master ]
+        zig: [ master ]
         os: [ ubuntu-latest, windows-latest, macos-latest ]
     runs-on: ${{ matrix.os }}
-    name: Zig ${{ matrix.zig }} on ${{ matrix.os }}
+    name: Zig Build/Test (zig ${{ matrix.zig }} on ${{ matrix.os }})
     steps:
       - uses: actions/checkout@v4
       - uses: mlugg/setup-zig@v1
         with:
           version: ${{ matrix.zig }}
       - name: Build
-        run: zig build --verbose
+        run: zig build --verbose --summary all
       - name: Run Tests
-        run: zig build test --verbose
+        run: zig build test --verbose --summary all

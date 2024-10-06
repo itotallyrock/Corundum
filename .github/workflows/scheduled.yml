@@ -26,6 +26,6 @@ jobs:
         with:
           version: ${{ matrix.zig }}
       - name: Build
-        run: zig build --verbose
+        run: zig build --verbose --summary all
       - name: Run Tests
-        run: zig build test --verbose
+        run: zig build test --verbose --summary all
