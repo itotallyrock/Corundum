@@ -38,7 +38,7 @@ pub const uci_parser: mecha.Parser(UciCommand) = mecha.oneOf(.{
     full_token("ucinewgame").mapConst(UciCommand{ .ucinewgame = .{} }),
     full_token("ponderhit").mapConst(UciCommand{ .ponderhit = .{} }),
     full_token("quit").mapConst(UciCommand{ .quit = .{} }),
-    mecha.combine(.{ token("debug"), mecha.oneOf(.{ full_token("on").mapConst(true), full_token("off").mapConst(false) }) }).map(toDebugCommand),
+    // mecha.combine(.{ token("debug"), mecha.oneOf(.{ full_token("on").mapConst(true), full_token("off").mapConst(false) }) }).map(toDebugCommand),
     // mecha.combine(.{token("setoption"), mecha.oneOf(.{
     //     mecha.combine(.{
 
@@ -91,17 +91,17 @@ test "quit" {
     try std.testing.expectEqualDeep(UciCommand.quit, result.value);
 }
 
-test "debug on command" {
-    const input = "debug on";
-    const result = try uci_parser.parse(std.testing.failing_allocator, input);
-    try std.testing.expectEqualDeep(UciCommand{ .debug = .{ .on = true } }, result.value);
-}
-
-test "debug off" {
-    const input = "debug off";
-    const result = try uci_parser.parse(std.testing.failing_allocator, input);
-    try std.testing.expectEqualDeep(UciCommand{ .debug = .{ .on = false } }, result.value);
-}
+// test "debug on command" {
+//     const input = "debug on";
+//     const result = try uci_parser.parse(std.testing.failing_allocator, input);
+//     try std.testing.expectEqualDeep(UciCommand{ .debug = .{ .on = true } }, result.value);
+// }
+//
+// test "debug off" {
+//     const input = "debug off";
+//     const result = try uci_parser.parse(std.testing.failing_allocator, input);
+//     try std.testing.expectEqualDeep(UciCommand{ .debug = .{ .on = false } }, result.value);
+// }
 
 // test "setoption name Threads" {
 //     const input = "setoption name Threads";
