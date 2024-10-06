@@ -1,8 +1,6 @@
 const std = @import("std");
 
-pub const UciParser = @import("uci_parser.zig").UciParser;
-
-pub const CliManager = @import("uci.zig").CliManager;
+pub const CliManager = @import("cli.zig").CliManager;
 pub const Square = @import("square.zig").Square;
 pub const EnPassantSquare = @import("square.zig").EnPassantSquare;
 pub const Board = @import("board.zig").Board;
@@ -40,6 +38,9 @@ pub fn main() !void {
 
     var buffered_stdin = std.io.bufferedReader(stdin.reader());
 
-    var cli_manager = CliManager.init(buffered_stdin.reader().any(), stdout.writer().any());
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+
+    var cli_manager = CliManager.init(arena.allocator(), buffered_stdin.reader().any(), stdout.writer().any());
     try cli_manager.run();
 }

@@ -1,60 +1,8 @@
 const std = @import("std");
 const mecha = @import("mecha");
-
-/// A parsed incoming UCI command
-pub const UciCommand = union(enum) {
-    uci: struct {},
-    debug: Debug,
-    isready: struct {},
-    ucinewgame: struct {},
-    setoption: SetOption,
-    position: Position,
-    go: Go,
-    stop: struct {},
-    ponderhit: struct {},
-    quit: struct {},
-    register: Register,
-};
-
-pub const Debug = struct {
-    on: bool,
-};
-
-pub const SetOption = struct {
-    name: []const u8,
-    value: ?[]const u8,
-};
-
-pub const Go = struct {
-    searchmoves: ?[]const []const u8,
-    ponder: bool = false,
-    wtime: ?u32,
-    btime: ?u32,
-    winc: ?u32,
-    binc: ?u32,
-    movestogo: ?u32,
-    depth: ?u32,
-    nodes: ?u32,
-    mate: ?u32,
-    movetime: ?u32,
-    infinite: bool = false,
-};
-
-pub const Position = struct {
-    position: union(enum) {
-        fen: []const u8,
-        startpos: struct {},
-    },
-    moves: ?[]const []const u8,
-};
-
-pub const Register = union(enum) {
-    user: struct {
-        name: []const u8,
-        code: []const u8,
-    },
-    later: struct {},
-};
+const uci = @import("uci.zig");
+const SetOption = uci.SetOption;
+const UciCommand = uci.UciCommand;
 
 fn full(parser: anytype) mecha.Parser(void) {
     return mecha.combine(.{
@@ -72,7 +20,7 @@ fn fullT(comptime T: type, parser: mecha.Parser(T)) mecha.Parser(T) {
 
 const whitespace = mecha.many(mecha.ascii.whitespace, .{ .collect = false, .min = 1 });
 
-pub fn takeUntil(end_parser: anytype) mecha.Parser([]const u8) {
+fn takeUntil(end_parser: anytype) mecha.Parser([]const u8) {
     return .{
         .parse = struct {
             fn parse(allocator: std.mem.Allocator, s: []const u8) !mecha.Result([]const u8) {
