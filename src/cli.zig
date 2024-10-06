@@ -6,6 +6,9 @@ const UciOptionConfig = uci.UciOptionConfig;
 const UciResponse = uci.UciResponse;
 const UciCommand = uci.UciCommand;
 const UciParser = @import("uci_parser.zig").UciParser;
+const parser_utils = @import("parser_utils.zig");
+const full = parser_utils.full;
+const whitespace = parser_utils.whitespace;
 
 /// A non-uci command sent to the engine to performance test, or [perft](https://www.chessprogramming.org/Perft), a given position to a certain depth
 pub const PerftCommand = struct {
@@ -33,20 +36,16 @@ pub const CliCommand = union(enum) {
 };
 
 pub const CliCommandParser = mecha.oneOf(.{
+    full(mecha.string("bench")).mapConst(CliCommand{ .bench = {} }),
+    full(mecha.string("help")).mapConst(CliCommand{ .help = {} }),
+    // TODO: Parse perft args
+    full(mecha.string("perft")).mapConst(CliCommand{ .perft = .{ .depth = 1, .fen = "startpos" } }),
     UciParser.map(struct {
         fn createCliCommand(command: UciCommand) CliCommand {
             return CliCommand{ .uci = command };
         }
     }.createCliCommand),
 });
-
-pub const CliCommandParseError = error{
-    ParserFailed,
-    HelpNotImplemented,
-    BenchNotImplemented,
-    PerftNotImplemented,
-    InvalidPerftCommand,
-};
 
 /// The CLI manager is responsible for parsing commands from the user and maintaining an engine state
 pub const CliManager = struct {
@@ -87,9 +86,16 @@ pub const CliManager = struct {
     /// The main loop for the CLI manager.
     /// Continuously reads input from the input stream and processes it as commands, mostly for running as a UCI engine.
     pub fn run(self: *CliManager) !void {
+        // Print engine meta data on startup
         try self.output_stream.print("{s} v{s} by {s}\n", .{ engine_name, build_options.version, engine_authors });
+
         main_loop: while (true) {
             const line = try self.readLine();
+
+            if (std.mem.trim(u8, line, " \n\t\r").len == 0) {
+                continue;
+            }
+
             const parse_result = CliCommandParser.parse(self.allocator, line) catch |err| switch (err) {
                 error.ParserFailed => {
                     try self.output_stream.print("Unknown command: '{s}'. Type help for more information.\n", .{line});
@@ -97,8 +103,8 @@ pub const CliManager = struct {
                 },
                 else => return err,
             };
-            const command = parse_result.value;
-            switch (command) {
+
+            switch (parse_result.value) {
                 .help => {
                     // TODO: Implement help
                     try self.output_stream.print("Help is not implemented.\n", .{});
@@ -273,8 +279,6 @@ pub const CliManager = struct {
         var line = std.BoundedArray(u8, base_buffer_size).init(0) catch unreachable;
         try self.input_stream.streamUntilDelimiter(line.writer(), '\n', base_buffer_size);
         const trimmed = std.mem.trim(u8, line.slice(), &std.ascii.whitespace);
-
-        std.debug.print("Read line '{s}'\n", .{trimmed});
 
         return trimmed;
     }
