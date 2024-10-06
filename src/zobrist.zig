@@ -54,7 +54,7 @@ pub const ZobristHash = struct {
     });
     /// Hash value for all piece square possibilities (including some illegal positions like pawns on last rank)
     const PIECE_SQUARE_KEYS: ByPlayer(ByPiece(BySquare(ZobristKey))) = blk: {
-        @setEvalBranchQuota(100_000);
+        @setEvalBranchQuota(1_000_000);
         break :blk ByPlayer(ByPiece(BySquare(ZobristKey))).init(.{
             .white = ByPiece(BySquare(ZobristKey)).init(.{
                 .pawn = BySquare(ZobristKey).init(.{
@@ -860,6 +860,7 @@ pub const ZobristHash = struct {
     key: ZobristKey,
 
     pub fn init(side_to_move: Player, king_squares: ByPlayer(Square), castle_rights: CastleRights, en_passant_square: ?EnPassantSquare) ZobristHash {
+        @setEvalBranchQuota(1_000_000);
         var hash = EMPTY
             .toggle_piece(.{ .player = .white, .piece = .king }, king_squares.get(.white))
             .toggle_piece(.{ .player = .black, .piece = .king }, king_squares.get(.black))

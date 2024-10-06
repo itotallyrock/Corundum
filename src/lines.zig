@@ -44,7 +44,7 @@ const through_lookup = blk: {
 /// The full board-spanning line that crosses through two aligned squares
 /// If the squares are not aligned, the result is an empty bitboard.
 pub fn through(from: Square, to: Square) Bitboard {
-    @setEvalBranchQuota(100000);
+    @setEvalBranchQuota(1_000_000);
     if (!@inComptime()) {
         return through_lookup[@intFromEnum(from)][@intFromEnum(to)];
     }
@@ -80,7 +80,7 @@ const between_lookup = blk: {
 /// If the squares are not aligned, the result is an empty bitboard.
 /// This does not include either end square (move gen should add the end piece's square to this mask for pin killing)
 pub fn between(from: Square, to: Square) Bitboard {
-    @setEvalBranchQuota(1000000);
+    @setEvalBranchQuota(1_000_000);
     if (!@inComptime()) {
         return between_lookup[@intFromEnum(from)][@intFromEnum(to)];
     }
