@@ -1,6 +1,5 @@
 const std = @import("std");
 
-
 /// A parsed incoming UCI command
 pub const UciCommand = union(enum) {
     uci: struct {},
@@ -55,7 +54,6 @@ pub const Register = union(enum) {
     },
     later: struct {},
 };
-
 
 pub const UciOptionType = enum {
     check,
