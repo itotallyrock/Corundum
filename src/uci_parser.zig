@@ -73,20 +73,20 @@ fn fullT(comptime T: type, parser: mecha.Parser(T)) mecha.Parser(T) {
 const whitespace = mecha.many(mecha.ascii.whitespace, .{ .collect = false, .min = 1 });
 
 pub fn takeUntil(end_parser: anytype) mecha.Parser([]const u8) {
+    const Res = mecha.Result([]const u8);
     return .{
         .parse = struct {
-            fn parse(allocator: std.mem.Allocator, s: []const u8) !mecha.Result([]const u8) {
+            fn parse(allocator: std.mem.Allocator, s: []const u8) !Res {
                 var index: usize = 0;
                 while (index < s.len) {
-                    const end = end_parser.parse(allocator, s[index..]) catch |err| if (err == error.ParserFailed) {
-                        index += 1;
-                        continue;
-                    } else {
-                        return err;
-                    };
-                    return mecha.Result([]const u8){ .value = s[0 .. index - 1], .rest = end.rest };
+                    const end = try end_parser.parse(allocator, s[index..]);
+                    switch (end.value) {
+                        .ok => return Res.ok(index + end.index, s[0 .. index - 1]),
+                        .err => index += 1,
+                    }
                 }
-                return mecha.Result([]const u8){ .value = s, .rest = &[_]u8{} };
+
+                return Res.ok(index, s[0..index]);
             }
         }.parse,
     };
@@ -137,59 +137,59 @@ pub const UciParser = mecha.oneOf(.{
 test "uci" {
     const input = "uci";
     const result = try UciParser.parse(std.testing.failing_allocator, input);
-    try std.testing.expectEqualDeep(UciCommand.uci, result.value);
+    try std.testing.expectEqualDeep(UciCommand.uci, result.value.ok);
 }
 
 test "stop" {
     const input = "stop";
     const result = try UciParser.parse(std.testing.failing_allocator, input);
-    try std.testing.expectEqualDeep(UciCommand.stop, result.value);
+    try std.testing.expectEqualDeep(UciCommand.stop, result.value.ok);
 }
 
 test "isready" {
     const input = "isready";
     const result = try UciParser.parse(std.testing.failing_allocator, input);
-    try std.testing.expectEqualDeep(UciCommand.isready, result.value);
+    try std.testing.expectEqualDeep(UciCommand.isready, result.value.ok);
 }
 
 test "ucinewgame" {
     const input = "ucinewgame";
     const result = try UciParser.parse(std.testing.failing_allocator, input);
-    try std.testing.expectEqualDeep(UciCommand.ucinewgame, result.value);
+    try std.testing.expectEqualDeep(UciCommand.ucinewgame, result.value.ok);
 }
 
 test "ponderhit" {
     const input = "ponderhit";
     const result = try UciParser.parse(std.testing.failing_allocator, input);
-    try std.testing.expectEqualDeep(UciCommand.ponderhit, result.value);
+    try std.testing.expectEqualDeep(UciCommand.ponderhit, result.value.ok);
 }
 
 test "quit" {
     const input = "quit";
     const result = try UciParser.parse(std.testing.failing_allocator, input);
-    try std.testing.expectEqualDeep(UciCommand.quit, result.value);
+    try std.testing.expectEqualDeep(UciCommand.quit, result.value.ok);
 }
 
 test "debug on command" {
     const input = "debug on";
     const result = try UciParser.parse(std.testing.failing_allocator, input);
-    try std.testing.expectEqualDeep(UciCommand{ .debug = .{ .on = true } }, result.value);
+    try std.testing.expectEqualDeep(UciCommand{ .debug = .{ .on = true } }, result.value.ok);
 }
 
 test "debug off" {
     const input = "debug off";
     const result = try UciParser.parse(std.testing.failing_allocator, input);
-    try std.testing.expectEqualDeep(UciCommand{ .debug = .{ .on = false } }, result.value);
+    try std.testing.expectEqualDeep(UciCommand{ .debug = .{ .on = false } }, result.value.ok);
 }
 
 test "setoption name Threads" {
     const input = "setoption name Threads";
     const result = try UciParser.parse(std.testing.failing_allocator, input);
-    try std.testing.expectEqualDeep(UciCommand{ .setoption = .{ .name = "Threads", .value = null } }, result.value);
+    try std.testing.expectEqualDeep(UciCommand{ .setoption = .{ .name = "Threads", .value = null } }, result.value.ok);
 }
 
 test "setoption name Hash value 4" {
     const input = "setoption name Hash value 4";
     const result = try UciParser.parse(std.testing.failing_allocator, input);
-    try std.testing.expectEqualDeep(UciCommand{ .setoption = .{ .name = "Hash", .value = "4" } }, result.value);
+    try std.testing.expectEqualDeep(UciCommand{ .setoption = .{ .name = "Hash", .value = "4" } }, result.value.ok);
 }

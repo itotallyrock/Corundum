@@ -58,37 +58,37 @@ pub const uci_parser: mecha.Parser(UciCommand) = mecha.oneOf(.{
 test "uci" {
     const input = "uci";
     const result = try uci_parser.parse(std.testing.failing_allocator, input);
-    try std.testing.expectEqualDeep(UciCommand.uci, result.value);
+    try std.testing.expectEqualDeep(UciCommand.uci, result.value.ok);
 }
 
 test "stop" {
     const input = "stop";
     const result = try uci_parser.parse(std.testing.failing_allocator, input);
-    try std.testing.expectEqualDeep(UciCommand.stop, result.value);
+    try std.testing.expectEqualDeep(UciCommand.stop, result.value.ok);
 }
 
 test "isready" {
     const input = "isready";
     const result = try uci_parser.parse(std.testing.failing_allocator, input);
-    try std.testing.expectEqualDeep(UciCommand.isready, result.value);
+    try std.testing.expectEqualDeep(UciCommand.isready, result.value.ok);
 }
 
 test "ucinewgame" {
     const input = "ucinewgame";
     const result = try uci_parser.parse(std.testing.failing_allocator, input);
-    try std.testing.expectEqualDeep(UciCommand.ucinewgame, result.value);
+    try std.testing.expectEqualDeep(UciCommand.ucinewgame, result.value.ok);
 }
 
 test "ponderhit" {
     const input = "ponderhit";
     const result = try uci_parser.parse(std.testing.failing_allocator, input);
-    try std.testing.expectEqualDeep(UciCommand.ponderhit, result.value);
+    try std.testing.expectEqualDeep(UciCommand.ponderhit, result.value.ok);
 }
 
 test "quit" {
     const input = "quit";
     const result = try uci_parser.parse(std.testing.failing_allocator, input);
-    try std.testing.expectEqualDeep(UciCommand.quit, result.value);
+    try std.testing.expectEqualDeep(UciCommand.quit, result.value.ok);
 }
 
 // test "debug on command" {
