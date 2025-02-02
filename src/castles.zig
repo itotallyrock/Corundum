@@ -3,21 +3,26 @@ const Player = @import("players.zig").Player;
 const ByPlayer = @import("players.zig").ByPlayer;
 const File = @import("square.zig").File;
 
+/// What set of castling rules are in effect.
 pub const CastleGameType = enum {
+    /// The standard rules for castling.
     standard,
+    /// Chess 960 or Fischer Random Chess rules for castling.
     fischer_random,
 };
 
-/// Specifies the configuration of castling rights.
+/// Specifies the configuration of castling by the castle ruleset for each game-type.
 /// This can be either the standard configuration or the Fischer Random configuration.
 pub const CastleConfig = union(CastleGameType) {
     /// The standard configuration (king on the E file, rooks on A & H files).
     standard: struct {},
     /// The Fischer Random Chess or Chess 960 configuration.
     fischer_random: struct {
+        /// The starting files for the rooks in Fischer Random Chess.
         starting_rook_files: ByCastleDirection(File),
     },
 
+    /// The starting files for the rooks
     pub fn startingRookFiles(self: CastleConfig) ByCastleDirection(File) {
         return switch (self) {
             .standard => ByCastleDirection(File).init(.{ .king_side = File.h, .queen_side = File.a }),
@@ -25,6 +30,7 @@ pub const CastleConfig = union(CastleGameType) {
         };
     }
 
+    /// Returns whether the configuration is Fischer Random Chess.
     pub fn isFischerRandom(self: CastleConfig) bool {
         return self == .fischer_random;
     }
@@ -301,6 +307,76 @@ pub const CastleAbilities = struct {
             }),
         }) }, CastleAbilities.all.rookMove(.black, .queen_side));
     }
+
+    /// Get the UCI string representation of the castle abilities.
+    /// i.e. "KQkq" for all abilities, "KQk" for all abilities except black queen side, etc.
+    pub fn getUciString(self: CastleAbilities) []const u8 {
+        if (self.hasAbility(.white, .king_side) and self.hasAbility(.white, .queen_side) and self.hasAbility(.black, .king_side) and self.hasAbility(.black, .queen_side)) {
+            return "KQkq";
+        }
+        if (self.hasAbility(.white, .king_side) and self.hasAbility(.white, .queen_side) and self.hasAbility(.black, .king_side) and !self.hasAbility(.black, .queen_side)) {
+            return "KQk";
+        }
+        if (self.hasAbility(.white, .king_side) and self.hasAbility(.white, .queen_side) and !self.hasAbility(.black, .king_side) and self.hasAbility(.black, .queen_side)) {
+            return "KQq";
+        }
+        if (self.hasAbility(.white, .king_side) and self.hasAbility(.white, .queen_side) and !self.hasAbility(.black, .king_side) and !self.hasAbility(.black, .queen_side)) {
+            return "KQ";
+        }
+        if (self.hasAbility(.white, .king_side) and !self.hasAbility(.white, .queen_side) and self.hasAbility(.black, .king_side) and self.hasAbility(.black, .queen_side)) {
+            return "Kkq";
+        }
+        if (self.hasAbility(.white, .king_side) and !self.hasAbility(.white, .queen_side) and self.hasAbility(.black, .king_side) and !self.hasAbility(.black, .queen_side)) {
+            return "Kk";
+        }
+        if (self.hasAbility(.white, .king_side) and !self.hasAbility(.white, .queen_side) and !self.hasAbility(.black, .king_side) and self.hasAbility(.black, .queen_side)) {
+            return "Kq";
+        }
+        if (self.hasAbility(.white, .king_side) and !self.hasAbility(.white, .queen_side) and !self.hasAbility(.black, .king_side) and !self.hasAbility(.black, .queen_side)) {
+            return "K";
+        }
+        if (!self.hasAbility(.white, .king_side) and self.hasAbility(.white, .queen_side) and self.hasAbility(.black, .king_side) and self.hasAbility(.black, .queen_side)) {
+            return "Qkq";
+        }
+        if (!self.hasAbility(.white, .king_side) and self.hasAbility(.white, .queen_side) and self.hasAbility(.black, .king_side) and !self.hasAbility(.black, .queen_side)) {
+            return "Qk";
+        }
+        if (!self.hasAbility(.white, .king_side) and self.hasAbility(.white, .queen_side) and !self.hasAbility(.black, .king_side) and self.hasAbility(.black, .queen_side)) {
+            return "Qq";
+        }
+        if (!self.hasAbility(.white, .king_side) and self.hasAbility(.white, .queen_side) and !self.hasAbility(.black, .king_side) and !self.hasAbility(.black, .queen_side)) {
+            return "Q";
+        }
+        if (!self.hasAbility(.white, .king_side) and !self.hasAbility(.white, .queen_side) and self.hasAbility(.black, .king_side) and self.hasAbility(.black, .queen_side)) {
+            return "kq";
+        }
+        if (!self.hasAbility(.white, .king_side) and !self.hasAbility(.white, .queen_side) and self.hasAbility(.black, .king_side) and !self.hasAbility(.black, .queen_side)) {
+            return "k";
+        }
+        if (!self.hasAbility(.white, .king_side) and !self.hasAbility(.white, .queen_side) and !self.hasAbility(.black, .king_side) and self.hasAbility(.black, .queen_side)) {
+            return "q";
+        }
+        return "-";
+    }
+
+    test "getUciString" {
+        try std.testing.expectEqual("KQkq", CastleAbilities.all.getUciString());
+        try std.testing.expectEqual("KQk", CastleAbilities.all.removeAbility(.black, .queen_side).getUciString());
+        try std.testing.expectEqual("KQq", CastleAbilities.all.removeAbility(.black, .king_side).getUciString());
+        try std.testing.expectEqual("KQ", CastleAbilities.all.removeAbility(.black, .king_side).removeAbility(.black, .queen_side).getUciString());
+        try std.testing.expectEqual("Kkq", CastleAbilities.all.removeAbility(.white, .queen_side).getUciString());
+        try std.testing.expectEqual("Kk", CastleAbilities.all.removeAbility(.white, .queen_side).removeAbility(.black, .queen_side).getUciString());
+        try std.testing.expectEqual("Kq", CastleAbilities.all.removeAbility(.white, .queen_side).removeAbility(.black, .king_side).getUciString());
+        try std.testing.expectEqual("K", CastleAbilities.all.removeAbility(.white, .queen_side).removeAbility(.black, .king_side).removeAbility(.black, .queen_side).getUciString());
+        try std.testing.expectEqual("Qkq", CastleAbilities.all.removeAbility(.white, .king_side).getUciString());
+        try std.testing.expectEqual("Qk", CastleAbilities.all.removeAbility(.white, .king_side).removeAbility(.black, .queen_side).getUciString());
+        try std.testing.expectEqual("Qq", CastleAbilities.all.removeAbility(.white, .king_side).removeAbility(.black, .king_side).getUciString());
+        try std.testing.expectEqual("Q", CastleAbilities.all.removeAbility(.white, .king_side).removeAbility(.black, .king_side).removeAbility(.black, .queen_side).getUciString());
+        try std.testing.expectEqual("kq", CastleAbilities.all.removeAbility(.white, .king_side).removeAbility(.white, .queen_side).getUciString());
+        try std.testing.expectEqual("k", CastleAbilities.all.removeAbility(.white, .king_side).removeAbility(.white, .queen_side).removeAbility(.black, .queen_side).getUciString());
+        try std.testing.expectEqual("q", CastleAbilities.all.removeAbility(.white, .king_side).removeAbility(.white, .queen_side).removeAbility(.black, .king_side).getUciString());
+        try std.testing.expectEqual("-", CastleAbilities.none.getUciString());
+    }
 };
 
 /// Represents the direction of a castle move.
@@ -315,123 +391,3 @@ pub const CastleDirection = enum {
 pub fn ByCastleDirection(comptime T: type) type {
     return std.EnumArray(CastleDirection, T);
 }
-
-/// Represents the rights to castle for each player and direction.
-pub const CastleRights = struct {
-    /// All possible castle rights.
-    pub const all = CastleRights.init(ByPlayer(ByCastleDirection(bool)).initFill(ByCastleDirection(bool).initFill(true)));
-    /// No castle rights.
-    pub const none = CastleRights.init(ByPlayer(ByCastleDirection(bool)).initFill(ByCastleDirection(bool).initFill(false)));
-    /// All rights for white.
-    pub const white_all = CastleRights.none.addRight(.white, .king_side).addRight(.white, .queen_side);
-    /// All rights for black.
-    pub const black_all = CastleRights.none.addRight(.black, .king_side).addRight(.black, .queen_side);
-    /// All rights for white on the king side.
-    pub const white_king_side = CastleRights.none.addRight(.white, .king_side);
-    /// All rights for white on the queen side.
-    pub const white_queen_side = CastleRights.none.addRight(.white, .queen_side);
-    /// All rights for black on the king side.
-    pub const black_king_side = CastleRights.none.addRight(.black, .king_side);
-    /// All rights for black on the queen side.
-    pub const black_queen_side = CastleRights.none.addRight(.black, .queen_side);
-
-    /// The underlying rights flags for each player and direction.
-    rights: ByPlayer(ByCastleDirection(bool)),
-
-    /// Get all rights for a given player.
-    pub fn forSide(comptime player: Player) CastleRights {
-        return if (player == .white) CastleRights.white_all else CastleRights.black_all;
-    }
-
-    /// Initialize the castle rights with the given rights.
-    pub fn init(rights: ByPlayer(ByCastleDirection(bool))) CastleRights {
-        return CastleRights{ .rights = rights };
-    }
-
-    /// Initialize the castle rights with the given rights flag to apply for all players and directions.
-    pub fn initFill(allRights: bool) CastleRights {
-        return CastleRights{
-            .rights = ByPlayer(ByCastleDirection(bool)).initFill(ByCastleDirection(bool).initFill(allRights)),
-        };
-    }
-
-    /// Check if a player has the rights to castle in a given direction.
-    pub fn hasRights(self: CastleRights, player: Player, direction: CastleDirection) bool {
-        return self.rights.get(player).get(direction);
-    }
-
-    /// Remove the rights to castle in a given direction for a player and return it.
-    pub fn removeRight(self: CastleRights, player: Player, direction: CastleDirection) CastleRights {
-        var result = self;
-        result.rights.getPtr(player).set(direction, false);
-        return result;
-    }
-
-    /// Add the rights to castle in a given direction for a player and return it.
-    pub fn addRight(self: CastleRights, player: Player, direction: CastleDirection) CastleRights {
-        var result = self;
-        result.rights.getPtr(player).set(direction, true);
-        return result;
-    }
-
-    /// Remove all rights for a player and return it.
-    pub fn kingMove(self: CastleRights, player: Player) CastleRights {
-        return self.removeRight(player, .king_side).removeRight(player, .queen_side);
-    }
-
-    /// Remove the rights for a specific castle direction based on which rook moved and return it.
-    pub fn rookMove(self: CastleRights, player: Player, direction: CastleDirection) CastleRights {
-        return self.removeRight(player, direction);
-    }
-
-    /// Get the UCI string representation of the castle rights.
-    /// i.e. "KQkq" for all rights, "KQk" for all rights except black queen side, etc.
-    pub fn getUciString(self: CastleRights) []const u8 {
-        if (self.hasRights(.white, .king_side) and self.hasRights(.white, .queen_side) and self.hasRights(.black, .king_side) and self.hasRights(.black, .queen_side)) {
-            return "KQkq";
-        }
-        if (self.hasRights(.white, .king_side) and self.hasRights(.white, .queen_side) and self.hasRights(.black, .king_side) and !self.hasRights(.black, .queen_side)) {
-            return "KQk";
-        }
-        if (self.hasRights(.white, .king_side) and self.hasRights(.white, .queen_side) and !self.hasRights(.black, .king_side) and self.hasRights(.black, .queen_side)) {
-            return "KQq";
-        }
-        if (self.hasRights(.white, .king_side) and self.hasRights(.white, .queen_side) and !self.hasRights(.black, .king_side) and !self.hasRights(.black, .queen_side)) {
-            return "KQ";
-        }
-        if (self.hasRights(.white, .king_side) and !self.hasRights(.white, .queen_side) and self.hasRights(.black, .king_side) and self.hasRights(.black, .queen_side)) {
-            return "Kkq";
-        }
-        if (self.hasRights(.white, .king_side) and !self.hasRights(.white, .queen_side) and self.hasRights(.black, .king_side) and !self.hasRights(.black, .queen_side)) {
-            return "Kk";
-        }
-        if (self.hasRights(.white, .king_side) and !self.hasRights(.white, .queen_side) and !self.hasRights(.black, .king_side) and self.hasRights(.black, .queen_side)) {
-            return "Kq";
-        }
-        if (self.hasRights(.white, .king_side) and !self.hasRights(.white, .queen_side) and !self.hasRights(.black, .king_side) and !self.hasRights(.black, .queen_side)) {
-            return "K";
-        }
-        if (!self.hasRights(.white, .king_side) and self.hasRights(.white, .queen_side) and self.hasRights(.black, .king_side) and self.hasRights(.black, .queen_side)) {
-            return "Qkq";
-        }
-        if (!self.hasRights(.white, .king_side) and self.hasRights(.white, .queen_side) and self.hasRights(.black, .king_side) and !self.hasRights(.black, .queen_side)) {
-            return "Qk";
-        }
-        if (!self.hasRights(.white, .king_side) and self.hasRights(.white, .queen_side) and !self.hasRights(.black, .king_side) and self.hasRights(.black, .queen_side)) {
-            return "Qq";
-        }
-        if (!self.hasRights(.white, .king_side) and self.hasRights(.white, .queen_side) and !self.hasRights(.black, .king_side) and !self.hasRights(.black, .queen_side)) {
-            return "Q";
-        }
-        if (!self.hasRights(.white, .king_side) and !self.hasRights(.white, .queen_side) and self.hasRights(.black, .king_side) and self.hasRights(.black, .queen_side)) {
-            return "kq";
-        }
-        if (!self.hasRights(.white, .king_side) and !self.hasRights(.white, .queen_side) and self.hasRights(.black, .king_side) and !self.hasRights(.black, .queen_side)) {
-            return "k";
-        }
-        if (!self.hasRights(.white, .king_side) and !self.hasRights(.white, .queen_side) and !self.hasRights(.black, .king_side) and self.hasRights(.black, .queen_side)) {
-            return "q";
-        }
-        return "-";
-    }
-};

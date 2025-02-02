@@ -11,7 +11,7 @@ const zobristModule = @import("zobrist.zig");
 const Bitboard = bitboardModule.Bitboard;
 const Player = playerModule.Player;
 const ByPlayer = playerModule.ByPlayer;
-const CastleRights = castlesModule.CastleRights;
+const CastleAbilities = castlesModule.CastleAbilities;
 const CastleDirection = castlesModule.CastleDirection;
 const Square = squareModule.Square;
 const Rank = squareModule.Rank;
@@ -149,8 +149,8 @@ const PersistentBoardState = struct {
     key: ZobristHash,
     /// The 50 move limit rule counter
     halfmove_clock: u8 = 0,
-    /// The current castle rights for both players
-    castle_rights: CastleRights,
+    /// The current castle abilities for both players
+    castle_abilities: CastleAbilities,
     /// The square behind the pawn that just moved two squares forward, if any
     en_passant_square: ?EnPassantSquare,
 
@@ -164,10 +164,10 @@ const PersistentBoardState = struct {
     /// Bitboards of squares that would give check if a given non-king piece were to move to them
     check_squares: ByNonKingPiece(Bitboard),
 
-    pub fn init(comptime side_to_move: Player, ep_square: ?EnPassantSquare, castle_rights: CastleRights, king_squares: ByPlayer(Square)) PersistentBoardState {
+    pub fn init(comptime side_to_move: Player, ep_square: ?EnPassantSquare, castle_abilities: CastleAbilities, king_squares: ByPlayer(Square)) PersistentBoardState {
         return PersistentBoardState{
-            .key = ZobristHash.init(side_to_move, king_squares, castle_rights, ep_square),
-            .castle_rights = castle_rights,
+            .key = ZobristHash.init(side_to_move, king_squares, castle_abilities, ep_square),
+            .castle_abilities = castle_abilities,
             .en_passant_square = ep_square,
             // todo: compute move generation masks
             .checkers = Bitboard.empty,
@@ -260,11 +260,11 @@ const PersistentBoardState = struct {
         // Move the piece in the key
         result.key = result.key.move(.{ .player = side_to_move, .piece = .king }, from_square, to_square);
 
-        // Remove any existing rights (from rights and key)
+        // Remove all castle abilities for side (from abilities and key)
         inline for (comptime std.enums.values(CastleDirection)) |castle_direction| {
-            if (self.castle_rights.hasRights(side_to_move, castle_direction)) {
-                result.key = result.key.toggle_castle_right(side_to_move, castle_direction);
-                result.castle_rights = result.castle_rights.removeRight(side_to_move, castle_direction);
+            if (self.castle_abilities.hasAbility(side_to_move, castle_direction)) {
+                result.key = result.key.toggle_castle_ability(side_to_move, castle_direction);
+                result.castle_abilities = result.castle_abilities.removeAbility(side_to_move, castle_direction);
             }
         }
 
@@ -284,7 +284,7 @@ const PersistentBoardState = struct {
 pub const Board = struct {
     const Self = @This();
     pub const start_position = Board
-        .init(.white, CastleRights.all, std.EnumArray(Player, Square).init(.{ .white = .e1, .black = .e8 }), null)
+        .init(.white, CastleAbilities.all, std.EnumArray(Player, Square).init(.{ .white = .e1, .black = .e8 }), null)
         .addPiece(.{ .piece = .pawn, .player = .white }, .a2)
         .addPiece(.{ .piece = .pawn, .player = .white }, .b2)
         .addPiece(.{ .piece = .pawn, .player = .white }, .c2)
@@ -327,11 +327,11 @@ pub const Board = struct {
     state: PersistentBoardState,
 
     /// Create a new board with the given king positions.
-    fn init(comptime starting_side: Player, comptime starting_rights: CastleRights, king_squares: ByPlayer(Square), en_passant_square: ?EnPassantSquare) Self {
+    fn init(comptime starting_side: Player, comptime starting_castle_abilities: CastleAbilities, king_squares: ByPlayer(Square), en_passant_square: ?EnPassantSquare) Self {
         return Self{
             .side_to_move = starting_side,
             .pieces = PieceArrangement.init(king_squares),
-            .state = PersistentBoardState.init(starting_side, en_passant_square, starting_rights, king_squares),
+            .state = PersistentBoardState.init(starting_side, en_passant_square, starting_castle_abilities, king_squares),
         };
     }
 
@@ -468,10 +468,10 @@ pub const Board = struct {
             }
             switch (rank) {
                 ._8 => std.debug.print("|\n{s}\n", .{line}),
-                ._7 => std.debug.print("|    Side to Move: {s}\n{s}   Castle Rights: {s}\n", .{
+                ._7 => std.debug.print("|    Side to Move: {s}\n{s}   Castle Abilities: {s}\n", .{
                     @tagName(self.side_to_move),
                     line,
-                    self.state.castle_rights.getUciString(),
+                    self.state.castle_abilities.getUciString(),
                 }),
                 ._6 => std.debug.print("|      En Passant: {s}\n{s}  Halfmove Clock: {d}\n", .{
                     if (self.epSquare()) |sq| @tagName(sq) else "-",

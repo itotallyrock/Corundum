@@ -10,7 +10,6 @@ pub const PieceArrangement = @import("board.zig").PieceArrangement;
 pub const Player = @import("players.zig").Player;
 pub const CastleConfig = @import("castles.zig").CastleConfig;
 pub const CastleAbilities = @import("castles.zig").CastleAbilities;
-pub const CastleRights = @import("castles.zig").CastleRights;
 pub const CastleDirection = @import("castles.zig").CastleDirection;
 pub const Piece = @import("pieces.zig").Piece;
 pub const NonKingPiece = @import("pieces.zig").NonKingPiece;
