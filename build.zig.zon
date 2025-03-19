@@ -1,15 +1,8 @@
 .{
-    .name = "corundum",
+    .name = .corundum,
     .version = "0.0.1",
-    .minimum_zig_version = "0.14.0",
-
-    .paths = .{
-        "build.zig",
-        "build.zig.zon",
-        "src",
-        //"LICENSE",
-        //"README.md",
-    },
+    .fingerprint = 0xc40cf4d2cca2811d,
+    .minimum_zig_version = "0.15.0-dev.64+2a4e06bcb",
 
     .dependencies = .{
         .mecha = .{
@@ -18,4 +11,11 @@
         },
     },
 
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        //"LICENSE",
+        //"README.md",
+    },
 }
