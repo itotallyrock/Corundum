@@ -1,11 +1,21 @@
 .{
-    .name = corundum,
+    .name = "corundum",
     .version = "0.0.1",
-    .paths = .{"."},
+    .minimum_zig_version = "0.14.0",
+
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        //"LICENSE",
+        //"README.md",
+    },
+
     .dependencies = .{
         .mecha = .{
             .url = "https://github.com/Hejsil/mecha/archive/refs/heads/master.tar.gz",
-            .hash = "1220fd8e9806e1b50a4c56c81b313f4fb28c462971b8d2bb8b2c63997b559edbf792",
+            .hash = "mecha-0.10.0-dVGaSElaAQBycIyj1XNpJTJLt6gMWXgB3urMvnpCD1ON",
         },
     },
+
 }
