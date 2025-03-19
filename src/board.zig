@@ -300,7 +300,7 @@ pub const Board = struct {
         .addPiece(.{ .piece = .bishop, .player = .white }, .f1)
         .addPiece(.{ .piece = .knight, .player = .white }, .g1)
         .addPiece(.{ .piece = .rook, .player = .white }, .h1)
-    // black pieces
+        // black pieces
         .addPiece(.{ .piece = .pawn, .player = .black }, .a7)
         .addPiece(.{ .piece = .pawn, .player = .black }, .b7)
         .addPiece(.{ .piece = .pawn, .player = .black }, .c7)

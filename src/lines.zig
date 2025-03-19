@@ -53,7 +53,7 @@ pub fn through(from: Square, to: Square) Bitboard {
             return from.toBitboard()
                 .rayAttacks(direction, Bitboard.empty)
                 .logicalAnd(to.toBitboard().rayAttacks(direction, Bitboard.empty))
-            // Because each ray attack doesn't include its starting square, we need to add it back in
+                // Because each ray attack doesn't include its starting square, we need to add it back in
                 .logicalOr(to.toBitboard())
                 .logicalOr(from.toBitboard());
         }
