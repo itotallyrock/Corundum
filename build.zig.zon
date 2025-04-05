@@ -7,7 +7,7 @@
     .dependencies = .{
         .mecha = .{
             .url = "https://github.com/Hejsil/mecha/archive/refs/heads/master.tar.gz",
-            .hash = "mecha-0.10.0-dVGaSElaAQBycIyj1XNpJTJLt6gMWXgB3urMvnpCD1ON",
+            .hash = "mecha-0.10.0-dVGaSGFXAQCqdCqQpN9JxqEOxSAZmMPZVSJf9sA8x4f8",
         },
     },
 
