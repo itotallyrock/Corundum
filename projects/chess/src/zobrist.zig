@@ -1,22 +1,25 @@
 const std = @import("std");
-const Player = @import("players.zig").Player;
-const ByPlayer = @import("players.zig").ByPlayer;
-const Square = @import("square.zig").Square;
-const File = @import("square.zig").File;
-const BySquare = @import("square.zig").BySquare;
-const BoardDirection = @import("directions.zig").BoardDirection;
-const EnPassantSquare = @import("square.zig").EnPassantSquare;
-const ByEnPassantSquare = @import("square.zig").ByEnPassantSquare;
-const OwnedPiece = @import("pieces.zig").OwnedPiece;
-const PromotionPiece = @import("pieces.zig").PromotionPiece;
-const OwnedNonKingPiece = @import("pieces.zig").OwnedNonKingPiece;
-const Piece = @import("pieces.zig").Piece;
-const ByPiece = @import("pieces.zig").ByPiece;
-const CastleAbilities = @import("castles.zig").CastleAbilities;
-const CastleDirection = @import("castles.zig").CastleDirection;
-const ByCastleDirection = @import("castles.zig").ByCastleDirection;
+const Player = @import("./player.zig").Player;
+const ByPlayer = @import("./player.zig").ByPlayer;
+const Square = @import("./square.zig").Square;
+const File = @import("./square.zig").File;
+const BySquare = @import("./square.zig").BySquare;
+const BoardDirection = @import("./direction.zig").BoardDirection;
+const EnPassantSquare = @import("./square.zig").EnPassantSquare;
+const ByEnPassantSquare = @import("./square.zig").ByEnPassantSquare;
+const OwnedPiece = @import("./piece.zig").OwnedPiece;
+const PromotionPiece = @import("./piece.zig").PromotionPiece;
+const OwnedNonKingPiece = @import("./piece.zig").OwnedNonKingPiece;
+const Piece = @import("./piece.zig").Piece;
+const ByPiece = @import("./piece.zig").ByPiece;
+const CastleAbilities = @import("./castle.zig").CastleAbilities;
+const CastleDirection = @import("./castle.zig").CastleDirection;
+const ByCastleDirection = @import("./castle.zig").ByCastleDirection;
 
+/// The type of a Zobrist key, a 64-bit unsigned integer
 const ZobristKey = u64;
+
+/// A Zobrist hash for a chess position.
 pub const ZobristHash = struct {
     /// The base key for an empty position
     const EMPTY_KEY: ZobristKey = 0xF1DC_4349_4EA4_76CE;
@@ -857,6 +860,7 @@ pub const ZobristHash = struct {
 
     pub const EMPTY = ZobristHash{ .key = EMPTY_KEY };
 
+    /// The underlying Zobrist key.
     key: ZobristKey,
 
     pub fn init(side_to_move: Player, king_squares: ByPlayer(Square), castle_abilities: CastleAbilities, en_passant_square: ?EnPassantSquare) ZobristHash {
@@ -914,15 +918,15 @@ pub const ZobristHash = struct {
 
     pub fn promote(self: ZobristHash, player: Player, promotion: PromotionPiece, from: Square, to: Square) ZobristHash {
         return self
-            .toggle_piece(.{ .Player = player, .Piece = .pawn }, from)
-            .toggle_piece(.{ .Player = player, .Piece = promotion.toPiece() }, to);
+            .toggle_piece(.{ .player = player, .piece = .pawn }, from)
+            .toggle_piece(.{ .player = player, .piece = promotion.toPiece() }, to);
     }
 
     pub fn promote_capture(self: ZobristHash, player: Player, captured_piece: OwnedNonKingPiece, promotion: PromotionPiece, from: Square, to: Square) ZobristHash {
         return self
             .toggle_piece(captured_piece.to_owned(), to)
-            .toggle_piece(.{ .Player = player, .Piece = .pawn }, from)
-            .toggle_piece(.{ .Player = player, .Piece = promotion.toPiece() }, to);
+            .toggle_piece(.{ .player = player, .piece = .pawn }, from)
+            .toggle_piece(.{ .player = player, .piece = promotion.toPiece() }, to);
     }
 
     pub fn toggle_castle_ability(self: ZobristHash, player: Player, castle_direction: CastleDirection) ZobristHash {
