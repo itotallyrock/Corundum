@@ -1,13 +1,10 @@
-//! By convention, root.zig is the root source file when making a library. If
-//! you are making an executable, the convention is to delete this file and
-//! start with main.zig instead.
+//! Chess core types and functions to maintain game state, allow moves to be made/unmade, support move generation and evaluation.
+
 const std = @import("std");
-const testing = std.testing;
 
-pub export fn add(a: i32, b: i32) i32 {
-    return a + b;
-}
+/// The player module contains types and functions related to players in chess.
+pub const player = @import("./player.zig");
 
-test "basic add functionality" {
-    try testing.expect(add(3, 7) == 10);
+test {
+    std.testing.refAllDeclsRecursive(@This());
 }
