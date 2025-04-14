@@ -162,7 +162,7 @@ pub fn ByPromotionPiece(comptime T: type) type {
 }
 
 /// A piece that has an associated player.
-pub const OwnedPiece = struct {
+pub const OwnedPiece = packed struct {
     /// The player that owns the piece.
     player: Player,
     /// The piece itself.
@@ -170,7 +170,7 @@ pub const OwnedPiece = struct {
 };
 
 /// A piece that is not a king and has an associated player.
-pub const OwnedNonKingPiece = struct {
+pub const OwnedNonKingPiece = packed struct {
     /// The player that owns the piece.
     player: Player,
     /// The piece itself.
@@ -186,7 +186,7 @@ pub const OwnedNonKingPiece = struct {
 };
 
 /// A piece that is not a pawn and has an associated player.
-pub const OwnedNonPawnPiece = struct {
+pub const OwnedNonPawnPiece = packed struct {
     /// The player that owns the piece.
     player: Player,
     /// The piece itself.
