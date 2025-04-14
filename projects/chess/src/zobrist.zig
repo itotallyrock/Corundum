@@ -1,4 +1,5 @@
 const std = @import("std");
+const zobrist_seed = @import("build_options").zobrist_seed;
 const Player = @import("./player.zig").Player;
 const ByPlayer = @import("./player.zig").ByPlayer;
 const Square = @import("./square.zig").Square;
@@ -115,7 +116,7 @@ const ZobristKeys = struct {
 
 /// A Zobrist hash for a chess position.
 pub const ZobristHash = struct {
-    const FEATURES = ZobristKeys.init(0xEB1EDE23CD04F71760E7A908AEB122BBE48D0CF561AEC147678AC2F99E68E420);
+    const FEATURES = ZobristKeys.init(zobrist_seed);
 
     /// The underlying Zobrist key.
     key: ZobristKey,
