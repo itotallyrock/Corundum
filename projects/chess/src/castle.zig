@@ -1,7 +1,7 @@
 const std = @import("std");
-const Player = @import("players.zig").Player;
-const ByPlayer = @import("players.zig").ByPlayer;
-const File = @import("square.zig").File;
+const Player = @import("./player.zig").Player;
+const ByPlayer = @import("./player.zig").ByPlayer;
+const File = @import("./square.zig").File;
 
 /// What set of castling rules are in effect.
 pub const CastleGameType = enum {
@@ -79,6 +79,8 @@ pub const CastleAbilities = struct {
     pub const none = CastleAbilities{ .abilities = ByPlayer(ByCastleDirection(bool)).initFill(ByCastleDirection(bool).initFill(false)) };
     pub const all = CastleAbilities{ .abilities = ByPlayer(ByCastleDirection(bool)).initFill(ByCastleDirection(bool).initFill(true)) };
     const Abilities = ByPlayer(ByCastleDirection(bool));
+
+    /// The abilities for each player.
     abilities: Abilities,
 
     /// Returns whether the given player can castle in the specified direction.
