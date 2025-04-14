@@ -1,9 +1,9 @@
 ///! Methods for dealing with line masks on the board
 ///! Typically used for sliding piece attacks and move generation
 const std = @import("std");
-const Bitboard = @import("bitboard.zig").Bitboard;
-const Square = @import("square.zig").Square;
-const SlidingPieceRayDirections = @import("directions.zig").SlidingPieceRayDirections;
+const Bitboard = @import("./bitboard.zig").Bitboard;
+const Square = @import("./square.zig").Square;
+const SlidingPieceRayDirections = @import("./direction.zig").SlidingPieceRayDirections;
 
 /// Whether two squares are aligned with eachother in a given cardinal or diagonal direction
 pub fn alignedAlong(from: Square, to: Square, comptime alignment: SlidingPieceRayDirections) bool {
