@@ -76,19 +76,56 @@ pub const CastleConfig = union(CastleGameType) {
 /// Simple flag container to keep track of which players can castle in which directions.
 /// Does not track legality or other positional constraints on castling.
 pub const CastleAbilities = struct {
-    pub const none = CastleAbilities{ .abilities = ByPlayer(ByCastleDirection(bool)).initFill(ByCastleDirection(bool).initFill(false)) };
-    pub const all = CastleAbilities{ .abilities = ByPlayer(ByCastleDirection(bool)).initFill(ByCastleDirection(bool).initFill(true)) };
-    const Abilities = ByPlayer(ByCastleDirection(bool));
+    /// No castle abilities.
+    pub const none = CastleAbilities{ .abilities = Abilities.initEmpty() };
+    /// All castle abilities.
+    pub const all = CastleAbilities{ .abilities = Abilities.initFull() };
+
+    /// Internal representation of the castle abilities.
+    const Abilities = std.bit_set.IntegerBitSet(std.enums.values(CastleDirection).len * std.enums.values(Player).len);
 
     /// The abilities for each player.
     abilities: Abilities,
 
-    /// Returns whether the given player can castle in the specified direction.
-    pub fn hasAbility(self: CastleAbilities, player: Player, direction: CastleDirection) bool {
-        return self.abilities.get(player).get(direction);
+    /// Helper function to get the index of the ability for the given player and direction.
+    fn getAbilityIndex(player: Player, direction: CastleDirection) usize {
+        return std.enums.values(Player).len * @intFromEnum(direction) + @intFromEnum(player);
     }
 
-    test "hasAbility" {
+    /// Initializes the castle abilities given a `ByPlayer` of `ByCastleDirection` booleans.
+    pub fn init(can_castle: ByPlayer(ByCastleDirection(bool))) CastleAbilities {
+        var ability = Abilities.initEmpty();
+        inline for (comptime std.enums.values(Player)) |player| {
+            inline for (comptime std.enums.values(CastleDirection)) |direction| {
+                ability.setValue(getAbilityIndex(player, direction), can_castle.get(player).get(direction));
+            }
+        }
+        return CastleAbilities{ .abilities = ability };
+    }
+
+    test init {
+        const castle_abilities = CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
+            .white = ByCastleDirection(bool).init(.{
+                .king_side = true,
+                .queen_side = false,
+            }),
+            .black = ByCastleDirection(bool).init(.{
+                .king_side = false,
+                .queen_side = true,
+            }),
+        }));
+        try std.testing.expectEqual(true, castle_abilities.hasAbility(.white, .king_side));
+        try std.testing.expectEqual(false, castle_abilities.hasAbility(.white, .queen_side));
+        try std.testing.expectEqual(false, castle_abilities.hasAbility(.black, .king_side));
+        try std.testing.expectEqual(true, castle_abilities.hasAbility(.black, .queen_side));
+    }
+
+    /// Returns whether the given player can castle in the specified direction.
+    pub fn hasAbility(self: CastleAbilities, player: Player, direction: CastleDirection) bool {
+        return self.abilities.isSet(getAbilityIndex(player, direction));
+    }
+
+    test hasAbility {
         const all_abilities = CastleAbilities.all;
         try std.testing.expectEqual(true, all_abilities.hasAbility(.white, .king_side));
         try std.testing.expectEqual(true, all_abilities.hasAbility(.white, .queen_side));
@@ -104,24 +141,15 @@ pub const CastleAbilities = struct {
 
     /// Adds the ability to castle in the specified direction for the given player.
     pub fn addAbility(self: CastleAbilities, player: Player, direction: CastleDirection) CastleAbilities {
-        return CastleAbilities{
-            .abilities = Abilities.init(.{
-                .white = ByCastleDirection(bool).init(.{
-                    .king_side = self.abilities.get(.white).get(.king_side) or (player == .white and direction == .king_side),
-                    .queen_side = self.abilities.get(.white).get(.queen_side) or (player == .white and direction == .queen_side),
-                }),
-                .black = ByCastleDirection(bool).init(.{
-                    .king_side = self.abilities.get(.black).get(.king_side) or (player == .black and direction == .king_side),
-                    .queen_side = self.abilities.get(.black).get(.queen_side) or (player == .black and direction == .queen_side),
-                }),
-            }),
-        };
+        var result = self.abilities;
+        result.set(getAbilityIndex(player, direction));
+        return CastleAbilities { .abilities = result };
     }
 
-    test "addAbility" {
+    test addAbility {
         const no_abilities = CastleAbilities.none;
         // Add the king-side castle ability for the white player.
-        try std.testing.expectEqual(CastleAbilities{ .abilities = Abilities.init(.{
+        try std.testing.expectEqual(CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
             .white = ByCastleDirection(bool).init(.{
                 .king_side = true,
                 .queen_side = false,
@@ -130,9 +158,9 @@ pub const CastleAbilities = struct {
                 .king_side = false,
                 .queen_side = false,
             }),
-        }) }, no_abilities.addAbility(.white, .king_side));
+        })), no_abilities.addAbility(.white, .king_side));
         // Add the queen side castle ability for the white player.
-        try std.testing.expectEqual(CastleAbilities{ .abilities = Abilities.init(.{
+        try std.testing.expectEqual(CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
             .white = ByCastleDirection(bool).init(.{
                 .king_side = false,
                 .queen_side = true,
@@ -141,10 +169,10 @@ pub const CastleAbilities = struct {
                 .king_side = false,
                 .queen_side = false,
             }),
-        }) }, no_abilities.addAbility(.white, .queen_side));
+        })), no_abilities.addAbility(.white, .queen_side));
 
         // Add the king-side castle ability for the black player.
-        try std.testing.expectEqual(CastleAbilities{ .abilities = Abilities.init(.{
+        try std.testing.expectEqual(CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
             .white = ByCastleDirection(bool).init(.{
                 .king_side = false,
                 .queen_side = false,
@@ -153,9 +181,9 @@ pub const CastleAbilities = struct {
                 .king_side = true,
                 .queen_side = false,
             }),
-        }) }, no_abilities.addAbility(.black, .king_side));
+        })), no_abilities.addAbility(.black, .king_side));
         // Add the queen side castle ability for the black player.
-        try std.testing.expectEqual(CastleAbilities{ .abilities = Abilities.init(.{
+        try std.testing.expectEqual(CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
             .white = ByCastleDirection(bool).init(.{
                 .king_side = false,
                 .queen_side = false,
@@ -164,7 +192,7 @@ pub const CastleAbilities = struct {
                 .king_side = false,
                 .queen_side = true,
             }),
-        }) }, no_abilities.addAbility(.black, .queen_side));
+        })), no_abilities.addAbility(.black, .queen_side));
 
         // Add castle abilities to the all abilities to see that it doesn't change.
         try std.testing.expectEqual(CastleAbilities.all, CastleAbilities.all.addAbility(.white, .king_side));
@@ -175,24 +203,15 @@ pub const CastleAbilities = struct {
 
     /// Removes the ability to castle in the specified direction for the given player.
     pub fn removeAbility(self: CastleAbilities, player: Player, direction: CastleDirection) CastleAbilities {
-        return CastleAbilities{
-            .abilities = Abilities.init(.{
-                .white = ByCastleDirection(bool).init(.{
-                    .king_side = self.abilities.get(.white).get(.king_side) and !(player == .white and direction == .king_side),
-                    .queen_side = self.abilities.get(.white).get(.queen_side) and !(player == .white and direction == .queen_side),
-                }),
-                .black = ByCastleDirection(bool).init(.{
-                    .king_side = self.abilities.get(.black).get(.king_side) and !(player == .black and direction == .king_side),
-                    .queen_side = self.abilities.get(.black).get(.queen_side) and !(player == .black and direction == .queen_side),
-                }),
-            }),
-        };
+        var result = self.abilities;
+        result.unset(getAbilityIndex(player, direction));
+        return CastleAbilities { .abilities = result };
     }
 
-    test "removeAbility" {
+    test removeAbility {
         const all_abilities = CastleAbilities.all;
         // Remove the king-side castle ability for the white player.
-        try std.testing.expectEqual(CastleAbilities{ .abilities = Abilities.init(.{
+        try std.testing.expectEqual(CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
             .white = ByCastleDirection(bool).init(.{
                 .king_side = false,
                 .queen_side = true,
@@ -201,9 +220,9 @@ pub const CastleAbilities = struct {
                 .king_side = true,
                 .queen_side = true,
             }),
-        }) }, all_abilities.removeAbility(.white, .king_side));
+        })), all_abilities.removeAbility(.white, .king_side));
         // Remove the queen side castle ability for the white player.
-        try std.testing.expectEqual(CastleAbilities{ .abilities = Abilities.init(.{
+        try std.testing.expectEqual(CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
             .white = ByCastleDirection(bool).init(.{
                 .king_side = true,
                 .queen_side = false,
@@ -212,9 +231,9 @@ pub const CastleAbilities = struct {
                 .king_side = true,
                 .queen_side = true,
             }),
-        }) }, all_abilities.removeAbility(.white, .queen_side));
+        })), all_abilities.removeAbility(.white, .queen_side));
         // Remove the king-side castle ability for the black player.
-        try std.testing.expectEqual(CastleAbilities{ .abilities = Abilities.init(.{
+        try std.testing.expectEqual(CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
             .white = ByCastleDirection(bool).init(.{
                 .king_side = true,
                 .queen_side = true,
@@ -223,9 +242,9 @@ pub const CastleAbilities = struct {
                 .king_side = false,
                 .queen_side = true,
             }),
-        }) }, all_abilities.removeAbility(.black, .king_side));
+        })), all_abilities.removeAbility(.black, .king_side));
         // Remove the queen side castle ability for the black player.
-        try std.testing.expectEqual(CastleAbilities{ .abilities = Abilities.init(.{
+        try std.testing.expectEqual(CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
             .white = ByCastleDirection(bool).init(.{
                 .king_side = true,
                 .queen_side = true,
@@ -234,7 +253,7 @@ pub const CastleAbilities = struct {
                 .king_side = true,
                 .queen_side = false,
             }),
-        }) }, all_abilities.removeAbility(.black, .queen_side));
+        })), all_abilities.removeAbility(.black, .queen_side));
 
         // Remove castle abilities from the no abilities to see that it doesn't change.
         try std.testing.expectEqual(CastleAbilities.none, CastleAbilities.none.removeAbility(.white, .king_side));
@@ -250,10 +269,10 @@ pub const CastleAbilities = struct {
         return self.removeAbility(player, .king_side).removeAbility(player, .queen_side);
     }
 
-    test "kingMove" {
+    test kingMove {
         const all_abilities = CastleAbilities.all;
         // White king move removes all white castle abilities.
-        try std.testing.expectEqual(CastleAbilities{ .abilities = Abilities.init(.{
+        try std.testing.expectEqual(CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
             .white = ByCastleDirection(bool).init(.{
                 .king_side = false,
                 .queen_side = false,
@@ -262,9 +281,9 @@ pub const CastleAbilities = struct {
                 .king_side = true,
                 .queen_side = true,
             }),
-        }) }, all_abilities.kingMove(.white));
+        })), all_abilities.kingMove(.white));
         // Black king move removes all black castle abilities.
-        try std.testing.expectEqual(CastleAbilities{ .abilities = Abilities.init(.{
+        try std.testing.expectEqual(CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
             .white = ByCastleDirection(bool).init(.{
                 .king_side = true,
                 .queen_side = true,
@@ -273,7 +292,7 @@ pub const CastleAbilities = struct {
                 .king_side = false,
                 .queen_side = false,
             }),
-        }) }, all_abilities.kingMove(.black));
+        })), all_abilities.kingMove(.black));
         // Both king move removes all castle abilities.
         try std.testing.expectEqual(CastleAbilities.none, all_abilities.kingMove(.white).kingMove(.black));
     }
@@ -285,9 +304,9 @@ pub const CastleAbilities = struct {
         return self.removeAbility(player, direction);
     }
 
-    test "rookMove" {
+    test rookMove {
         // White king-side rook move removes the white king-side castle ability.
-        try std.testing.expectEqual(CastleAbilities{ .abilities = Abilities.init(.{
+        try std.testing.expectEqual(CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
             .white = ByCastleDirection(bool).init(.{
                 .king_side = false,
                 .queen_side = true,
@@ -296,9 +315,9 @@ pub const CastleAbilities = struct {
                 .king_side = true,
                 .queen_side = true,
             }),
-        }) }, CastleAbilities.all.rookMove(.white, .king_side));
+        })), CastleAbilities.all.rookMove(.white, .king_side));
         // Black queen-side rook move removes the black queen-side castle ability.
-        try std.testing.expectEqual(CastleAbilities{ .abilities = Abilities.init(.{
+        try std.testing.expectEqual(CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
             .white = ByCastleDirection(bool).init(.{
                 .king_side = true,
                 .queen_side = true,
@@ -307,7 +326,7 @@ pub const CastleAbilities = struct {
                 .king_side = true,
                 .queen_side = false,
             }),
-        }) }, CastleAbilities.all.rookMove(.black, .queen_side));
+        })), CastleAbilities.all.rookMove(.black, .queen_side));
     }
 
     /// Get the UCI string representation of the castle abilities.
@@ -361,7 +380,7 @@ pub const CastleAbilities = struct {
         return "-";
     }
 
-    test "getUciString" {
+    test getUciString {
         try std.testing.expectEqual("KQkq", CastleAbilities.all.getUciString());
         try std.testing.expectEqual("KQk", CastleAbilities.all.removeAbility(.black, .queen_side).getUciString());
         try std.testing.expectEqual("KQq", CastleAbilities.all.removeAbility(.black, .king_side).getUciString());
@@ -382,7 +401,7 @@ pub const CastleAbilities = struct {
 };
 
 /// Represents the direction of a castle move.
-pub const CastleDirection = enum {
+pub const CastleDirection = enum(u1) {
     /// The king-side castle direction.
     king_side,
     /// The queen-side castle direction.
