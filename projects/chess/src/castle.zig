@@ -380,7 +380,7 @@ pub const CastleAbilities = struct {
         return "-";
     }
 
-    test getUciString {
+    test "getUciString" {
         try std.testing.expectEqual("KQkq", CastleAbilities.all.getUciString());
         try std.testing.expectEqual("KQk", CastleAbilities.all.removeAbility(.black, .queen_side).getUciString());
         try std.testing.expectEqual("KQq", CastleAbilities.all.removeAbility(.black, .king_side).getUciString());
