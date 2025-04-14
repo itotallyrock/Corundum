@@ -1,22 +1,33 @@
 const std = @import("std");
-const Player = @import("players.zig").Player;
+const Player = @import("./player.zig").Player;
 
 /// A piece on the board.
 pub const Piece = enum(u3) {
+    /// Either side's pawn
     pawn,
+    /// Either side's rook/castle
     rook,
+    /// Either side's knight
     knight,
+    /// Either side's bishop
     bishop,
+    /// Either side's queen
     queen,
+    /// Either side's king
     king,
 };
 
 /// A piece that is not a king.
 pub const NonKingPiece = enum(u3) {
+    /// Either side's pawn
     pawn = @intFromEnum(Piece.pawn),
+    /// Either side's rook/castle
     rook = @intFromEnum(Piece.rook),
+    /// Either side's knight
     knight = @intFromEnum(Piece.knight),
+    /// Either side's bishop
     bishop = @intFromEnum(Piece.bishop),
+    /// Either side's queen
     queen = @intFromEnum(Piece.queen),
 
     /// Convert to the corresponding vanilla `Piece`.
@@ -52,9 +63,13 @@ pub const NonKingPiece = enum(u3) {
 
 /// A piece that a pawn can be promoted to.
 pub const PromotionPiece = enum(u3) {
+    /// Promote to a rook
     rook = @intFromEnum(Piece.rook),
+    /// Promote to a knight
     knight = @intFromEnum(Piece.knight),
+    /// Promote to a bishop
     bishop = @intFromEnum(Piece.bishop),
+    /// Promote to a queen
     queen = @intFromEnum(Piece.queen),
 
     /// Convert to the corresponding vanilla `Piece`.
@@ -89,10 +104,15 @@ pub const PromotionPiece = enum(u3) {
 
 /// A piece that is not a pawn.
 pub const NonPawnPiece = enum(u3) {
+    /// Either side's rook/castle
     rook = @intFromEnum(Piece.rook),
+    /// Either side's knight
     knight = @intFromEnum(Piece.knight),
+    /// Either side's bishop
     bishop = @intFromEnum(Piece.bishop),
+    /// Either side's queen
     queen = @intFromEnum(Piece.queen),
+    /// Either side's king
     king = @intFromEnum(Piece.king),
 
     /// Convert to the corresponding vanilla `Piece`.
@@ -151,7 +171,9 @@ pub const OwnedPiece = struct {
 
 /// A piece that is not a king and has an associated player.
 pub const OwnedNonKingPiece = struct {
+    /// The player that owns the piece.
     player: Player,
+    /// The piece itself.
     piece: NonKingPiece,
 
     /// Convert to an `OwnedPiece` (convert inner `NonKingPiece` to `Piece`).
@@ -165,7 +187,9 @@ pub const OwnedNonKingPiece = struct {
 
 /// A piece that is not a pawn and has an associated player.
 pub const OwnedNonPawnPiece = struct {
+    /// The player that owns the piece.
     player: Player,
+    /// The piece itself.
     piece: NonPawnPiece,
 
     /// Convert to an `OwnedPiece` (convert inner `NonPawnPiece` to `Piece`).
