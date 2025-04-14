@@ -19,16 +19,33 @@ const ByCastleDirection = @import("./castle.zig").ByCastleDirection;
 /// The underlying type of a Zobrist hash, a 64-bit unsigned integer
 const ZobristKey = u64;
 
-/// Generate a random array of Zobrist key using a linear congruential generator at comptime.
-pub fn comptimeRandom(comptime seed: ZobristKey, comptime count: usize) [count]ZobristKey {
-    const a: ZobristKey = 6364136223846793005;
-    const c: ZobristKey = 1;
-    var state: ZobristKey = seed;
+/// The type of the seed used to generate Zobrist keys at compile time.
+const ComptimeRandomSeed = u256;
+
+/// Generate a random array of Zobrist key using Xoshiro256 algorithm.
+fn comptimeRandom(comptime seed: ComptimeRandomSeed, comptime count: usize) [count]ZobristKey {
+    const mask = (1 << 64) - 1;
+    var state: [4]u64 = .{
+        @intCast(seed & mask),
+        @intCast((seed >> 64) & mask),
+        @intCast((seed >> 128) & mask),
+        @intCast((seed >> 192) & mask),
+    };
 
     var result: [count]ZobristKey = undefined;
     inline for (0..count) |i| {
-        state = @addWithOverflow(@mulWithOverflow(a, state)[0], c)[0];
-        result[i] = state;
+        result[i] = std.math.rotl(u64, state[0] +% state[3], 23) +% state[0];
+
+        const t = state[1] << 17;
+
+        state[2] ^= state[0];
+        state[3] ^= state[1];
+        state[1] ^= state[2];
+        state[0] ^= state[3];
+
+        state[2] ^= t;
+
+        state[3] = std.math.rotl(u64, state[3], 45);
     }
     return result;
 }
@@ -47,8 +64,8 @@ const ZobristKeys = struct {
     piece_square: ByPlayer(ByPiece(BySquare(ZobristKey))),
 
     /// Create a new Zobrist keys struct from a seed.
-    fn init(seed: ZobristKey) ZobristKeys {
-        @setEvalBranchQuota(150_000);
+    fn init(seed: ComptimeRandomSeed) ZobristKeys {
+        @setEvalBranchQuota(120_000);
         const EMPTY_INDEX: usize = 0;
         const SIDE_INDEX: usize = 1;
         const EN_PASSANT_INDEX: usize = 2;
@@ -98,7 +115,7 @@ const ZobristKeys = struct {
 
 /// A Zobrist hash for a chess position.
 pub const ZobristHash = struct {
-    const FEATURES = ZobristKeys.init(0xDEAD_BEEF_CAFE_BABE);
+    const FEATURES = ZobristKeys.init(0xEB1EDE23CD04F71760E7A908AEB122BBE48D0CF561AEC147678AC2F99E68E420);
 
     /// The underlying Zobrist key.
     key: ZobristKey,
