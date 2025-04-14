@@ -16,6 +16,8 @@ pub const bitboard = @import("./bitboard.zig");
 pub const line = @import("./line.zig");
 /// The castle module contains types and functions related to castling in chess.
 pub const castle = @import("./castle.zig");
+/// The move module contains types and functions related to moves in chess.
+pub const move = @import("./move.zig");
 
 test {
     std.testing.refAllDeclsRecursive(@This());
