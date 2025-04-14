@@ -1,10 +1,10 @@
 const std = @import("std");
-const Square = @import("square.zig").Square;
-const ByRank = @import("square.zig").ByRank;
-const ByFile = @import("square.zig").ByFile;
-const BoardDirection = @import("directions.zig").BoardDirection;
-const NonPawnPiece = @import("pieces.zig").NonPawnPiece;
-const SlidingPieceRayDirections = @import("directions.zig").SlidingPieceRayDirections;
+const Square = @import("./square.zig").Square;
+const ByRank = @import("./square.zig").ByRank;
+const ByFile = @import("./square.zig").ByFile;
+const BoardDirection = @import("./direction.zig").BoardDirection;
+const NonPawnPiece = @import("./piece.zig").NonPawnPiece;
+const SlidingPieceRayDirections = @import("./direction.zig").SlidingPieceRayDirections;
 
 /// A board mask that represents a set of squares on a chess board.
 /// The mask is a 64-bit integer where each bit represents a square on the board.
@@ -113,6 +113,7 @@ pub const Bitboard = struct {
         return null;
     }
 
+    /// Shift all squares in the bitboard in a given direction.
     pub fn shift(self: Bitboard, direction: BoardDirection) Bitboard {
         const shiftable_squares_mask = switch (direction) {
             .north, .south => Bitboard.all,
@@ -124,6 +125,7 @@ pub const Bitboard = struct {
             .logicalShift(@intFromEnum(direction));
     }
 
+    /// Fill the bitboard in a given direction up to and including a non-empty square.
     pub fn occludedFill(self: Bitboard, occluded: Bitboard, direction: BoardDirection) Bitboard {
         if (self.isEmpty()) {
             return Bitboard.empty;
@@ -150,10 +152,14 @@ pub const Bitboard = struct {
         return filled;
     }
 
+    /// Get a single-direction ray attack from a starting bitboard
     fn rayAttack(self: Bitboard, occupied: Bitboard, direction: BoardDirection) Bitboard {
         return self.occludedFill(occupied, direction).shift(direction);
     }
 
+    /// Get all 4 ray attacks from a starting bitboard
+    /// When `direction` is `SlidingPieceRayDirections.cardinal`, the attacks are in the cardinal directions (north, south, east, west).
+    /// When `direction` is `SlidingPieceRayDirections.diagonal`, the attacks are in the diagonal directions (north-east, north-west, south-east, south-west).
     pub fn rayAttacks(self: Bitboard, direction: SlidingPieceRayDirections, occupied: Bitboard) Bitboard {
         // TODO: Use comptime inspection to use pext/pdep based lookup at runtime
         if (direction == .cardinal) {
@@ -163,6 +169,7 @@ pub const Bitboard = struct {
         }
     }
 
+    /// Get all squares attacked by a king from a starting bitboard
     fn kingAttacks(self: Bitboard) Bitboard {
         const eastWestAttacks = self.shift(.east).logicalOr(self.shift(.west));
         const kingRow = self.logicalOr(eastWestAttacks);
@@ -170,6 +177,7 @@ pub const Bitboard = struct {
         return eastWestAttacks.logicalOr(kingRow.shift(.south)).logicalOr(kingRow.shift(.north));
     }
 
+    /// Get all squares attacked by a knight from a starting bitboard
     fn knightAttacks(self: Bitboard) Bitboard {
         // TODO: Use logicalShift or shift instead of bitshifting
         const l1 = (Bitboard{ .mask = self.mask >> 1 }).logicalAnd(files.get(.h).logicalNot());
@@ -183,6 +191,7 @@ pub const Bitboard = struct {
         return Bitboard{ .mask = h1.mask << 16 | h1.mask >> 16 | h2.mask << 8 | h2.mask >> 8 };
     }
 
+    /// Get all squares attacked by a piece from a starting bitboard (an occluded bitboard is required for sliding pieces)
     pub fn attacks(self: Bitboard, piece: NonPawnPiece, occupied: Bitboard) Bitboard {
         switch (piece) {
             .king => return self.kingAttacks(),

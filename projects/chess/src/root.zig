@@ -8,6 +8,10 @@ pub const player = @import("./player.zig");
 pub const direction = @import("./direction.zig");
 /// The piece module contains types and functions related to chess pieces.
 pub const piece = @import("./piece.zig");
+/// The square module contains types and functions related to squares on a chess board.
+pub const square = @import("./square.zig");
+/// The bitboard module contains types and functions related to bitboards, a common representation of chess boards.
+pub const bitboard = @import("./bitboard.zig");
 
 test {
     std.testing.refAllDeclsRecursive(@This());
