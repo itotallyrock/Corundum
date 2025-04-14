@@ -1,15 +1,23 @@
 const std = @import("std");
-const Player = @import("players.zig").Player;
+const Player = @import("./player.zig").Player;
 
 /// Represents an absolute direction on the board (always from white's perspective).
 pub const BoardDirection = enum(i5) {
+    /// Towards the top of the board from whites POV (rank 8).
     north = 8,
+    /// Towards the bottom of the board from whites POV (rank 1).
     south = -8,
+    /// Towards the right of the board from whites POV (file h).
     east = 1,
+    /// Towards the left of the board from whites POV (file a).
     west = -1,
+    /// Towards the top right of the board from whites POV (rank 8, file h).
     north_east = 9,
+    /// Towards the top left of the board from whites POV (rank 8, file a).
     north_west = 7,
+    /// Towards the bottom right of the board from whites POV (rank 1, file h).
     south_east = -7,
+    /// Towards the bottom left of the board from whites POV (rank 1, file a).
     south_west = -9,
 
     /// Returns the direction that is the opposite of this one.
@@ -49,13 +57,21 @@ pub fn ByBoardDirection(comptime T: type) type {
 
 /// A relative direction on the board, relative to a player's perspective.
 pub const RelativeDirection = enum(u3) {
+    /// The direction a player's own pawns move
     forward,
+    /// Towards your own back rank
     backward,
+    /// Towards the left of the board from your perspective
     left,
+    /// Towards the right of the board from your perspective
     right,
+    /// Towards the enemy's back rank and left
     forward_left,
+    /// Towards the enemy's back rank and right
     forward_right,
+    /// Towards your own back rank and left
     backward_left,
+    /// Towards your own back rank and right
     backward_right,
 
     /// Given a perspective, returns the corresponding `BoardDirection`.
@@ -94,7 +110,9 @@ pub const RelativeDirection = enum(u3) {
 
 /// Represents the relative direction a pawn can attack in.
 pub const PawnAttackDirection = enum(u3) {
+    /// The direction a pawn attacks forward (diagonal left).
     forward_left = @intFromEnum(RelativeDirection.forward_left),
+    /// The direction a pawn attacks forward (diagonal right).
     forward_right = @intFromEnum(RelativeDirection.forward_right),
 
     /// Returns the `RelativeDirection` corresponding to this `PawnAttackDirection`.s
