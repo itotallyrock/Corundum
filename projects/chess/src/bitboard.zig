@@ -70,6 +70,8 @@ pub const Bitboard = struct {
     }
 
     /// Shift the bits of the bitboard to the left or right.
+    /// The `offset` is the number of squares to shift.
+    /// Positive values shift left, negative values shift right.
     pub fn logicalShift(self: Bitboard, offset: i7) Bitboard {
         if (offset < 0) {
             return Bitboard{ .mask = self.mask >> @intCast(-offset) };
@@ -179,16 +181,12 @@ pub const Bitboard = struct {
 
     /// Get all squares attacked by a knight from a starting bitboard
     fn knightAttacks(self: Bitboard) Bitboard {
-        // TODO: Use logicalShift or shift instead of bitshifting
-        const l1 = (Bitboard{ .mask = self.mask >> 1 }).logicalAnd(files.get(.h).logicalNot());
-        const l2 = (Bitboard{ .mask = self.mask >> 2 }).logicalAnd(files.get(.h).logicalOr(files.get(.g)).logicalNot());
-        const r1 = (Bitboard{ .mask = self.mask << 1 }).logicalAnd(files.get(.a).logicalNot());
-        const r2 = (Bitboard{ .mask = self.mask << 2 }).logicalAnd(files.get(.a).logicalOr(files.get(.b)).logicalNot());
-        const h1 = l1.logicalOr(r1);
-        const h2 = l2.logicalOr(r2);
+        const right_one = self.logicalShift(1).logicalAnd(files.get(.a).logicalNot());
+        const right_two = self.logicalShift(2).logicalAnd(files.get(.a).logicalOr(files.get(.b)).logicalNot());
+        const left_one = self.logicalShift(-1).logicalAnd(files.get(.h).logicalNot()).logicalOr(right_one);
+        const left_two = self.logicalShift(-2).logicalAnd(files.get(.h).logicalOr(files.get(.g)).logicalNot()).logicalOr(right_two);
 
-        // TODO: Use logicalShift or shift instead of bitshifting
-        return Bitboard{ .mask = h1.mask << 16 | h1.mask >> 16 | h2.mask << 8 | h2.mask >> 8 };
+        return left_one.logicalShift(16).logicalOr(left_one.logicalShift(-16)).logicalOr(left_two.logicalShift(8)).logicalOr(left_two.logicalShift(-8));
     }
 
     /// Get all squares attacked by a piece from a starting bitboard (an occluded bitboard is required for sliding pieces)
@@ -440,14 +438,20 @@ pub const Bitboard = struct {
         try std.testing.expectEqualDeep(Bitboard{ .mask = 0x302 }, (Bitboard{ .mask = 1 }).attacks(.king, undefined));
         try std.testing.expectEqualDeep(Bitboard{ .mask = 0x7050_7000_0000 }, (Bitboard{ .mask = 0x0020_0000_0000 }).attacks(.king, undefined));
         try std.testing.expectEqualDeep(Bitboard{ .mask = 0xC040_C000_0000_0000 }, (Bitboard{ .mask = 0x0080_0000_0000_0000 }).attacks(.king, undefined));
-        // TODO: Test a lot more king attacks
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0xe0a0e007050700 }, (Bitboard{ .mask = 0x400000020000 }).attacks(.king, undefined));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x40c0000000000302 }, (Bitboard{ .mask = 0x8000000000000001 }).attacks(.king, undefined));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x20300000000c040 }, (Bitboard{ .mask = 0x100000000000080 }).attacks(.king, undefined));
     }
 
     test "Bitboard Knight attacks work" {
         try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0A11_0011_0A00_0000 }, (Bitboard{ .mask = 0x0400_0000_0000 }).attacks(.knight, undefined));
         try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0050_8800_8850_0000 }, (Bitboard{ .mask = 0x0020_0000_0000 }).attacks(.knight, undefined));
         try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0040_2000 }, (Bitboard{ .mask = 0x80 }).attacks(.knight, undefined));
-        // TODO: Test a lot more knight attacks
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x24420000000000 }, (Bitboard{ .mask = 0x8100000000000000 }).attacks(.knight, undefined));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x8a119c735aaa1488 }, (Bitboard{ .mask = 0x20040008002000 }).attacks(.knight, undefined));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x14226a7714756a00 }, (Bitboard{ .mask = 0x80094000000 }).attacks(.knight, undefined));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0x0 }, (Bitboard{ .mask = 0x0 }).attacks(.knight, undefined));
+        try std.testing.expectEqualDeep(Bitboard{ .mask = 0xffffffffffffffff }, (Bitboard{ .mask = 0xffffffffffffffff }).attacks(.knight, undefined));
     }
 
     test "Bitboard Rook attacks works" {
