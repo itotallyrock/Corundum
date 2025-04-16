@@ -2,6 +2,7 @@ const std = @import("std");
 const Bitboard = @import("./bitboard.zig").Bitboard;
 const Player = @import("./player.zig").Player;
 const BoardDirection = @import("./direction.zig").BoardDirection;
+const CastleDirection = @import("./castle.zig").CastleDirection;
 
 /// A column index for the board
 pub const File = enum(u3) {
@@ -16,7 +17,35 @@ pub const File = enum(u3) {
 
     /// Returns the promotion square on the given file for the desired player
     pub fn promotionSquareFor(self: File, player: Player) Square {
-        return Square.fromFileAndRank(self, Rank.promotionRankFor(player));
+        return Square.fromFileAndRank(self, Rank.promotionTargetRank(player));
+    }
+
+    /// Get the file the king moves to when castling
+    pub fn castlingKingTargetFile(castle_direction: CastleDirection) File {
+        if (castle_direction == .king_side) {
+            return .g;
+        } else {
+            return .c;
+        }
+    }
+
+    /// Get the file the rook moves to when castling
+    pub fn castlingRookTargetFile(castle_direction: CastleDirection) File {
+        if (castle_direction == .king_side) {
+            return .f;
+        } else {
+            return .d;
+        }
+    }
+
+    test castlingKingTargetFile {
+        try std.testing.expectEqual(File.castlingKingTargetFile(.king_side), File.g);
+        try std.testing.expectEqual(File.castlingKingTargetFile(.queen_side), File.c);
+    }
+
+    test castlingRookTargetFile {
+        try std.testing.expectEqual(File.castlingRookTargetFile(.king_side), File.f);
+        try std.testing.expectEqual(File.castlingRookTargetFile(.queen_side), File.d);
     }
 
     test epSquareFor {
@@ -76,7 +105,7 @@ pub const Rank = enum(u3) {
     }
 
     /// Returns the rank for a pawn promotion of the desired player
-    pub fn promotionRankFor(player: Player) Rank {
+    pub fn promotionTargetRank(player: Player) Rank {
         if (player == .white) {
             return ._8;
         } else {
@@ -84,14 +113,70 @@ pub const Rank = enum(u3) {
         }
     }
 
+    /// Returns the rank all pawns promote from for the desired player
+    pub fn promotionFromRank(player: Player) Rank {
+        if (player == .white) {
+            return ._7;
+        } else {
+            return ._2;
+        }
+    }
+
+    /// Returns the rank the major pieces start on for the desired player
+    pub fn backRank(player: Player) Rank {
+        if (player == .white) {
+            return ._1;
+        } else {
+            return ._8;
+        }
+    }
+
+    /// Returns the rank all pawns start on for the desired player
+    pub fn pawnRank(player: Player) Rank {
+        if (player == .white) {
+            return ._2;
+        } else {
+            return ._7;
+        }
+    }
+
+    /// Returns the rank all pawns double push end on for the desired player
+    pub fn doublePushedRank(player: Player) Rank {
+        if (player == .white) {
+            return ._4;
+        } else {
+            return ._5;
+        }
+    }
+
+    test doublePushedRank {
+        try std.testing.expectEqual(Rank.doublePushedRank(.white), Rank._4);
+        try std.testing.expectEqual(Rank.doublePushedRank(.black), Rank._5);
+    }
+
+    test promotionFromRank {
+        try std.testing.expectEqual(Rank.promotionFromRank(.white), Rank._7);
+        try std.testing.expectEqual(Rank.promotionFromRank(.black), Rank._2);
+    }
+
+    test pawnRank {
+        try std.testing.expectEqual(Rank.pawnRank(.white), Rank._2);
+        try std.testing.expectEqual(Rank.pawnRank(.black), Rank._7);
+    }
+
     test epRankFor {
         try std.testing.expectEqual(Rank.epRankFor(.white), Rank._3);
         try std.testing.expectEqual(Rank.epRankFor(.black), Rank._6);
     }
 
-    test promotionRankFor {
-        try std.testing.expectEqual(Rank.promotionRankFor(.white), Rank._8);
-        try std.testing.expectEqual(Rank.promotionRankFor(.black), Rank._1);
+    test promotionTargetRank {
+        try std.testing.expectEqual(Rank.promotionTargetRank(.white), Rank._8);
+        try std.testing.expectEqual(Rank.promotionTargetRank(.black), Rank._1);
+    }
+
+    test backRank {
+        try std.testing.expectEqual(Rank.backRank(.white), Rank._1);
+        try std.testing.expectEqual(Rank.backRank(.black), Rank._8);
     }
 };
 
