@@ -125,7 +125,7 @@ pub const Square = enum(u6) {
 
     /// Creates a `Bitboard` with only this square set.
     pub fn toBitboard(self: Square) Bitboard {
-        return Bitboard{ .mask = Bitboard.a1.mask << @intFromEnum(self) };
+        return Bitboard.initInt(Bitboard.a1.mask.mask << @intFromEnum(self));
     }
 
     /// Try to shift/move the square in the given direction.
@@ -183,15 +183,15 @@ pub const Square = enum(u6) {
 
     test toBitboard {
         try std.testing.expectEqual(Square.a1.toBitboard(), Bitboard.a1);
-        try std.testing.expectEqual(Square.b4.toBitboard(), Bitboard{ .mask = 0x2000000 });
-        try std.testing.expectEqual(Square.g5.toBitboard(), Bitboard{ .mask = 0x4000000000 });
-        try std.testing.expectEqual(Square.h8.toBitboard(), Bitboard{ .mask = 0x8000000000000000 });
-        try std.testing.expectEqual(Square.a8.toBitboard(), Bitboard{ .mask = 0x100000000000000 });
-        try std.testing.expectEqual(Square.h1.toBitboard(), Bitboard{ .mask = 0x80 });
-        try std.testing.expectEqual(Square.f7.toBitboard(), Bitboard{ .mask = 0x20000000000000 });
-        try std.testing.expectEqual(Square.c2.toBitboard(), Bitboard{ .mask = 0x400 });
-        try std.testing.expectEqual(Square.d3.toBitboard(), Bitboard{ .mask = 0x80000 });
-        try std.testing.expectEqual(Square.e6.toBitboard(), Bitboard{ .mask = 0x100000000000 });
+        try std.testing.expectEqual(Square.b4.toBitboard(), Bitboard.initInt(0x2000000));
+        try std.testing.expectEqual(Square.g5.toBitboard(), Bitboard.initInt(0x4000000000));
+        try std.testing.expectEqual(Square.h8.toBitboard(), Bitboard.initInt(0x8000000000000000));
+        try std.testing.expectEqual(Square.a8.toBitboard(), Bitboard.initInt(0x100000000000000));
+        try std.testing.expectEqual(Square.h1.toBitboard(), Bitboard.initInt(0x80));
+        try std.testing.expectEqual(Square.f7.toBitboard(), Bitboard.initInt(0x20000000000000));
+        try std.testing.expectEqual(Square.c2.toBitboard(), Bitboard.initInt(0x400));
+        try std.testing.expectEqual(Square.d3.toBitboard(), Bitboard.initInt(0x80000));
+        try std.testing.expectEqual(Square.e6.toBitboard(), Bitboard.initInt(0x100000000000));
     }
 
     test shift {
