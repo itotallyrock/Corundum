@@ -20,6 +20,8 @@ pub const castle = @import("./castle.zig");
 pub const move = @import("./move.zig");
 /// The zobrist module contains types and functions related to Zobrist hashing, a common technique for representing chess positions.
 pub const zobrist = @import("./zobrist.zig");
+/// The piece_arrangement module contains types and functions related to the arrangement of pieces on a chess board.
+pub const piece_arrangement = @import("./piece_arrangement.zig");
 
 test {
     std.testing.refAllDeclsRecursive(@This());
