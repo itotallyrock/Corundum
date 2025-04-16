@@ -10,6 +10,13 @@ pub const File = enum(u3) {
     a, b, c, d, e, f, g, h,
     // zig fmt: on
 
+    /// Whether two files are adjacent
+    pub fn isAdjacent(self: File, other: File) bool {
+        const selfIndex: i32 = @intCast(@intFromEnum(self));
+        const otherIndex: i32 = @intCast(@intFromEnum(other));
+        return (selfIndex == otherIndex + 1) or (selfIndex == otherIndex - 1);
+    }
+
     /// Returns the en passant square on the given file for the desired player
     pub fn epSquareFor(self: File, player: Player) EnPassantSquare {
         return EnPassantSquare.from_square(Square.fromFileAndRank(self, Rank.epRankFor(player))) catch unreachable;
@@ -36,6 +43,30 @@ pub const File = enum(u3) {
         } else {
             return .d;
         }
+    }
+
+    test isAdjacent {
+        try std.testing.expectEqual(File.a.isAdjacent(.b), true);
+        try std.testing.expectEqual(File.b.isAdjacent(.a), true);
+        try std.testing.expectEqual(File.b.isAdjacent(.c), true);
+        try std.testing.expectEqual(File.c.isAdjacent(.b), true);
+        try std.testing.expectEqual(File.c.isAdjacent(.d), true);
+        try std.testing.expectEqual(File.d.isAdjacent(.c), true);
+        try std.testing.expectEqual(File.d.isAdjacent(.e), true);
+        try std.testing.expectEqual(File.e.isAdjacent(.d), true);
+        try std.testing.expectEqual(File.e.isAdjacent(.f), true);
+        try std.testing.expectEqual(File.f.isAdjacent(.e), true);
+        try std.testing.expectEqual(File.f.isAdjacent(.g), true);
+        try std.testing.expectEqual(File.g.isAdjacent(.f), true);
+        try std.testing.expectEqual(File.g.isAdjacent(.h), true);
+        try std.testing.expectEqual(File.h.isAdjacent(.g), true);
+
+        try std.testing.expectEqual(File.a.isAdjacent(.c), false);
+        try std.testing.expectEqual(File.b.isAdjacent(.d), false);
+        try std.testing.expectEqual(File.c.isAdjacent(.e), false);
+        try std.testing.expectEqual(File.d.isAdjacent(.f), false);
+        try std.testing.expectEqual(File.f.isAdjacent(.h), false);
+        try std.testing.expectEqual(File.h.isAdjacent(.a), false);
     }
 
     test castlingKingTargetFile {
