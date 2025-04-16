@@ -20,6 +20,8 @@ pub const CastleConfig = union(CastleGameType) {
     fischer_random: struct {
         /// The starting files for the rooks in Fischer Random Chess.
         starting_rook_files: ByCastleDirection(File),
+        /// The starting file for the king in Fischer Random Chess.
+        starting_king_file: File,
     },
 
     /// The starting files for the rooks
@@ -30,6 +32,14 @@ pub const CastleConfig = union(CastleGameType) {
         };
     }
 
+    /// The starting file for the king
+    pub fn startingKingFile(self: CastleConfig) File {
+        return switch (self) {
+            .standard => File.e,
+            .fischer_random => self.fischer_random.starting_king_file,
+        };
+    }
+
     /// Returns whether the configuration is Fischer Random Chess.
     pub fn isFischerRandom(self: CastleConfig) bool {
         return self == .fischer_random;
@@ -37,8 +47,8 @@ pub const CastleConfig = union(CastleGameType) {
 
     test "isFishcerRandom" {
         const standard_config = CastleConfig{ .standard = .{} };
-        const fischer_random_config = CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b }) } };
-        const fischer_random_copying_standard_config = CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = File.h, .queen_side = File.a }) } };
+        const fischer_random_config = CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b }) } };
+        const fischer_random_copying_standard_config = CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = File.h, .queen_side = File.a }) } };
 
         // Fischer Random configuration is correctly identified as such.
         try std.testing.expectEqual(false, standard_config.isFischerRandom());
@@ -50,8 +60,8 @@ pub const CastleConfig = union(CastleGameType) {
 
     test "startingRookFiles" {
         const standard_config = CastleConfig{ .standard = .{} };
-        const fischer_random_config = CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b }) } };
-        const fischer_random_copying_standard_config = CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = File.h, .queen_side = File.a }) } };
+        const fischer_random_config = CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b }) } };
+        const fischer_random_copying_standard_config = CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = File.h, .queen_side = File.a }) } };
 
         // Standard configuration has the correct starting rook files.
         try std.testing.expectEqualDeep(ByCastleDirection(File).init(.{
@@ -430,8 +440,8 @@ test "getCastleChar" {
     try std.testing.expectEqual('q', getCastleChar(CastleConfig{ .standard = .{} }, CastleDirection.queen_side));
 
     // Fischer random castling.
-    try std.testing.expectEqual('g', getCastleChar(CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleDirection.king_side));
-    try std.testing.expectEqual('b', getCastleChar(CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleDirection.queen_side));
+    try std.testing.expectEqual('g', getCastleChar(CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleDirection.king_side));
+    try std.testing.expectEqual('b', getCastleChar(CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleDirection.queen_side));
 }
 
 fn getSidedCastleChar(castle_config: CastleConfig, player: Player, castle_direction: CastleDirection) u8 {
@@ -449,10 +459,10 @@ test "getSidedCastleChar" {
     try std.testing.expectEqual('q', getSidedCastleChar(CastleConfig{ .standard = .{} }, .black, CastleDirection.queen_side));
 
     // Fischer random castling.
-    try std.testing.expectEqual('G', getSidedCastleChar(CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, .white, CastleDirection.king_side));
-    try std.testing.expectEqual('B', getSidedCastleChar(CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, .white, CastleDirection.queen_side));
-    try std.testing.expectEqual('g', getSidedCastleChar(CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, .black, CastleDirection.king_side));
-    try std.testing.expectEqual('b', getSidedCastleChar(CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, .black, CastleDirection.queen_side));
+    try std.testing.expectEqual('G', getSidedCastleChar(CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, .white, CastleDirection.king_side));
+    try std.testing.expectEqual('B', getSidedCastleChar(CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, .white, CastleDirection.queen_side));
+    try std.testing.expectEqual('g', getSidedCastleChar(CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, .black, CastleDirection.king_side));
+    try std.testing.expectEqual('b', getSidedCastleChar(CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, .black, CastleDirection.queen_side));
 }
 
 fn tryGetSidedCastleChar(castle_config: CastleConfig, castle_abilities: CastleAbilities, player: Player, castle_direction: CastleDirection) ?u8 {
@@ -502,10 +512,10 @@ test "getUciString" {
     try std.testing.expectEqualStrings("-", getUciString(CastleConfig{ .standard = .{} }, CastleAbilities.none));
 
     // Fischer random
-    try std.testing.expectEqualStrings("GBgb", getUciString(CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleAbilities.all));
-    try std.testing.expectEqualStrings("GBg", getUciString(CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleAbilities.all.removeAbility(.black, .queen_side)));
-    try std.testing.expectEqualStrings("GBb", getUciString(CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleAbilities.all.removeAbility(.black, .king_side)));
-    try std.testing.expectEqualStrings("GB", getUciString(CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleAbilities.all.removeAbility(.black, .king_side).removeAbility(.black, .queen_side)));
-    try std.testing.expectEqualStrings("G", getUciString(CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleAbilities.all.removeAbility(.white, .queen_side).removeAbility(.black, .king_side).removeAbility(.black, .queen_side)));
-    try std.testing.expectEqualStrings("-", getUciString(CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleAbilities.none));
+    try std.testing.expectEqualStrings("GBgb", getUciString(CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleAbilities.all));
+    try std.testing.expectEqualStrings("GBg", getUciString(CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleAbilities.all.removeAbility(.black, .queen_side)));
+    try std.testing.expectEqualStrings("GBb", getUciString(CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleAbilities.all.removeAbility(.black, .king_side)));
+    try std.testing.expectEqualStrings("GB", getUciString(CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleAbilities.all.removeAbility(.black, .king_side).removeAbility(.black, .queen_side)));
+    try std.testing.expectEqualStrings("G", getUciString(CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleAbilities.all.removeAbility(.white, .queen_side).removeAbility(.black, .king_side).removeAbility(.black, .queen_side)));
+    try std.testing.expectEqualStrings("-", getUciString(CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleAbilities.none));
 }
