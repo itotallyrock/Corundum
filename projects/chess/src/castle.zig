@@ -85,7 +85,7 @@ pub const CastleConfig = union(CastleGameType) {
 
 /// Simple flag container to keep track of which players can castle in which directions.
 /// Does not track legality or other positional constraints on castling.
-pub const CastleAbilities = struct {
+pub const CastleAbilities = packed struct {
     /// No castle abilities.
     pub const none = CastleAbilities{ .abilities = Abilities.initEmpty() };
     /// All castle abilities.
@@ -408,6 +408,14 @@ pub const CastleAbilities = struct {
         try std.testing.expectEqual("q", CastleAbilities.all.removeAbility(.white, .king_side).removeAbility(.white, .queen_side).removeAbility(.black, .king_side).getUciString());
         try std.testing.expectEqual("-", CastleAbilities.none.getUciString());
     }
+};
+
+/// State for maintaining castling rules for a game
+pub const CastleState = struct {
+    /// The castle configuration.
+    config: CastleConfig,
+    /// The castle abilities.
+    abilities: CastleAbilities,
 };
 
 /// Represents the direction of a castle move.
