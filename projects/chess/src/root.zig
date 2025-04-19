@@ -1,7 +1,4 @@
 //! Chess core types and functions to maintain game state, allow moves to be made/unmade, support move generation and evaluation.
-
-const std = @import("std");
-
 /// The player module contains types and functions related to players in chess.
 pub const player = @import("./player.zig");
 /// The direction module contains types and functions related directionality on a chess board.
@@ -22,11 +19,16 @@ pub const move = @import("./move.zig");
 pub const zobrist = @import("./zobrist.zig");
 /// The piece_arrangement module contains types and functions related to the arrangement of pieces on a chess board.
 pub const piece_arrangement = @import("./piece_arrangement.zig");
+/// The ply module contains types and functions related to the concept of ply in chess, which is a half-move.
+pub const ply = @import("./ply.zig");
 /// The square count module contains a type containing a number of squares
 pub const square_count = @import("./square_count.zig");
+/// The game rules module contains types and functions related to the game setup and alternative gamemode specific config.
+pub const game_rules = @import("./game_rules.zig");
 /// The board status module contains types and functions related to the status of a chess board use for comptime specific board functions.
 pub const board_status = @import("./board_status.zig").BoardStatus;
 
 test {
+    const std = @import("std");
     std.testing.refAllDeclsRecursive(@This());
 }
