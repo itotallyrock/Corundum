@@ -4,12 +4,64 @@ const ByPlayer = @import("./player.zig").ByPlayer;
 const File = @import("./square.zig").File;
 
 /// What set of castling rules are in effect.
-pub const CastleGameType = enum {
+pub const CastleGameType = enum(u1) {
     /// The standard rules for castling.
     standard,
     /// Chess 960 or Fischer Random Chess rules for castling.
     fischer_random,
 };
+
+/// Create the struct for keeping track of the starting files for the rooks and king.
+pub fn StartingCastleFiles(comptime game_type: CastleGameType) type {
+    switch (game_type) {
+        .standard => return struct {
+            const Self = @This();
+
+            /// Create a new set of starting files for the rooks and king in standard chess. (noop)
+            pub inline fn init() Self {
+                return .{};
+            }
+
+            /// The starting file for the king in standard chess.
+            pub inline fn kingFile(_: Self) File {
+                return File.e;
+            }
+
+            /// The starting files for the rooks in standard chess.
+            pub inline fn rookFiles(_: Self) ByCastleDirection(File) {
+                return ByCastleDirection(File).init(.{ .king_side = File.h, .queen_side = File.a });
+            }
+        },
+        .fischer_random => return struct {
+            const Self = @This();
+            /// The starting files for the rooks in Fischer Random Chess.
+            starting_rook_files: ByCastleDirection(File),
+            /// The starting file for the king in Fischer Random Chess.
+            starting_king_file: File,
+
+            /// Create a new set of starting files for the rooks and king in Fischer Random Chess.
+            pub fn init(
+                starting_king_file: File,
+                starting_rook_files: ByCastleDirection(File),
+            ) Self {
+                return Self{
+                    .starting_king_file = starting_king_file,
+                    .starting_rook_files = starting_rook_files,
+                };
+            }
+
+            /// The starting file for the king in Fischer Random Chess.
+            pub fn kingFile(self: Self) File {
+                return self.starting_king_file;
+            }
+
+            /// The starting files for the rooks in Fischer Random Chess.
+            pub fn rookFiles(self: Self) ByCastleDirection(File) {
+                return self.starting_rook_files;
+            }
+        },
+    }
+}
 
 /// Specifies the configuration of castling by the castle ruleset for each game-type.
 /// This can be either the standard configuration or the Fischer Random configuration.
@@ -153,7 +205,7 @@ pub const CastleAbilities = packed struct {
     pub fn addAbility(self: CastleAbilities, player: Player, direction: CastleDirection) CastleAbilities {
         var result = self.abilities;
         result.set(getAbilityIndex(player, direction));
-        return CastleAbilities { .abilities = result };
+        return CastleAbilities{ .abilities = result };
     }
 
     test addAbility {
@@ -215,7 +267,7 @@ pub const CastleAbilities = packed struct {
     pub fn removeAbility(self: CastleAbilities, player: Player, direction: CastleDirection) CastleAbilities {
         var result = self.abilities;
         result.unset(getAbilityIndex(player, direction));
-        return CastleAbilities { .abilities = result };
+        return CastleAbilities{ .abilities = result };
     }
 
     test removeAbility {
