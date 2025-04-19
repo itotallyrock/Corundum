@@ -22,6 +22,8 @@ pub const move = @import("./move.zig");
 pub const zobrist = @import("./zobrist.zig");
 /// The piece_arrangement module contains types and functions related to the arrangement of pieces on a chess board.
 pub const piece_arrangement = @import("./piece_arrangement.zig");
+/// The square count module contains a type containing a number of squares
+pub const square_count = @import("./square_count.zig");
 /// The board status module contains types and functions related to the status of a chess board use for comptime specific board functions.
 pub const board_status = @import("./board_status.zig").BoardStatus;
 

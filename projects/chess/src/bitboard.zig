@@ -1,10 +1,12 @@
 const std = @import("std");
+
+const BoardDirection = @import("./direction.zig").BoardDirection;
+const SlidingPieceRayDirections = @import("./direction.zig").SlidingPieceRayDirections;
+const NonPawnPiece = @import("./piece.zig").NonPawnPiece;
+const SquareCount = @import("./square_count.zig").SquareCount;
 const Square = @import("./square.zig").Square;
 const ByRank = @import("./square.zig").ByRank;
 const ByFile = @import("./square.zig").ByFile;
-const BoardDirection = @import("./direction.zig").BoardDirection;
-const NonPawnPiece = @import("./piece.zig").NonPawnPiece;
-const SlidingPieceRayDirections = @import("./direction.zig").SlidingPieceRayDirections;
 
 /// A board mask that represents a set of squares on a chess board.
 /// The mask is a 64-bit integer where each bit represents a square on the board.
@@ -13,8 +15,6 @@ const SlidingPieceRayDirections = @import("./direction.zig").SlidingPieceRayDire
 pub const Bitboard = struct {
     /// Essentially this is a u64, but we use a bit set to make it easier to work with and generic over any number of squares.
     const BitSet = std.bit_set.IntegerBitSet(std.enums.values(Square).len);
-    /// Integer type used to represent a count of the number of squares in the bitboard.
-    const SquareCount = std.meta.Int(.unsigned, std.math.log2(std.enums.values(Square).len) + 1);
     /// An empty bitboard with no squares set.
     pub const empty = Bitboard.initInt(0);
     /// A bitboard with all squares set.
