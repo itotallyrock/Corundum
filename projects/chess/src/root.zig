@@ -27,6 +27,8 @@ pub const square_count = @import("./square_count.zig");
 pub const game_rules = @import("./game_rules.zig");
 /// The board status module contains types and functions related to the status of a chess board use for comptime specific board functions.
 pub const board_status = @import("./board_status.zig").BoardStatus;
+/// The repetition state module contains types and functions related to tracking of repetitions in a chess game.
+pub const repetition_state = @import("./repetition_state.zig").RepetitionState;
 
 test {
     const std = @import("std");
