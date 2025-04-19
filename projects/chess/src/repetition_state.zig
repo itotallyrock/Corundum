@@ -213,6 +213,11 @@ pub fn RepetitionState(threefold_rule: ThreefoldRepetition) type {
     }
 }
 
+test RepetitionState {
+    try std.testing.expectEqual(0, @bitSizeOf(RepetitionState(ThreefoldRepetition{ .disabled = .{} })));
+    try std.testing.expect(@bitSizeOf(RepetitionState(ThreefoldRepetition{ .enabled = .{ .history_size = 100 } })) > 0);
+}
+
 test {
     std.testing.refAllDeclsRecursive(RepetitionState(.{ .disabled = .{} }));
     std.testing.refAllDeclsRecursive(RepetitionState(.{ .enabled = .{ .history_size = 255 } }));

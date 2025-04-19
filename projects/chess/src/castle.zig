@@ -31,6 +31,16 @@ pub fn StartingCastleFiles(comptime game_type: CastleGameType) type {
             pub inline fn rookFiles(_: Self) ByCastleDirection(File) {
                 return ByCastleDirection(File).init(.{ .king_side = File.h, .queen_side = File.a });
             }
+
+            test kingFile {
+                const starting_files = StartingCastleFiles(.standard).init();
+                try std.testing.expectEqual(File.e, starting_files.kingFile());
+            }
+
+            test rookFiles {
+                const starting_files = StartingCastleFiles(.standard).init();
+                try std.testing.expectEqualDeep(ByCastleDirection(File).init(.{ .king_side = File.h, .queen_side = File.a }), starting_files.rookFiles());
+            }
         },
         .fischer_random => return struct {
             const Self = @This();
@@ -59,7 +69,28 @@ pub fn StartingCastleFiles(comptime game_type: CastleGameType) type {
             pub fn rookFiles(self: Self) ByCastleDirection(File) {
                 return self.starting_rook_files;
             }
+
+            test kingFile {
+                const starting_files = StartingCastleFiles(.fischer_random).init(.e, ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b }));
+                try std.testing.expectEqual(File.e, starting_files.kingFile());
+            }
+
+            test rookFiles {
+                const starting_files = StartingCastleFiles(.fischer_random).init(.e, ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b }));
+                try std.testing.expectEqualDeep(ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b }), starting_files.rookFiles());
+            }
         },
+    }
+}
+
+test StartingCastleFiles {
+    try std.testing.expectEqual(0, @bitSizeOf(StartingCastleFiles(.standard)));
+    try std.testing.expect(@bitSizeOf(StartingCastleFiles(.fischer_random)) > 0);
+}
+
+test {
+    inline for (comptime std.enums.values(CastleGameType)) |castle_game_type| {
+        std.testing.refAllDeclsRecursive(StartingCastleFiles(castle_game_type));
     }
 }
 
