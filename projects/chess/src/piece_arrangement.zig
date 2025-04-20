@@ -249,4 +249,22 @@ pub const PieceArrangement = struct {
             }
         }
     }
+
+    /// Get the mask of all pieces on the board (both sides)
+    pub fn occupied(self: PieceArrangement) Bitboard {
+        return self.side_masks.get(.white).logicalOr(self.side_masks.get(.black));
+    }
+
+    test occupied {
+        const king_squares = ByPlayer(Square).init(.{
+            .white = Square.e1,
+            .black = Square.e8,
+        });
+        var arrangement = PieceArrangement.init(king_squares);
+        try std.testing.expectEqual(arrangement.occupied(), Square.e1.toBitboard().logicalOr(Square.e8.toBitboard()));
+        arrangement = arrangement.addPiece(.{ .player = .white, .piece = NonKingPiece.rook }, Square.b2);
+        try std.testing.expectEqual(arrangement.occupied(), Square.e1.toBitboard().logicalOr(Square.e8.toBitboard()).logicalOr(Square.b2.toBitboard()));
+        arrangement = arrangement.addPiece(.{ .player = .black, .piece = NonKingPiece.rook }, Square.c3);
+        try std.testing.expectEqual(arrangement.occupied(), Square.e1.toBitboard().logicalOr(Square.e8.toBitboard()).logicalOr(Square.b2.toBitboard()).logicalOr(Square.c3.toBitboard()));
+    }
 };
