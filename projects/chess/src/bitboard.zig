@@ -211,11 +211,10 @@ pub const Bitboard = struct {
     }
 
     pub inline fn pawnAttacks(self: Bitboard, perspective: Player) Bitboard {
-        const direction = switch (perspective) {
+        const pushed = self.shift(switch (perspective) {
             .white => .north,
             .black => .south,
-        };
-        const pushed = self.shift(direction);
+        });
         return pushed.shift(.east).logicalOr(pushed.shift(.west));
     }
 

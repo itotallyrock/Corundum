@@ -6,6 +6,8 @@ const OwnedNonKingPiece = @import("./piece.zig").OwnedNonKingPiece;
 const OwnedPiece = @import("./piece.zig").OwnedPiece;
 const NonKingPiece = @import("./piece.zig").NonKingPiece;
 const Piece = @import("./piece.zig").Piece;
+const PromotionPiece = @import("./piece.zig").PromotionPiece;
+const NonPawnPiece = @import("./piece.zig").NonPawnPiece;
 const Player = @import("./player.zig").Player;
 const ByPlayer = @import("./player.zig").ByPlayer;
 const Square = @import("./square.zig").Square;
@@ -266,5 +268,59 @@ pub const PieceArrangement = struct {
         try std.testing.expectEqual(arrangement.occupied(), Square.e1.toBitboard().logicalOr(Square.e8.toBitboard()).logicalOr(Square.b2.toBitboard()));
         arrangement = arrangement.addPiece(.{ .player = .black, .piece = NonKingPiece.rook }, Square.c3);
         try std.testing.expectEqual(arrangement.occupied(), Square.e1.toBitboard().logicalOr(Square.e8.toBitboard()).logicalOr(Square.b2.toBitboard()).logicalOr(Square.c3.toBitboard()));
+    }
+
+    /// Get a mask of all attackers to a given square (both sides)
+    /// This is used for checking if a square is attacked by any piece
+    /// Comptime include_kings is used to determine if king attacks should be included
+    pub fn attackersTo(self: PieceArrangement, square: Square, comptime include_kings: bool) Bitboard {
+        return self.attackersToWithOppupied(square, self.occupied(), include_kings);
+    }
+
+    /// Get a mask of all attackers to a given square (both sides) for a given occupied mask
+    pub fn attackersToWithOppupied(self: PieceArrangement, square: Square, occupied_mask: Bitboard, comptime include_kings: bool) Bitboard {
+        const from_mask = square.toBitboard();
+        var result = Bitboard.empty;
+
+        // Add attacks for non-pawn & non-king pieces
+        inline for (comptime std.enums.values(PromotionPiece)) |piece| {
+            const piece_mask = self.piece_masks.get(NonKingPiece.fromPiece(piece.toPiece()) catch unreachable);
+            const piece_attacks_from_square = from_mask.attacks(NonPawnPiece.fromPiece(piece.toPiece()) catch unreachable, occupied_mask);
+            const piece_attacks = piece_mask.logicalAnd(piece_attacks_from_square);
+            result = result.logicalOr(piece_attacks);
+        }
+
+        // Add pawn attacks separately (since pawn moves are perspective based)
+        inline for (comptime std.enums.values(Player)) |player| {
+            const pawns_mask = self.piece_masks.get(.pawn).logicalAnd(self.side_masks.get(player));
+            const pawn_attacks_from_square = from_mask.pawnAttacks(player.opposite());
+            const pawn_attacks = pawns_mask.logicalAnd(pawn_attacks_from_square);
+            result = result.logicalOr(pawn_attacks);
+        }
+
+        // Sometimes we don't care about the king attacks (like when checking for check since king can't give check)
+        if (include_kings) {
+            inline for (comptime std.enums.values(Player)) |player| {
+                const king_mask = self.kings.get(player).toBitboard();
+                const king_attacks_from_square = from_mask.attacks(.king, occupied_mask);
+                const king_attacks = king_mask.logicalAnd(king_attacks_from_square);
+                result = result.logicalOr(king_attacks);
+            }
+        }
+
+        return result;
+    }
+
+    test attackersToWithOppupied {
+        var arrangement = PieceArrangement.init(.init(.{
+            .white = Square.c1,
+            .black = Square.e8,
+        }))
+            .addPiece(.{ .player = .white, .piece = NonKingPiece.rook }, Square.b2)
+            .addPiece(.{ .player = .black, .piece = NonKingPiece.bishop }, Square.c3)
+            .addPiece(.{ .player = .black, .piece = NonKingPiece.rook }, Square.b5);
+        const occupied_mask = arrangement.occupied();
+        try std.testing.expectEqual(Bitboard.initInt(0x200040000), arrangement.attackersToWithOppupied(Square.b2, occupied_mask, false));
+        try std.testing.expectEqual(Bitboard.initInt(0x200040004), arrangement.attackersToWithOppupied(Square.b2, occupied_mask, true));
     }
 };
