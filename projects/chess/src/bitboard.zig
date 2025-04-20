@@ -242,7 +242,7 @@ pub const Bitboard = struct {
 
     /// Get an iterator over the set squares in the bitboard.
     pub fn iterator(self: Bitboard, comptime options: std.bit_set.IteratorOptions) SquareIterator(options) {
-        return SquareIterator(options){.iterator = self.mask.iterator(options)};
+        return SquareIterator(options){ .iterator = self.mask.iterator(options) };
     }
 
     test iterator {
