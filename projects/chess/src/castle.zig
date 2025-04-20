@@ -13,7 +13,18 @@ pub const CastleGameType = enum(u1) {
 };
 
 /// Create the struct for keeping track of the starting files for the rooks and king.
-pub fn StartingCastleFiles(comptime game_type: CastleGameType) type {
+pub fn StartingCastleFiles(comptime game_type: CastleGameType, comptime castle_abilities: CastleAbilities) type {
+    // When we have no castle abilities, we don't want to store any castling configuration anymore
+    if (castle_abilities == CastleAbilities.none) {
+        return struct {
+            const Self = @This();
+            /// Create a new set of starting files for the rooks and king in standard chess. (noop)
+            pub inline fn init() Self {
+                return .{};
+            }
+        };
+    }
+
     switch (game_type) {
         .standard => return struct {
             const Self = @This();
@@ -34,12 +45,12 @@ pub fn StartingCastleFiles(comptime game_type: CastleGameType) type {
             }
 
             test kingFile {
-                const starting_files = StartingCastleFiles(.standard).init();
+                const starting_files = StartingCastleFiles(.standard, .all).init();
                 try std.testing.expectEqual(File.e, starting_files.kingFile());
             }
 
             test rookFiles {
-                const starting_files = StartingCastleFiles(.standard).init();
+                const starting_files = StartingCastleFiles(.standard, .all).init();
                 try std.testing.expectEqualDeep(ByCastleDirection(File).init(.{ .king_side = File.h, .queen_side = File.a }), starting_files.rookFiles());
             }
         },
@@ -72,12 +83,12 @@ pub fn StartingCastleFiles(comptime game_type: CastleGameType) type {
             }
 
             test kingFile {
-                const starting_files = StartingCastleFiles(.fischer_random).init(.e, ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b }));
+                const starting_files = StartingCastleFiles(.fischer_random, .all).init(.e, ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b }));
                 try std.testing.expectEqual(File.e, starting_files.kingFile());
             }
 
             test rookFiles {
-                const starting_files = StartingCastleFiles(.fischer_random).init(.e, ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b }));
+                const starting_files = StartingCastleFiles(.fischer_random, .all).init(.e, ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b }));
                 try std.testing.expectEqualDeep(ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b }), starting_files.rookFiles());
             }
         },
@@ -85,13 +96,17 @@ pub fn StartingCastleFiles(comptime game_type: CastleGameType) type {
 }
 
 test StartingCastleFiles {
-    try std.testing.expectEqual(0, @bitSizeOf(StartingCastleFiles(.standard)));
-    try std.testing.expect(@bitSizeOf(StartingCastleFiles(.fischer_random)) > 0);
+    try std.testing.expectEqual(0, @bitSizeOf(StartingCastleFiles(.standard, .all)));
+    try std.testing.expectEqual(0, @bitSizeOf(StartingCastleFiles(.standard, .none)));
+    try std.testing.expectEqual(0, @bitSizeOf(StartingCastleFiles(.fischer_random, .none)));
+    try std.testing.expect(@bitSizeOf(StartingCastleFiles(.fischer_random, .all)) > 0);
 }
 
 test {
-    inline for (comptime std.enums.values(CastleGameType)) |castle_game_type| {
-        std.testing.refAllDeclsRecursive(StartingCastleFiles(castle_game_type));
+    inline for (.{ CastleAbilities.all, CastleAbilities.none }) |castle_abilities| {
+        inline for (comptime std.enums.values(CastleGameType)) |castle_game_type| {
+            std.testing.refAllDeclsRecursive(StartingCastleFiles(castle_game_type, castle_abilities));
+        }
     }
 }
 
