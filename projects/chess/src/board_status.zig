@@ -1,8 +1,8 @@
-
 const std = @import("std");
-const Player = @import("./player.zig").Player;
+
 const CastleAbilities = @import("./castle.zig").CastleAbilities;
 const CastleDirection = @import("./castle.zig").CastleDirection;
+const Player = @import("./player.zig").Player;
 const File = @import("./square.zig").File;
 
 /// Represents an optional file. This is used for the en passant square, which can be null if there is no en passant square.

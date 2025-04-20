@@ -1,13 +1,13 @@
-
 const std = @import("std");
+
 const Bitboard = @import("./bitboard.zig").Bitboard;
-const Player = @import("./player.zig").Player;
-const ByPlayer = @import("./player.zig").ByPlayer;
 const ByNonKingPiece = @import("./piece.zig").ByNonKingPiece;
 const OwnedNonKingPiece = @import("./piece.zig").OwnedNonKingPiece;
 const OwnedPiece = @import("./piece.zig").OwnedPiece;
 const NonKingPiece = @import("./piece.zig").NonKingPiece;
 const Piece = @import("./piece.zig").Piece;
+const Player = @import("./player.zig").Player;
+const ByPlayer = @import("./player.zig").ByPlayer;
 const Square = @import("./square.zig").Square;
 
 /// The state of the pieces on the game board as a snapshot.
@@ -87,7 +87,7 @@ pub const PieceArrangement = struct {
             .white = Square.e1,
             .black = Square.e8,
         });
-        inline for (comptime .{Square.a1, Square.a4, Square.a8, Square.h1, Square.h8, Square.e4, Square.e5, Square.g7}) |target_square| {
+        inline for (comptime .{ Square.a1, Square.a4, Square.a8, Square.h1, Square.h8, Square.e4, Square.e5, Square.g7 }) |target_square| {
             inline for (comptime std.enums.values(NonKingPiece)) |piece| {
                 inline for (comptime std.enums.values(Player)) |player| {
                     var arrangement = PieceArrangement.init(king_squares);
@@ -173,7 +173,7 @@ pub const PieceArrangement = struct {
             .white = Square.e1,
             .black = Square.e8,
         });
-        inline for (comptime .{Square.a1, Square.a4, Square.a8, Square.h1, Square.h8, Square.e4, Square.e5, Square.g7}) |target_square| {
+        inline for (comptime .{ Square.a1, Square.a4, Square.a8, Square.h1, Square.h8, Square.e4, Square.e5, Square.g7 }) |target_square| {
             inline for (comptime std.enums.values(NonKingPiece)) |piece| {
                 inline for (comptime std.enums.values(Player)) |player| {
                     const arrangement = PieceArrangement.init(king_squares);
@@ -208,7 +208,7 @@ pub const PieceArrangement = struct {
             .white = Square.e1,
             .black = Square.e8,
         });
-        inline for (comptime .{Square.a1, Square.a4, Square.a8, Square.h1, Square.h8, Square.e4, Square.e5, Square.g7}) |target_square| {
+        inline for (comptime .{ Square.a1, Square.a4, Square.a8, Square.h1, Square.h8, Square.e4, Square.e5, Square.g7 }) |target_square| {
             inline for (comptime std.enums.values(NonKingPiece)) |piece| {
                 inline for (comptime std.enums.values(Player)) |player| {
                     const arrangement = PieceArrangement.init(king_squares);
@@ -239,7 +239,7 @@ pub const PieceArrangement = struct {
             .white = Square.e1,
             .black = Square.e8,
         });
-        inline for (comptime .{Square.a1, Square.a4, Square.a8, Square.h1, Square.h8, Square.e4, Square.e5, Square.g7, Square.b2}) |target_square| {
+        inline for (comptime .{ Square.a1, Square.a4, Square.a8, Square.h1, Square.h8, Square.e4, Square.e5, Square.g7, Square.b2 }) |target_square| {
             inline for (comptime std.enums.values(NonKingPiece)) |piece| {
                 inline for (comptime std.enums.values(Player)) |player| {
                     const arrangement = PieceArrangement.init(king_squares);

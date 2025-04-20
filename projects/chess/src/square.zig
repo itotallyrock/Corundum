@@ -1,8 +1,9 @@
 const std = @import("std");
+
 const Bitboard = @import("./bitboard.zig").Bitboard;
-const Player = @import("./player.zig").Player;
-const BoardDirection = @import("./direction.zig").BoardDirection;
 const CastleDirection = @import("./castle.zig").CastleDirection;
+const BoardDirection = @import("./direction.zig").BoardDirection;
+const Player = @import("./player.zig").Player;
 
 /// A column index for the board
 pub const File = enum(u3) {

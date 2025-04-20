@@ -1,5 +1,5 @@
-
 const std = @import("std");
+
 const Square = @import("./square.zig").Square;
 
 /// Type containing a number of squares.

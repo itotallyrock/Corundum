@@ -1,17 +1,18 @@
 const std = @import("std");
-const Square = @import("./square.zig").Square;
-const EnPassantSquare = @import("./square.zig").EnPassantSquare;
-const File = @import("./square.zig").File;
-const Rank = @import("./square.zig").Rank;
-const Player = @import("./player.zig").Player;
+
+const CastleDirection = @import("./castle.zig").CastleDirection;
+const CastleConfig = @import("./castle.zig").CastleConfig;
+const PawnAttackDirection = @import("./direction.zig").PawnAttackDirection;
+const RelativeDirection = @import("./direction.zig").RelativeDirection;
 const Piece = @import("./piece.zig").Piece;
 const PromotionPiece = @import("./piece.zig").PromotionPiece;
 const NonPawnPiece = @import("./piece.zig").NonPawnPiece;
 const NonKingPiece = @import("./piece.zig").NonKingPiece;
-const PawnAttackDirection = @import("./direction.zig").PawnAttackDirection;
-const CastleDirection = @import("./castle.zig").CastleDirection;
-const CastleConfig = @import("./castle.zig").CastleConfig;
-const RelativeDirection = @import("./direction.zig").RelativeDirection;
+const Player = @import("./player.zig").Player;
+const Square = @import("./square.zig").Square;
+const EnPassantSquare = @import("./square.zig").EnPassantSquare;
+const File = @import("./square.zig").File;
+const Rank = @import("./square.zig").Rank;
 
 /// A move to be made on the board
 pub const BoardMove = union(enum) {

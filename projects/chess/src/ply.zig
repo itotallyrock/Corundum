@@ -1,4 +1,3 @@
-
 const std = @import("std");
 
 /// The maximum number of half-moves (plies) in a chess game.

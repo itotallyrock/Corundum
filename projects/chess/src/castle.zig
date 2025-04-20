@@ -1,4 +1,5 @@
 const std = @import("std");
+
 const Player = @import("./player.zig").Player;
 const ByPlayer = @import("./player.zig").ByPlayer;
 const File = @import("./square.zig").File;

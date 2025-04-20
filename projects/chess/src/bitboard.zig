@@ -3,10 +3,10 @@ const std = @import("std");
 const BoardDirection = @import("./direction.zig").BoardDirection;
 const SlidingPieceRayDirections = @import("./direction.zig").SlidingPieceRayDirections;
 const NonPawnPiece = @import("./piece.zig").NonPawnPiece;
-const SquareCount = @import("./square_count.zig").SquareCount;
 const Square = @import("./square.zig").Square;
 const ByRank = @import("./square.zig").ByRank;
 const ByFile = @import("./square.zig").ByFile;
+const SquareCount = @import("./square_count.zig").SquareCount;
 
 /// A board mask that represents a set of squares on a chess board.
 /// The mask is a 64-bit integer where each bit represents a square on the board.
@@ -51,7 +51,7 @@ pub const Bitboard = struct {
 
     /// Create a new bitboard with the given integer mask.
     pub fn initInt(mask: BitSet.MaskInt) Bitboard {
-        return Bitboard{ .mask = BitSet { .mask = mask } };
+        return Bitboard{ .mask = BitSet{ .mask = mask } };
     }
 
     /// Combine two bitboards using a logical OR operation.

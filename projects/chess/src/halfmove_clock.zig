@@ -1,6 +1,7 @@
 const std = @import("std");
-const Ply = @import("./ply.zig").Ply;
+
 const BooleanRule = @import("./game_rules.zig").BooleanRule;
+const Ply = @import("./ply.zig").Ply;
 
 /// The maximum number of half-moves (plies) before a game is considered drawn due to the fifty-move rule.
 pub const MAX_HALFMOVE_CLOCK = 100;
