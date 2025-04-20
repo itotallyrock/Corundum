@@ -64,7 +64,6 @@ pub const BoardStatus = packed struct {
     pub fn kingMove(self: Self) Self {
         return Self{
             .side_to_move = self.side_to_move.opposite(),
-            // TODO: Consider checking for existing rights before removing or debug assert
             .castle_abilities = self.castle_abilities.kingMove(self.side_to_move),
             .en_passant_file = OptionalFile.none,
         };
@@ -73,7 +72,6 @@ pub const BoardStatus = packed struct {
     pub fn rookMove(self: Self, castle_direction: CastleDirection) Self {
         return Self{
             .side_to_move = self.side_to_move.opposite(),
-            // TODO: Consider checking for existing rights before removing or debug assert
             .castle_abilities = self.castle_abilities.rookMove(self.side_to_move, castle_direction),
             .en_passant_file = OptionalFile.none,
         };
@@ -82,7 +80,6 @@ pub const BoardStatus = packed struct {
     pub fn rookCapture(self: Self, castle_direction: CastleDirection) Self {
         return Self{
             .side_to_move = self.side_to_move.opposite(),
-            // TODO: Consider checking for existing rights before removing or debug assert
             .castle_abilities = self.castle_abilities.rookMove(self.side_to_move.opposite(), castle_direction),
             .en_passant_file = OptionalFile.none,
         };
