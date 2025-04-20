@@ -3,6 +3,7 @@ const std = @import("std");
 const BoardDirection = @import("./direction.zig").BoardDirection;
 const SlidingPieceRayDirections = @import("./direction.zig").SlidingPieceRayDirections;
 const NonPawnPiece = @import("./piece.zig").NonPawnPiece;
+const Player = @import("./player.zig").Player;
 const Square = @import("./square.zig").Square;
 const ByRank = @import("./square.zig").ByRank;
 const ByFile = @import("./square.zig").ByFile;
@@ -207,6 +208,23 @@ pub const Bitboard = struct {
             .rook => return self.rayAttacks(.cardinal, occupied),
             .queen => return self.rayAttacks(.cardinal, occupied).logicalOr(self.rayAttacks(.diagonal, occupied)),
         }
+    }
+
+    pub inline fn pawnAttacks(self: Bitboard, perspective: Player) Bitboard {
+        const direction = switch (perspective) {
+            .white => .north,
+            .black => .south,
+        };
+        const pushed = self.shift(direction);
+        return pushed.shift(.east).logicalOr(pushed.shift(.west));
+    }
+
+    test pawnAttacks {
+        try std.testing.expectEqual(Bitboard.empty.pawnAttacks(.white), empty);
+        try std.testing.expectEqual(Bitboard.empty.pawnAttacks(.black), empty);
+        try std.testing.expectEqual(Bitboard.initInt(0xff0000000000), Bitboard.initInt(0x00FF000000000000).pawnAttacks(.black));
+        try std.testing.expectEqual(Bitboard.initInt(0xff0000), Bitboard.initInt(0xff00).pawnAttacks(.white));
+        try std.testing.expectEqual(Bitboard.initInt(0x3c05501400a00000), Bitboard.initInt(0x18022008004000).pawnAttacks(.white));
     }
 
     test isEmpty {
