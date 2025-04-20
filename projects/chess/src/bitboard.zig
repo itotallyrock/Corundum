@@ -226,6 +226,35 @@ pub const Bitboard = struct {
         try std.testing.expectEqual(Bitboard.initInt(0x3c05501400a00000), Bitboard.initInt(0x18022008004000).pawnAttacks(.white));
     }
 
+    /// Type to represent an iterator over the set squares in the bitboard.
+    pub fn SquareIterator(comptime options: std.bit_set.IteratorOptions) type {
+        return struct {
+            const Self = @This();
+            iterator: BitSet.Iterator(options),
+            pub fn next(self: *Self) ?Square {
+                if (self.iterator.next()) |square| {
+                    return @enumFromInt(square);
+                }
+                return null;
+            }
+        };
+    }
+
+    /// Get an iterator over the set squares in the bitboard.
+    pub fn iterator(self: Bitboard, comptime options: std.bit_set.IteratorOptions) SquareIterator(options) {
+        return SquareIterator(options){.iterator = self.mask.iterator(options)};
+    }
+
+    test iterator {
+        var iter = Bitboard.initInt(0x12300).iterator(.{});
+        try std.testing.expectEqual(.a2, iter.next().?);
+        try std.testing.expectEqual(.b2, iter.next().?);
+        try std.testing.expectEqual(.f2, iter.next().?);
+        try std.testing.expectEqual(.a3, iter.next().?);
+        try std.testing.expectEqual(null, iter.next());
+        try std.testing.expectEqual(null, iter.next());
+    }
+
     test isEmpty {
         try std.testing.expect(Bitboard.empty.isEmpty());
         try std.testing.expect(!Bitboard.all.isEmpty());
