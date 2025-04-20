@@ -5,6 +5,7 @@ const BoardStatus = @import("./board_status.zig").BoardStatus;
 const StartingCastleFiles = @import("./castle.zig").StartingCastleFiles;
 const GameRules = @import("./game_rules.zig").GameRules;
 const HalfmoveClock = @import("./halfmove_clock.zig").HalfmoveClock;
+const between = @import("./line.zig").between;
 const ByNonKingPiece = @import("./piece.zig").ByNonKingPiece;
 const PieceArrangement = @import("./piece_arrangement.zig").PieceArrangement;
 const ByPlayer = @import("./player.zig").ByPlayer;
@@ -44,8 +45,8 @@ pub fn HistoryState(comptime rules: GameRules) type {
         check_squares: ByNonKingPiece(Bitboard),
 
         fn init(comptime board_status: BoardStatus, pieces: PieceArrangement, zobrist_hash: ZobristHash) Self {
-            const white_blockers, const black_pinners = computeBlockerPinners(board_status, pieces, .white);
-            const black_blockers, const white_pinners = computeBlockerPinners(board_status, pieces, .black);
+            const white_blockers, const black_pinners = computeBlockerPinners(pieces, .white);
+            const black_blockers, const white_pinners = computeBlockerPinners(pieces, .black);
             return Self{
                 .zobrist_hash = zobrist_hash,
                 .checkers = computeCheckers(board_status, pieces),
@@ -69,23 +70,62 @@ pub fn HistoryState(comptime rules: GameRules) type {
             previous.next = &state;
         }
 
+        /// Compute a new bitboard mask of all pieces giving check to the king
         fn computeCheckers(comptime board_status: BoardStatus, pieces: PieceArrangement) Bitboard {
-            _ = board_status;
-            _ = pieces;
-            @panic("TODO");
+            const opponent_king_square = pieces.kings.get(board_status.side_to_move.opposite());
+            const friendly_pieces = pieces.side_masks.get(board_status.side_to_move);
+            return pieces.attackersTo(opponent_king_square, false).logicalAnd(friendly_pieces);
         }
 
-        fn computeBlockerPinners(comptime board_status: BoardStatus, pieces: PieceArrangement, perspective: Player) struct { Bitboard, Bitboard } {
-            _ = board_status;
-            _ = pieces;
-            _ = perspective;
-            @panic("TODO");
+        /// Compute the blockers and pinners for a given player returns a tuple of blockers then pinners
+        fn computeBlockerPinners(pieces: PieceArrangement, blocker_perspective: Player) struct { Bitboard, Bitboard } {
+            const king_square = pieces.kings.get(blocker_perspective);
+            const king_mask = king_square.toBitboard();
+            var blockers = Bitboard.empty;
+            var pinners = Bitboard.empty;
+
+            const occupied = pieces.occupied();
+            const queens = pieces.piece_masks.get(.queen);
+            const queen_rooks = queens.logicalOr(pieces.piece_masks.get(.rook));
+            const queen_bishops = queens.logicalOr(pieces.piece_masks.get(.bishop));
+            const snipers = king_mask.attacks(.rook, occupied).logicalAnd(queen_rooks)
+                .logicalOr(king_mask.attacks(.bishop, occupied).logicalAnd(queen_bishops))
+                .logicalAnd(pieces.side_masks.get(blocker_perspective.opposite()));
+            const occupancy = occupied.logicalXor(snipers);
+
+            var sniper_squares = snipers.iterator(.{});
+            while (sniper_squares.next()) |sniper_square| {
+                const blockers_for_sniper = between(king_square, sniper_square).logicalAnd(occupancy);
+                // If only one blocker is between the king and the sniper, it is a pin
+                if (!blockers_for_sniper.isEmpty() and blockers_for_sniper.numSquares() == 1) {
+                    blockers = blockers.logicalOr(blockers_for_sniper);
+                    if (!blockers_for_sniper.logicalAnd(pieces.side_masks.get(blocker_perspective)).isEmpty()) {
+                        pinners = pinners.logicalOr(sniper_square.toBitboard());
+                    }
+                }
+            }
+
+            return .{
+                blockers,
+                pinners,
+            };
         }
 
+        /// Compute the squares that would give check if occupied by a certain piece
         fn computeCheckSquares(comptime board_status: BoardStatus, pieces: PieceArrangement) ByNonKingPiece(Bitboard) {
-            _ = board_status;
-            _ = pieces;
-            @panic("TODO");
+            const opponent_king_mask = pieces.kings.get(board_status.side_to_move.opposite()).toBitboard();
+            const occupied = pieces.occupied();
+
+            const bishop_attacks = opponent_king_mask.attacks(.bishop, occupied);
+            const rook_attacks = opponent_king_mask.attacks(.rook, occupied);
+
+            return .init(.{
+                .pawn = pieces.piece_masks.get(.pawn).pawnAttacks(board_status.side_to_move.opposite()),
+                .knight = pieces.piece_masks.get(.knight).attacks(.knight, occupied),
+                .bishop = bishop_attacks,
+                .rook = rook_attacks,
+                .queen = rook_attacks.logicalOr(bishop_attacks),
+            });
         }
     };
 }
