@@ -1,21 +1,24 @@
 const std = @import("std");
 const zobrist_seed = @import("build_options").zobrist_seed;
-const Player = @import("./player.zig").Player;
-const ByPlayer = @import("./player.zig").ByPlayer;
-const Square = @import("./square.zig").Square;
-const File = @import("./square.zig").File;
-const BySquare = @import("./square.zig").BySquare;
+
+const BoardStatus = @import("./board_status.zig").BoardStatus;
+const CastleAbilities = @import("./castle.zig").CastleAbilities;
+const CastleDirection = @import("./castle.zig").CastleDirection;
+const ByCastleDirection = @import("./castle.zig").ByCastleDirection;
 const BoardDirection = @import("./direction.zig").BoardDirection;
-const EnPassantSquare = @import("./square.zig").EnPassantSquare;
-const ByFile = @import("./square.zig").ByFile;
 const OwnedPiece = @import("./piece.zig").OwnedPiece;
 const PromotionPiece = @import("./piece.zig").PromotionPiece;
 const OwnedNonKingPiece = @import("./piece.zig").OwnedNonKingPiece;
 const Piece = @import("./piece.zig").Piece;
 const ByPiece = @import("./piece.zig").ByPiece;
-const CastleAbilities = @import("./castle.zig").CastleAbilities;
-const CastleDirection = @import("./castle.zig").CastleDirection;
-const ByCastleDirection = @import("./castle.zig").ByCastleDirection;
+const PieceArrangement = @import("./piece_arrangement.zig").PieceArrangement;
+const Player = @import("./player.zig").Player;
+const ByPlayer = @import("./player.zig").ByPlayer;
+const Square = @import("./square.zig").Square;
+const File = @import("./square.zig").File;
+const BySquare = @import("./square.zig").BySquare;
+const EnPassantSquare = @import("./square.zig").EnPassantSquare;
+const ByFile = @import("./square.zig").ByFile;
 
 /// The underlying type of a Zobrist hash, a 64-bit unsigned integer
 const ZobristKey = u64;
@@ -121,20 +124,25 @@ pub const ZobristHash = struct {
     /// The underlying Zobrist key.
     key: ZobristKey,
 
-    /// Create a new Zobrist hash from the non-king-piece starting features of a chess position.
-    pub fn init(side_to_move: Player, king_squares: ByPlayer(Square), castle_abilities: CastleAbilities, en_passant_square: ?EnPassantSquare) ZobristHash {
+    pub fn initPieces(comptime board_status: BoardStatus, pieces: PieceArrangement) ZobristHash {
         @setEvalBranchQuota(1_000_000);
         var hash = fromKey(FEATURES.empty)
-            .togglePiece(.{ .player = .white, .piece = .king }, king_squares.get(.white))
-            .togglePiece(.{ .player = .black, .piece = .king }, king_squares.get(.black))
-            .toggleCastleAbilities(castle_abilities);
+            .togglePiece(.{ .player = .white, .piece = .king }, pieces.kings.get(.white))
+            .togglePiece(.{ .player = .black, .piece = .king }, pieces.kings.get(.black))
+            .toggleCastleAbilities(board_status.castle_abilities);
 
-        if (en_passant_square) |square| {
-            hash = hash.toggleEnPassant(square.to_square().fileOf());
+        if (board_status.en_passant_file.inner()) |file| {
+            hash = hash.toggleEnPassant(file);
         }
 
-        if (side_to_move == .black) {
+        if (board_status.side_to_move == .black) {
             hash = hash.switchSides();
+        }
+
+        inline for (comptime std.enums.values(Square)) |square| {
+            if (pieces.sidedPieceOn(square)) |piece| {
+                hash = hash.togglePiece(piece, square);
+            }
         }
 
         return hash;
@@ -280,7 +288,7 @@ pub const ZobristHash = struct {
             inline for (players) |player| {
                 inline for (pieces) |piece| {
                     const owned_piece = OwnedPiece{ .piece = piece, .player = player };
-                    const hash = comptime ZobristHash.init(starting_player, ByPlayer(Square).init(.{ .white = .e1, .black = .e8 }), CastleAbilities.all, null);
+                    const hash = comptime ZobristHash.initPieces(.init(starting_player, .all, .none), .init(.init(.{ .white = .e1, .black = .e8 })));
                     for (std.enums.values(Square)) |square| {
                         const toggled_once = hash.togglePiece(owned_piece, square);
                         try std.testing.expect(hash.key != toggled_once.key);
@@ -297,7 +305,7 @@ pub const ZobristHash = struct {
     test switchSides {
         const players = comptime std.enums.values(Player);
         inline for (players) |starting_player| {
-            const hash = comptime ZobristHash.init(starting_player, ByPlayer(Square).init(.{ .white = .e1, .black = .e8 }), CastleAbilities.all, null);
+            const hash = comptime ZobristHash.initPieces(.init(starting_player, .all, .none), .init(.init(.{ .white = .e1, .black = .e8 })));
             const toggled = hash.switchSides();
             try std.testing.expect(hash.key != toggled.key);
             const toggled_back = toggled.switchSides();
@@ -311,7 +319,7 @@ pub const ZobristHash = struct {
         const players = comptime std.enums.values(Player);
         const castle_directions = comptime std.enums.values(CastleDirection);
         inline for (players) |starting_player| {
-            const hash = comptime ZobristHash.init(starting_player, ByPlayer(Square).init(.{ .white = .e1, .black = .e8 }), CastleAbilities.all, null);
+            const hash = comptime ZobristHash.initPieces(.init(starting_player, .all, .none), .init(.init(.{ .white = .e1, .black = .e8 })));
             inline for (players) |player| {
                 inline for (castle_directions) |castle_direction| {
                     const toggled = hash.toggleCastleAbility(player, castle_direction);
@@ -328,7 +336,7 @@ pub const ZobristHash = struct {
     test toggleCastleAbilities {
         const players = comptime std.enums.values(Player);
         inline for (players) |starting_player| {
-            const hash = comptime ZobristHash.init(starting_player, ByPlayer(Square).init(.{ .white = .e1, .black = .e8 }), CastleAbilities.all, null);
+            const hash = comptime ZobristHash.initPieces(.init(starting_player, .all, .none), .init(.init(.{ .white = .e1, .black = .e8 })));
             const toggled = hash.toggleCastleAbilities(CastleAbilities.all);
             try std.testing.expect(hash.key != toggled.key);
             const toggled_back = toggled.toggleCastleAbilities(CastleAbilities.all);
@@ -344,7 +352,7 @@ pub const ZobristHash = struct {
         const players = comptime std.enums.values(Player);
         const files = comptime std.enums.values(File);
         inline for (players) |starting_player| {
-            const hash = comptime ZobristHash.init(starting_player, ByPlayer(Square).init(.{ .white = .e1, .black = .e8 }), CastleAbilities.all, null);
+            const hash = comptime ZobristHash.initPieces(.init(starting_player, .all, .none), .init(.init(.{ .white = .e1, .black = .e8 })));
             inline for (files) |file| {
                 const toggled = hash.toggleEnPassant(file);
                 try std.testing.expect(hash.key != toggled.key);

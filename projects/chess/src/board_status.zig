@@ -11,12 +11,10 @@ pub const OptionalFile = packed struct {
     has_value: bool,
     _file: File,
 
-    pub fn initNull() OptionalFile {
-        return OptionalFile{
-            .has_value = false,
-            ._file = File.a,
-        };
-    }
+    pub const none = OptionalFile{
+        .has_value = false,
+        ._file = File.a,
+    };
 
     pub fn init(f: File) OptionalFile {
         return OptionalFile{
@@ -34,7 +32,7 @@ pub const OptionalFile = packed struct {
     }
 
     test inner {
-        const test1 = OptionalFile.initNull();
+        const test1 = OptionalFile.none;
         try std.testing.expectEqual(null, test1.inner());
         const test2 = OptionalFile.init(.a);
         try std.testing.expectEqual(test2.inner().?, .a);
@@ -68,7 +66,7 @@ pub const BoardStatus = packed struct {
             .side_to_move = self.side_to_move.opposite(),
             // TODO: Consider checking for existing rights before removing or debug assert
             .castle_abilities = self.castle_abilities.kingMove(self.side_to_move),
-            .en_passant_file = OptionalFile.initNull(),
+            .en_passant_file = OptionalFile.none,
         };
     }
 
@@ -77,7 +75,7 @@ pub const BoardStatus = packed struct {
             .side_to_move = self.side_to_move.opposite(),
             // TODO: Consider checking for existing rights before removing or debug assert
             .castle_abilities = self.castle_abilities.rookMove(self.side_to_move, castle_direction),
-            .en_passant_file = OptionalFile.initNull(),
+            .en_passant_file = OptionalFile.none,
         };
     }
 
@@ -86,7 +84,7 @@ pub const BoardStatus = packed struct {
             .side_to_move = self.side_to_move.opposite(),
             // TODO: Consider checking for existing rights before removing or debug assert
             .castle_abilities = self.castle_abilities.rookMove(self.side_to_move.opposite(), castle_direction),
-            .en_passant_file = OptionalFile.initNull(),
+            .en_passant_file = OptionalFile.none,
         };
     }
 
@@ -102,7 +100,7 @@ pub const BoardStatus = packed struct {
         return Self{
             .side_to_move = self.side_to_move.opposite(),
             .castle_abilities = self.castle_abilities,
-            .en_passant_file = OptionalFile.initNull(),
+            .en_passant_file = OptionalFile.none,
         };
     }
 };
