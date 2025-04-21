@@ -50,6 +50,14 @@ pub const PieceArrangement = struct {
         try std.testing.expectEqual(arrangement.side_masks.get(.black), Square.a8.toBitboard());
     }
 
+    /// Try to add a non-king piece to the board on a given square
+    pub fn tryAddPiece(self: PieceArrangement, piece: OwnedNonKingPiece, square: Square) !PieceArrangement {
+        if (self.sideOn(square) != null or self.pieceOn(square) != null) {
+            return error.SquareOccupied;
+        }
+        return self.addPiece(piece, square);
+    }
+
     /// Add a non-king piece to the board on a given square
     pub fn addPiece(self: PieceArrangement, piece: OwnedNonKingPiece, square: Square) PieceArrangement {
         std.debug.assert(self.sideOn(square) == null and self.pieceOn(square) == null);
