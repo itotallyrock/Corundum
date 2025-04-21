@@ -29,6 +29,8 @@ pub const game_rules = @import("./game_rules.zig");
 pub const board_status = @import("./board_status.zig").BoardStatus;
 /// The history state module contains types and functions related to preservation of moves across the history of a chess game.
 pub const history_state = @import("./history_state.zig");
+/// The FEN module contains types and functions related to the Forsyth-Edwards Notation (FEN) used to represent chess positions.
+pub const fen = @import("./fen.zig");
 
 test {
     const std = @import("std");
