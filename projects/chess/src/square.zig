@@ -225,9 +225,23 @@ pub const Square = enum(u6) {
     a8, b8, c8, d8, e8, f8, g8, h8,
     // zig fmt: on
 
+    /// The integer type that can hold all squares (typicaly used for math operations on squares).
+    pub const OffsetInt = std.math.IntFittingRange(@intFromEnum(Square.a1), @intFromEnum(Square.h8));
+
     /// Creates a square from a file and rank.
     pub fn fromFileAndRank(file: File, rank: Rank) Square {
         return @enumFromInt(@as(u8, @intFromEnum(rank)) * 8 + @as(u8, @intFromEnum(file)));
+    }
+
+    /// Creates a square from an offset int.
+    pub fn fromOffset(offset_int: OffsetInt) Square {
+        std.debug.assert(offset_int <= @intFromEnum(Square.h8));
+        return @enumFromInt(offset_int);
+    }
+
+    /// Returns the offset of the square.
+    pub fn offset(self: Square) OffsetInt {
+        return @intFromEnum(self);
     }
 
     /// Returns the rank of the square.
@@ -252,6 +266,32 @@ pub const Square = enum(u6) {
             .toBitboard()
             .shift(direction)
             .getSquare();
+    }
+
+    test fromOffset {
+        try std.testing.expectEqual(Square.fromOffset(0), Square.a1);
+        try std.testing.expectEqual(Square.fromOffset(1), Square.b1);
+        try std.testing.expectEqual(Square.fromOffset(2), Square.c1);
+        try std.testing.expectEqual(Square.fromOffset(3), Square.d1);
+        try std.testing.expectEqual(Square.fromOffset(4), Square.e1);
+        try std.testing.expectEqual(Square.fromOffset(5), Square.f1);
+        try std.testing.expectEqual(Square.fromOffset(6), Square.g1);
+        try std.testing.expectEqual(Square.fromOffset(7), Square.h1);
+        try std.testing.expectEqual(Square.fromOffset(8), Square.a2);
+        try std.testing.expectEqual(Square.fromOffset(63), Square.h8);
+    }
+    test offset {
+        try std.testing.expectEqual(Square.a1.offset(), 0);
+        try std.testing.expectEqual(Square.b1.offset(), 1);
+        try std.testing.expectEqual(Square.c1.offset(), 2);
+        try std.testing.expectEqual(Square.d1.offset(), 3);
+        try std.testing.expectEqual(Square.e1.offset(), 4);
+        try std.testing.expectEqual(Square.f1.offset(), 5);
+        try std.testing.expectEqual(Square.g1.offset(), 6);
+        try std.testing.expectEqual(Square.h1.offset(), 7);
+        try std.testing.expectEqual(Square.a2.offset(), 8);
+        try std.testing.expectEqual(Square.a8.offset(), 56);
+        try std.testing.expectEqual(Square.h8.offset(), 63);
     }
 
     test fromFileAndRank {
