@@ -28,27 +28,27 @@ pub const BoardMove = union(enum) {
     /// A pawn move that captures a piece
     pawn_capture: struct {
         const Self = @This();
-        /// The starting square of the pawn
-        from: Square,
+        /// The ending square of the pawn
+        to: Square,
         /// The direction the pawn captures in
         direction: PawnAttackDirection,
         /// The piece that was captured
         captured_piece: NonKingPiece,
 
-        /// Get the square the pawn moves to
-        pub fn to(self: Self, side_to_move: Player) Square {
-            return self.from.shift(self.direction.toRelativeDirection().toDirection(side_to_move));
+        /// Get the square the pawn moved from
+        pub fn from(self: Self, side_to_move: Player) Square {
+            return self.from.shift(self.direction.toRelativeDirection().toDirection(side_to_move).opposite());
         }
     },
     /// A single pawn forward move that doesn't capture or promote
     pawn_push: struct {
         const Self = @This();
-        /// The file the pawn starts from
-        from: Square,
+        /// The target square the pawn ends on
+        to: Square,
 
-        /// Get the square the pawn moves to
-        pub fn to(self: Self, side_to_move: Player) Square {
-            return self.from.shift(RelativeDirection.forward.toDirection(side_to_move));
+        /// Get the square the pawn movedW from
+        pub fn from(self: Self, side_to_move: Player) Square {
+            return self.to.shift(RelativeDirection.backward.toDirection(side_to_move));
         }
     },
     /// A double pawn forward move from the starting rank
@@ -166,4 +166,36 @@ pub const BoardMove = union(enum) {
             return self.from(side_to_move).shift(self.capture_direction.toRelativeDirection().toDirection(side_to_move));
         }
     },
+
+    fn from(self: BoardMove, comptime side_to_move: Player, castle_config: CastleConfig) Square {
+        return switch (self) {
+            .quiet => |s| s.from,
+            .pawn_capture => |s| s.from(side_to_move),
+            .pawn_push => |s| s.from(side_to_move),
+            .double_pawn_push => |s| s.from(side_to_move),
+            .capture => |s| s.from,
+            .en_passant_capture => |s| s.from(side_to_move),
+            .castle => |s| s.kingFrom(side_to_move, castle_config),
+            .promotion => |s| s.from(side_to_move),
+            .promotion_capture => |s| s.from(side_to_move),
+        };
+    }
+
+    pub fn to(self: BoardMove, comptime side_to_move: Player) Square {
+        return switch (self) {
+            .quiet => |s| s.to,
+            .pawn_capture => |s| s.to,
+            .pawn_push => |s| s.to,
+            .double_pawn_push => |s| s.to(side_to_move),
+            .capture => |s| s.to,
+            .en_passant_capture => |s| s.to(side_to_move, s.from_file),
+            .castle => |s| s.kingTo(side_to_move),
+            .promotion => |s| s.to(side_to_move),
+            .promotion_capture => |s| s.to(side_to_move),
+        };
+    }
 };
+
+test "size of BoardMove" {
+    try std.testing.expectEqual(5, @sizeOf(BoardMove));
+}
