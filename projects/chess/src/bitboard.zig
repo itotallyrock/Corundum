@@ -210,11 +210,24 @@ pub const Bitboard = struct {
         }
     }
 
-    pub inline fn pawnAttacks(self: Bitboard, perspective: Player) Bitboard {
-        const pushed = self.shift(switch (perspective) {
+    pub inline fn pawnPush(self: Bitboard, perspective: Player) Bitboard {
+        return self.shift(switch (perspective) {
             .white => .north,
             .black => .south,
         });
+    }
+
+    test pawnPush {
+        try std.testing.expectEqual(Bitboard.empty.pawnPush(.white), empty);
+        try std.testing.expectEqual(Bitboard.empty.pawnPush(.black), empty);
+        try std.testing.expectEqual(Bitboard.initInt(0xff0000), Bitboard.initInt(0xff00).pawnPush(.white));
+        try std.testing.expectEqual(Bitboard.initInt(0xff0000000000), Bitboard.initInt(0xff000000000000).pawnPush(.black));
+        try std.testing.expectEqual(Bitboard.initInt(0x4000200800020000), Bitboard.initInt(0x40002008000200).pawnPush(.white));
+        try std.testing.expectEqual(Bitboard.initInt(0x2184003), Bitboard.initInt(0x218400300).pawnPush(.black));
+    }
+
+    pub inline fn pawnAttacks(self: Bitboard, perspective: Player) Bitboard {
+        const pushed = self.pawnPush(perspective);
         return pushed.shift(.east).logicalOr(pushed.shift(.west));
     }
 
