@@ -2,7 +2,11 @@ const std = @import("std");
 
 const Player = @import("./player.zig").Player;
 const ByPlayer = @import("./player.zig").ByPlayer;
+const Square = @import("./square.zig").Square;
 const File = @import("./square.zig").File;
+const Rank = @import("./square.zig").Rank;
+const Bitboard = @import("./bitboard.zig").Bitboard;
+const between = @import("./line.zig").between;
 
 /// What set of castling rules are in effect.
 pub const CastleGameType = enum(u1) {
@@ -44,6 +48,51 @@ pub fn StartingCastleFiles(comptime game_type: CastleGameType, comptime castle_a
                 return ByCastleDirection(File).init(.{ .king_side = File.h, .queen_side = File.a });
             }
 
+            /// Get the mask for the starting rook position for the given player and direction.
+            pub inline fn startingRookMask(self: Self, player: Player, castle_direction: CastleDirection) Bitboard {
+                const back_rank = Rank.backRank(player);
+                return Square.fromFileAndRank(self.rookFiles().get(castle_direction), back_rank).toBitboard();
+            }
+
+            /// Returns the path of squares between the king and rook for the given player and direction.
+            pub inline fn castlePath(self: Self, player: Player, castle_direction: CastleDirection) Bitboard {
+                const rank = Rank.backRank(player);
+                const white_king_square = Square.fromFileAndRank(self.kingFile(), rank);
+                const rook_square = Square.fromFileAndRank(self.rookFiles().get(castle_direction), rank);
+
+                return between(white_king_square, rook_square);
+            }
+
+            test castlePath {
+                try std.testing.expectEqual(
+                    Bitboard.initInt(0xe),
+                    StartingCastleFiles(.standard, .all).init().castlePath(.white, .queen_side),
+                );
+                try std.testing.expectEqual(
+                    Bitboard.initInt(0x60),
+                    StartingCastleFiles(.standard, .all).init().castlePath(.white, .king_side),
+                );
+                try std.testing.expectEqual(
+                    Bitboard.initInt(0xe00000000000000),
+                    StartingCastleFiles(.standard, .all).init().castlePath(.black, .queen_side),
+                );
+                try std.testing.expectEqual(
+                    Bitboard.initInt(0x6000000000000000),
+                    StartingCastleFiles(.standard, .all).init().castlePath(.black, .king_side),
+                );
+            }
+
+            test startingRookMask {
+                try std.testing.expectEqual(
+                    Bitboard.initInt(0x1),
+                    StartingCastleFiles(.standard, .all).init().startingRookMask(.white, .queen_side),
+                );
+                try std.testing.expectEqual(
+                    Bitboard.initInt(0x8000000000000000),
+                    StartingCastleFiles(.standard, .all).init().startingRookMask(.black, .king_side),
+                );
+            }
+
             test kingFile {
                 const starting_files = StartingCastleFiles(.standard, .all).init();
                 try std.testing.expectEqual(File.e, starting_files.kingFile());
@@ -73,13 +122,50 @@ pub fn StartingCastleFiles(comptime game_type: CastleGameType, comptime castle_a
             }
 
             /// The starting file for the king in Fischer Random Chess.
-            pub fn kingFile(self: Self) File {
+            pub inline fn kingFile(self: Self) File {
                 return self.starting_king_file;
             }
 
             /// The starting files for the rooks in Fischer Random Chess.
-            pub fn rookFiles(self: Self) ByCastleDirection(File) {
+            pub inline fn rookFiles(self: Self) ByCastleDirection(File) {
                 return self.starting_rook_files;
+            }
+
+            /// Get the mask for the starting rook position for the given player and direction.
+            pub inline fn startingRookMask(self: Self, player: Player, castle_direction: CastleDirection) Bitboard {
+                const back_rank = Rank.backRank(player);
+                return Square.fromFileAndRank(self.rookFiles().get(castle_direction), back_rank).toBitboard();
+            }
+
+            /// Returns the path of squares between the king and rook for the given player and direction.
+            pub inline fn castlePath(self: Self, player: Player, castle_direction: CastleDirection) Bitboard {
+                const rank = Rank.backRank(player);
+                const white_king_square = Square.fromFileAndRank(self.kingFile(), rank);
+                const rook_square = Square.fromFileAndRank(self.rookFiles().get(castle_direction), rank);
+
+                return between(white_king_square, rook_square);
+            }
+
+            test castlePath {
+                try std.testing.expectEqual(
+                    Bitboard.initInt(0x1c),
+                    StartingCastleFiles(.fischer_random, .all).init(.f, ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b })).castlePath(.white, .queen_side),
+                );
+                try std.testing.expectEqual(
+                    Bitboard.initInt(0x3000000000000000),
+                    StartingCastleFiles(.fischer_random, .all).init(.d, ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b })).castlePath(.black, .king_side),
+                );
+            }
+
+            test startingRookMask {
+                try std.testing.expectEqual(
+                    Bitboard.initInt(0x2),
+                    StartingCastleFiles(.fischer_random, .all).init(.e, ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b })).startingRookMask(.white, .queen_side),
+                );
+                try std.testing.expectEqual(
+                    Bitboard.initInt(0x4000000000000000),
+                    StartingCastleFiles(.fischer_random, .all).init(.e, ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b })).startingRookMask(.black, .king_side),
+                );
             }
 
             test kingFile {
@@ -124,7 +210,7 @@ pub const CastleConfig = union(CastleGameType) {
     },
 
     /// The starting files for the rooks
-    pub fn startingRookFiles(self: CastleConfig) ByCastleDirection(File) {
+    pub inline fn startingRookFiles(self: CastleConfig) ByCastleDirection(File) {
         return switch (self) {
             .standard => ByCastleDirection(File).init(.{ .king_side = File.h, .queen_side = File.a }),
             .fischer_random => self.fischer_random.starting_rook_files,
@@ -132,7 +218,7 @@ pub const CastleConfig = union(CastleGameType) {
     }
 
     /// The starting file for the king
-    pub fn startingKingFile(self: CastleConfig) File {
+    pub inline fn startingKingFile(self: CastleConfig) File {
         return switch (self) {
             .standard => File.e,
             .fischer_random => self.fischer_random.starting_king_file,
@@ -140,7 +226,7 @@ pub const CastleConfig = union(CastleGameType) {
     }
 
     /// Returns whether the configuration is Fischer Random Chess.
-    pub fn isFischerRandom(self: CastleConfig) bool {
+    pub inline fn isFischerRandom(self: CastleConfig) bool {
         return self == .fischer_random;
     }
 
