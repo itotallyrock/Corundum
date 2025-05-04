@@ -414,5 +414,10 @@ test "parseFen fullmove count matches for black" {
     const blackFullmoveCountFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 21";
     try std.testing.expectEqual(41, (try parseFen(blackFullmoveCountFen)).game_ply.?);
 }
+
+test "parseFen halfmove clock matches" {
+    const halfmoveClockFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 5 21";
+    try std.testing.expectEqual(5, (try parseFen(halfmoveClockFen)).halfmove_clock.?);
+}
 // TODO: test a ton more fens
 // TODO: test chess960 fens
