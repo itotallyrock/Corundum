@@ -11,6 +11,7 @@ const PieceArrangement = @import("./piece_arrangement.zig").PieceArrangement;
 const ByPlayer = @import("./player.zig").ByPlayer;
 const Player = @import("./player.zig").Player;
 const Ply = @import("./ply.zig").Ply;
+const File = @import("./square.zig").File;
 const ZobristHash = @import("./zobrist.zig").ZobristHash;
 
 /// Create a history state for a game of chess for a given set of game rules.
@@ -33,6 +34,8 @@ pub fn HistoryState(comptime rules: GameRules) type {
         zobrist_hash: ZobristHash,
         /// The move limit clock
         halfmove_clock: MoveLimitClock = MoveLimitClock.init(),
+        /// The en passant file if there is one
+        en_passant_file: ?File,
 
         // State of the game that is used to generate legal moves
         /// Squares currently giving check
@@ -44,7 +47,7 @@ pub fn HistoryState(comptime rules: GameRules) type {
         /// Squares that when occupied by a certain piece would result in check
         check_squares: ByNonKingPiece(Bitboard),
 
-        fn init(comptime board_status: BoardStatus, pieces: PieceArrangement, zobrist_hash: ZobristHash) Self {
+        fn init(comptime board_status: BoardStatus, pieces: PieceArrangement, zobrist_hash: ZobristHash, en_passant_file: if (board_status.has_en_passant) File else void) Self {
             const white_blockers, const black_pinners = computeBlockerPinners(pieces, .white);
             const black_blockers, const white_pinners = computeBlockerPinners(pieces, .black);
             return Self{
@@ -53,17 +56,18 @@ pub fn HistoryState(comptime rules: GameRules) type {
                 .blockers = .init(.{ .white = white_blockers, .black = black_blockers }),
                 .pinners = .init(.{ .white = white_pinners, .black = black_pinners }),
                 .check_squares = computeCheckSquares(board_status, pieces),
+                .en_passant_file = if (@TypeOf(en_passant_file) == @TypeOf(File)) en_passant_file else null,
             };
         }
 
         // Create a new history state for a new game given the game rules and the initial position
-        pub fn initPieces(comptime board_status: BoardStatus, pieces: PieceArrangement) Self {
-            return Self.init(board_status, pieces, ZobristHash.initPieces(board_status, pieces));
+        pub fn initPieces(comptime board_status: BoardStatus, pieces: PieceArrangement, en_passant_file: if (board_status.has_en_passant) File else void) Self {
+            return Self.init(board_status, pieces, ZobristHash.initPieces(board_status, pieces, en_passant_file), en_passant_file);
         }
 
         /// Create a contuination state of the game from a previous state
-        pub fn initNext(comptime board_status: BoardStatus, zobrist_hash: ZobristHash, pieces: PieceArrangement, previous: *Self) Self {
-            var state = Self.init(board_status, pieces, zobrist_hash);
+        pub fn initNext(comptime board_status: BoardStatus, zobrist_hash: ZobristHash, pieces: PieceArrangement, previous: *Self, en_passant_file: if (board_status.has_en_passant) File else void) Self {
+            var state = Self.init(board_status, pieces, zobrist_hash, en_passant_file);
             state.previous = previous;
             state.game_ply = previous.game_ply + 1;
             state.halfmove_clock = previous.halfmove_clock;
