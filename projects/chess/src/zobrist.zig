@@ -169,7 +169,7 @@ pub const ZobristHash = struct {
 
     /// Double push a pawn from the start rank in the Zobrist hash.
     pub fn doublePawnPush(self: ZobristHash, player: Player, en_passant_file: File) ZobristHash {
-        const en_passant_square = en_passant_file.epSquareFor(player).to_square();
+        const en_passant_square = en_passant_file.epSquareFor(player).toSquare();
         const forward = BoardDirection.forward(player);
         const from = en_passant_square.shift(forward.opposite()) orelse unreachable;
         const to = en_passant_square.shift(forward) orelse unreachable;

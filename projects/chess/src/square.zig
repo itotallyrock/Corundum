@@ -20,7 +20,7 @@ pub const File = enum(u3) {
 
     /// Returns the en passant square on the given file for the desired player
     pub fn epSquareFor(self: File, player: Player) EnPassantSquare {
-        return EnPassantSquare.from_square(Square.fromFileAndRank(self, Rank.epRankFor(player))) catch unreachable;
+        return EnPassantSquare.fromSquare(Square.fromFileAndRank(self, Rank.epRankFor(player))) catch unreachable;
     }
 
     /// Returns the promotion square on the given file for the desired player
@@ -390,12 +390,12 @@ pub const EnPassantSquare = enum(u6) {
     // zig fmt: on
 
     /// Create a normal `Square` from an `EnPassantSquare`
-    pub fn to_square(self: EnPassantSquare) Square {
+    pub fn toSquare(self: EnPassantSquare) Square {
         return @enumFromInt(@intFromEnum(self));
     }
 
     /// Create an `EnPassantSquare` from a `Square`
-    pub fn from_square(square: Square) !EnPassantSquare {
+    pub fn fromSquare(square: Square) !EnPassantSquare {
         return switch (square) {
             .a3, .b3, .c3, .d3, .e3, .f3, .g3, .h3, .a6, .b6, .c6, .d6, .e6, .f6, .g6, .h6 => @enumFromInt(@intFromEnum(square)),
             else => error.InvalidEnPassantSquare,

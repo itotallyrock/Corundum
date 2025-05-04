@@ -282,11 +282,11 @@ pub const PieceArrangement = struct {
     /// This is used for checking if a square is attacked by any piece
     /// Comptime include_kings is used to determine if king attacks should be included
     pub fn attackersTo(self: PieceArrangement, square: Square, comptime include_kings: bool) Bitboard {
-        return self.attackersToWithOppupied(square, self.occupied(), include_kings);
+        return self.attackersToWithOccupied(square, self.occupied(), include_kings);
     }
 
     /// Get a mask of all attackers to a given square (both sides) for a given occupied mask
-    pub fn attackersToWithOppupied(self: PieceArrangement, square: Square, occupied_mask: Bitboard, comptime include_kings: bool) Bitboard {
+    pub fn attackersToWithOccupied(self: PieceArrangement, square: Square, occupied_mask: Bitboard, comptime include_kings: bool) Bitboard {
         const from_mask = square.toBitboard();
         var result = Bitboard.empty;
 
@@ -319,7 +319,7 @@ pub const PieceArrangement = struct {
         return result;
     }
 
-    test attackersToWithOppupied {
+    test attackersToWithOccupied {
         var arrangement = PieceArrangement.init(.init(.{
             .white = Square.c1,
             .black = Square.e8,
@@ -328,7 +328,7 @@ pub const PieceArrangement = struct {
             .addPiece(.{ .player = .black, .piece = NonKingPiece.bishop }, Square.c3)
             .addPiece(.{ .player = .black, .piece = NonKingPiece.rook }, Square.b5);
         const occupied_mask = arrangement.occupied();
-        try std.testing.expectEqual(Bitboard.initInt(0x200040000), arrangement.attackersToWithOppupied(Square.b2, occupied_mask, false));
-        try std.testing.expectEqual(Bitboard.initInt(0x200040004), arrangement.attackersToWithOppupied(Square.b2, occupied_mask, true));
+        try std.testing.expectEqual(Bitboard.initInt(0x200040000), arrangement.attackersToWithOccupied(Square.b2, occupied_mask, false));
+        try std.testing.expectEqual(Bitboard.initInt(0x200040004), arrangement.attackersToWithOccupied(Square.b2, occupied_mask, true));
     }
 };
