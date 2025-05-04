@@ -78,7 +78,7 @@ pub fn HistoryState(comptime rules: GameRules) type {
         }
 
         /// Compute the blockers and pinners for a given player returns a tuple of blockers then pinners
-        fn computeBlockerPinners(pieces: PieceArrangement, blocker_perspective: Player) struct { Bitboard, Bitboard } {
+        fn computeBlockerPinners(pieces: PieceArrangement, comptime blocker_perspective: Player) struct { Bitboard, Bitboard } {
             const king_square = pieces.kings.get(blocker_perspective);
             const king_mask = king_square.toBitboard();
             var blockers = Bitboard.empty;
