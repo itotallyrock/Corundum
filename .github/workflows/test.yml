@@ -35,13 +35,12 @@ jobs:
         zig: [ master ]
         os: [ ubuntu-latest, windows-latest, macos-latest ]
     runs-on: ${{ matrix.os }}
-    name: Zig Build & Test (zig ${{ matrix.zig }} on ${{ matrix.os }})
+    name: Zig Build & Test Projects (zig ${{ matrix.zig }} on ${{ matrix.os }})
     steps:
       - uses: actions/checkout@v4
       - uses: mlugg/setup-zig@v2
         with:
           version: ${{ matrix.zig }}
-      - name: Build
-        run: zig build --verbose --summary all
-      - name: Run Tests
+      - name: Chess Library
         run: zig build test --verbose --summary all
+        working-directory: ./projects/chess
