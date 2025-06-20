@@ -30,7 +30,7 @@ pub const SetOption = struct {
             const unprefixed_name_and_possible_value = std.mem.trimLeft(u8, remaining_command[5..], " ");
 
             const value_index = std.ascii.indexOfIgnoreCase(unprefixed_name_and_possible_value, " value ");
-            const name, const value = if (value_index) |index| .{ unprefixed_name_and_possible_value[0..index], unprefixed_name_and_possible_value[index + 7..] } else .{ unprefixed_name_and_possible_value, null };
+            const name, const value = if (value_index) |index| .{ unprefixed_name_and_possible_value[0..index], unprefixed_name_and_possible_value[index + 7 ..] } else .{ unprefixed_name_and_possible_value, null };
             if (name.len == 0 or std.ascii.eqlIgnoreCase(name, "value")) return error.InvalidSetOptionMissingName;
 
             return Self{

@@ -26,7 +26,7 @@ pub const Position = struct {
         if (std.ascii.startsWithIgnoreCase(source, "position ")) {
             const remaining_command = std.mem.trimLeft(u8, source[8..], " ");
             const moves_index = std.ascii.indexOfIgnoreCase(remaining_command, " moves ");
-            const position, const moves = if (moves_index) |index| .{ std.mem.trim(u8, remaining_command[0..index], " "), std.mem.trim(u8, remaining_command[index + 7..], " ") } else .{ remaining_command, null };
+            const position, const moves = if (moves_index) |index| .{ std.mem.trim(u8, remaining_command[0..index], " "), std.mem.trim(u8, remaining_command[index + 7 ..], " ") } else .{ remaining_command, null };
 
             return Self{
                 .position = try StartingPosition.parse(position),
