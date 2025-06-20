@@ -6,6 +6,7 @@ const Debug = @import("./debug.zig").Debug;
 const Position = @import("./position.zig").Position;
 const IsReady = @import("./is_ready.zig").IsReady;
 const PonderHit = @import("./ponder_hit.zig").PonderHit;
+const Register = @import("./register.zig").Register;
 const SetOption = @import("./set_option.zig").SetOption;
 const UciNewGame = @import("./uci_new_game.zig").UciNewGame;
 
@@ -21,6 +22,7 @@ pub const AnyUciCommand = union(enum) {
     is_ready: IsReady,
     uci_new_game: UciNewGame,
     position: Position,
+    register: Register,
     set_option: SetOption,
 
     /// Attempts to parse a UCI command from the given source string.
@@ -53,7 +55,10 @@ pub const AnyUciCommand = union(enum) {
         if (try SetOption.parse(trimmed)) |set_option| {
             return AnyUciCommand{ .set_option = set_option };
         }
-        // TODO: "go" and "register"
+        if (try Register.parse(trimmed)) |register| {
+            return AnyUciCommand{ .register = register };
+        }
+        // TODO: "go"
 
         return error.UnrecognizedCommand;
     }
@@ -71,6 +76,8 @@ test AnyUciCommand {
     try std.testing.expectEqualDeep(AnyUciCommand{ .ponder_hit = PonderHit{} }, AnyUciCommand.parse("ponderhit"));
     try std.testing.expectEqualDeep(AnyUciCommand{ .set_option = SetOption{ .name = "option_name", .value = "option_value" } }, AnyUciCommand.parse("setoption name option_name value option_value"));
     try std.testing.expectEqualDeep(AnyUciCommand{ .set_option = SetOption{ .name = "option_name", .value = null } }, AnyUciCommand.parse("setoption name option_name"));
+    try std.testing.expectEqualDeep(AnyUciCommand{ .register = Register{ .user = .{ .name = "engine_name", .code = "engine_code" } } }, AnyUciCommand.parse("register name engine_name code engine_code"));
+    try std.testing.expectEqualDeep(AnyUciCommand{ .register = Register{ .later = .{} } }, AnyUciCommand.parse("register later"));
 
-    // TODO: Test "go" and "register" commands
+    // TODO: Test "go" commands
 }
