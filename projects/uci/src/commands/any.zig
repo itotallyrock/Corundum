@@ -1,4 +1,5 @@
 const std = @import("std");
+const Go = @import("./go.zig").Go;
 const Uci = @import("./uci.zig").Uci;
 const Quit = @import("./quit.zig").Quit;
 const Stop = @import("./stop.zig").Stop;
@@ -14,6 +15,7 @@ const UciNewGame = @import("./uci_new_game.zig").UciNewGame;
 pub const AnyUciCommand = union(enum) {
     const Self = @This();
 
+    go: Go,
     uci: Uci,
     quit: Quit,
     stop: Stop,
@@ -58,7 +60,9 @@ pub const AnyUciCommand = union(enum) {
         if (try Register.parse(trimmed)) |register| {
             return AnyUciCommand{ .register = register };
         }
-        // TODO: "go"
+        if (try Go.parse(trimmed)) |go| {
+            return AnyUciCommand{ .go = go };
+        }
 
         return error.UnrecognizedCommand;
     }
@@ -78,6 +82,7 @@ test AnyUciCommand {
     try std.testing.expectEqualDeep(AnyUciCommand{ .set_option = SetOption{ .name = "option_name", .value = null } }, AnyUciCommand.parse("setoption name option_name"));
     try std.testing.expectEqualDeep(AnyUciCommand{ .register = Register{ .user = .{ .name = "engine_name", .code = "engine_code" } } }, AnyUciCommand.parse("register name engine_name code engine_code"));
     try std.testing.expectEqualDeep(AnyUciCommand{ .register = Register{ .later = .{} } }, AnyUciCommand.parse("register later"));
-
-    // TODO: Test "go" commands
+    try std.testing.expectEqualDeep(AnyUciCommand{ .go = Go{} }, AnyUciCommand.parse("go infinite"));
+    try std.testing.expectEqualDeep(AnyUciCommand{ .go = Go{ .depth = 10 } }, AnyUciCommand.parse("go depth 10"));
+    try std.testing.expectEqualDeep(AnyUciCommand{ .go = Go{ .time_controls = .{ .search_time_ms = 1000 } } }, AnyUciCommand.parse("go movetime 1000"));
 }
