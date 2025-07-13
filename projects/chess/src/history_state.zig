@@ -60,7 +60,7 @@ pub fn HistoryState(comptime rules: GameRules) type {
             };
         }
 
-        // Create a new history state for a new game given the game rules and the initial position
+        /// Create a new history state for a new game given the game rules and the initial position
         pub fn initPieces(comptime board_status: BoardStatus, pieces: PieceArrangement, en_passant_file: if (board_status.has_en_passant) File else void) Self {
             return Self.init(board_status, pieces, ZobristHash.initPieces(board_status, pieces, en_passant_file), en_passant_file);
         }
