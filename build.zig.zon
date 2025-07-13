@@ -4,12 +4,7 @@
     .fingerprint = 0xc40cf4d2cca2811d,
     .minimum_zig_version = "0.15.0-dev.64+2a4e06bcb",
 
-    .dependencies = .{
-        .mecha = .{
-            .url = "https://github.com/Hejsil/mecha/archive/refs/heads/master.tar.gz",
-            .hash = "mecha-0.10.0-dVGaSI1XAQB9DD3Om3U880SnM3W6ZaFMNbKFJFsAt2qn",
-        },
-    },
+    .dependencies = .{},
 
     .paths = .{
         "build.zig",

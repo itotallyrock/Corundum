@@ -1,46 +1,46 @@
-const std = @import("std");
-
-pub const UciParser = @import("uci_parser.zig").UciParser;
-
-pub const CliManager = @import("uci.zig").CliManager;
-pub const Square = @import("square.zig").Square;
-pub const EnPassantSquare = @import("square.zig").EnPassantSquare;
-pub const Board = @import("board.zig").Board;
-pub const PieceArrangement = @import("board.zig").PieceArrangement;
-pub const Player = @import("players.zig").Player;
-pub const CastleConfig = @import("castles.zig").CastleConfig;
-pub const CastleAbilities = @import("castles.zig").CastleAbilities;
-pub const CastleDirection = @import("castles.zig").CastleDirection;
-pub const Piece = @import("pieces.zig").Piece;
-pub const NonKingPiece = @import("pieces.zig").NonKingPiece;
-pub const OwnedPiece = @import("pieces.zig").OwnedPiece;
-pub const OwnedNonKingPiece = @import("pieces.zig").OwnedNonKingPiece;
-pub const ByPlayer = @import("players.zig").ByPlayer;
-pub const BoardMove = @import("moves.zig").BoardMove;
-pub const lines = @import("lines.zig");
-
-test {
-    std.testing.refAllDeclsRecursive(@This());
-}
+//! By convention, main.zig is where your main function lives in the case that
+//! you are building an executable. If you are making a library, the convention
+//! is to delete this file and start with root.zig instead.
 
 pub fn main() !void {
-    _ = @import("board.zig")
-        .Board.start_position
-        .doublePawnPush(.e)
-        .pawnPush(.e7)
-        .pawnPush(.e4)
-        .doublePawnPush(.f)
-        .enPassantCapture(.e)
-        .kingMove(.e8, .e7)
-        .debugPrint();
+    // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
+    std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
 
-    var stdin = std.io.getStdIn();
-    defer stdin.close();
-    var stdout = std.io.getStdOut();
-    defer stdout.close();
+    // stdout is for the actual output of your application, for example if you
+    // are implementing gzip, then only the compressed bytes should be sent to
+    // stdout, not any debugging messages.
+    const stdout_file = std.io.getStdOut().writer();
+    var bw = std.io.bufferedWriter(stdout_file);
+    const stdout = bw.writer();
 
-    var buffered_stdin = std.io.bufferedReader(stdin.reader());
+    try stdout.print("Run `zig build test` to run the tests.\n", .{});
 
-    var cli_manager = CliManager.init(buffered_stdin.reader().any(), stdout.writer().any());
-    try cli_manager.run();
+    try bw.flush(); // Don't forget to flush!
 }
+
+test "simple test" {
+    var list = std.ArrayList(i32).init(std.testing.allocator);
+    defer list.deinit(); // Try commenting this out and see if zig detects the memory leak!
+    try list.append(42);
+    try std.testing.expectEqual(@as(i32, 42), list.pop());
+}
+
+test "use other module" {
+    try std.testing.expectEqual(@as(i32, 150), lib.add(100, 50));
+}
+
+test "fuzz example" {
+    const Context = struct {
+        fn testOne(context: @This(), input: []const u8) anyerror!void {
+            _ = context;
+            // Try passing `--fuzz` to `zig build test` and see if it manages to fail this test case!
+            try std.testing.expect(!std.mem.eql(u8, "canyoufindme", input));
+        }
+    };
+    try std.testing.fuzz(Context{}, Context.testOne, .{});
+}
+
+const std = @import("std");
+
+/// This imports the separate module containing `root.zig`. Take a look in `build.zig` for details.
+const lib = @import("corundum_lib");
