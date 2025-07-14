@@ -1,4 +1,3 @@
-
 const std = @import("std");
 
 pub const GoTimeControls = union(enum) {
@@ -21,7 +20,7 @@ const PartialTimeControls = struct {
     black_time_ms: ?u32 = null,
     black_increment_ms: ?u32 = null,
 
-    fn controlsType(self: Self) ?enum{ infinite, search_time_ms, move_clock } {
+    fn controlsType(self: Self) ?enum { infinite, search_time_ms, move_clock } {
         if (self.infinite) {
             return .infinite;
         } else if (self.search_time_ms != null) {
@@ -45,7 +44,7 @@ const PartialTimeControls = struct {
                         .white_increment_ms = self.white_increment_ms,
                         .black_time_ms = black_time,
                         .black_increment_ms = self.black_increment_ms,
-                    }};
+                    } };
                 },
             }
         } else {
@@ -148,16 +147,7 @@ pub const Go = struct {
 
                 if (std.ascii.eqlIgnoreCase(token, "searchmoves")) {
                     const remaining_str = tokens.rest();
-                    const end_index = @min(std.ascii.indexOfIgnoreCase(remaining_str, "depth") orelse remaining_str.len,
-                    std.ascii.indexOfIgnoreCase(remaining_str, "nodes") orelse remaining_str.len,
-                    std.ascii.indexOfIgnoreCase(remaining_str, "movetime") orelse remaining_str.len,
-                    std.ascii.indexOfIgnoreCase(remaining_str, "mate") orelse remaining_str.len,
-                    std.ascii.indexOfIgnoreCase(remaining_str, "wtime") orelse remaining_str.len,
-                    std.ascii.indexOfIgnoreCase(remaining_str, "btime") orelse remaining_str.len,
-                    std.ascii.indexOfIgnoreCase(remaining_str, "winc") orelse remaining_str.len,
-                    std.ascii.indexOfIgnoreCase(remaining_str, "binc") orelse remaining_str.len,
-                    std.ascii.indexOfIgnoreCase(remaining_str, "infinite") orelse remaining_str.len,
-                    std.ascii.indexOfIgnoreCase(remaining_str, "ponder") orelse remaining_str.len);
+                    const end_index = @min(std.ascii.indexOfIgnoreCase(remaining_str, "depth") orelse remaining_str.len, std.ascii.indexOfIgnoreCase(remaining_str, "nodes") orelse remaining_str.len, std.ascii.indexOfIgnoreCase(remaining_str, "movetime") orelse remaining_str.len, std.ascii.indexOfIgnoreCase(remaining_str, "mate") orelse remaining_str.len, std.ascii.indexOfIgnoreCase(remaining_str, "wtime") orelse remaining_str.len, std.ascii.indexOfIgnoreCase(remaining_str, "btime") orelse remaining_str.len, std.ascii.indexOfIgnoreCase(remaining_str, "winc") orelse remaining_str.len, std.ascii.indexOfIgnoreCase(remaining_str, "binc") orelse remaining_str.len, std.ascii.indexOfIgnoreCase(remaining_str, "infinite") orelse remaining_str.len, std.ascii.indexOfIgnoreCase(remaining_str, "ponder") orelse remaining_str.len);
 
                     const moves_str = std.mem.trim(u8, remaining_str[0..end_index], " ");
                     if (moves_str.len > 0) {

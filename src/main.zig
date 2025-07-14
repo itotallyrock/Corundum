@@ -15,4 +15,3 @@ pub fn main() !void {
     var uci_engine_manager = UciEngineManager.init(stdin.reader().any(), stdout.writer().any(), root_allocator.allocator());
     try uci_engine_manager.run();
 }
-

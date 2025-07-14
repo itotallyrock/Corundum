@@ -41,7 +41,6 @@ fn addBinaryModule(
     exe_mod: *std.Build.Module,
     all_tests_step: *std.Build.Step,
     all_builds_step: *std.Build.Step,
-
 ) *std.Build.Step.Compile {
     const build_step = b.step("build_" ++ binary_name, "Build " ++ binary_name ++ " binary");
     const test_step = b.step("test_" ++ binary_name, "Run unit tests for " ++ binary_name ++ " binary");
