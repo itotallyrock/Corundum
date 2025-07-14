@@ -1,7 +1,7 @@
 //! TODO
 
 const std = @import("std");
-const UciEngineManager = @import("corundum_lib").UciEngineManager;
+const UciEngineManager = @import("./root.zig").UciEngineManager;
 
 /// TODO
 pub fn main() !void {
