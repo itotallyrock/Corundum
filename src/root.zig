@@ -1,4 +1,5 @@
 const std = @import("std");
+const AnyUciCommand = @import("uci").AnyUciCommand;
 
 /// The potential states of the UCI engine
 pub const UciEngineState = union(enum) {
@@ -56,10 +57,21 @@ pub const UciEngineManager = struct {
             defer buffer_stream.reset();
             logger.debug("received command: {s}", .{command});
 
-            const parsed_command = std.mem.trim(u8, command, " \r\n\t");
-            if (std.ascii.startsWithIgnoreCase(parsed_command, "quit")) break;
-            // TODO: parse the command
-            // UciCommand.parse(parsed_command) catch |err| switch (err) {}
+            const parsed_command = AnyUciCommand.parse(std.mem.trim(u8, command, " \r\n\t")) catch |err| switch (err) {
+                else => @panic("TODO: Handle error"),
+            };
+
+            // TODO: Probably abstract this since at this point we can call "try self.handleCommand(parsed_command)"
+            switch (parsed_command) {
+                .quit => {
+                    logger.info("quitting", .{});
+                    return;
+                },
+                else => {
+                    std.debug.print("TODO: Handle command {any}", .{parsed_command});
+                    continue;
+                },
+            }
             // TODO: execute the command based on the current state and the parsed command
         }
     }
