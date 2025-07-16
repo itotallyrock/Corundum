@@ -1,72 +1,6 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
-const app_name = "corundum";
-const app_prefix = app_name ++ "_";
-
-fn addLibrary(
-    b: *std.Build,
-    comptime step_name: []const u8,
-    comptime library_name: []const u8,
-    lib_mod: *std.Build.Module,
-    all_tests_step: *std.Build.Step,
-    all_builds_step: *std.Build.Step,
-) *std.Build.Step.Compile {
-    const build_step = b.step("build_" ++ step_name ++ "_lib", "Build " ++ library_name ++ " library");
-    const test_step = b.step("test_" ++ step_name ++ "_lib", "Run unit tests for " ++ library_name ++ " library");
-
-    const lib = b.addLibrary(.{
-        .linkage = .static,
-        .name = library_name,
-        .root_module = lib_mod,
-    });
-    build_step.dependOn(&lib.step);
-    all_builds_step.dependOn(&lib.step);
-
-    const test_mod = b.addTest(.{
-        .name = step_name ++ "_lib_tests",
-        .root_module = lib_mod,
-    });
-    const run_lib_unit_tests = b.addRunArtifact(test_mod);
-    all_tests_step.dependOn(&run_lib_unit_tests.step);
-    test_step.dependOn(&run_lib_unit_tests.step);
-
-    b.installArtifact(lib);
-
-    return lib;
-}
-
-fn addBinaryModule(
-    b: *std.Build,
-    comptime binary_name: []const u8,
-    exe_mod: *std.Build.Module,
-    all_tests_step: *std.Build.Step,
-    all_builds_step: *std.Build.Step,
-) *std.Build.Step.Compile {
-    const build_step = b.step("build_" ++ binary_name, "Build " ++ binary_name ++ " binary");
-    const test_step = b.step("test_" ++ binary_name, "Run unit tests for " ++ binary_name ++ " binary");
-
-    const exe = b.addExecutable(.{
-        .linkage = .static,
-        .name = binary_name,
-        .root_module = exe_mod,
-    });
-    build_step.dependOn(&exe.step);
-    all_builds_step.dependOn(&exe.step);
-
-    const exe_unit_tests = b.addTest(.{
-        .name = binary_name ++ "_tests",
-        .root_module = exe_mod,
-    });
-    const run_lib_unit_tests = b.addRunArtifact(exe_unit_tests);
-    test_step.dependOn(&run_lib_unit_tests.step);
-    all_tests_step.dependOn(&run_lib_unit_tests.step);
-
-    b.installArtifact(exe);
-
-    return exe;
-}
-
 const chess_project_root = "./projects/chess";
 const uci_project_root = "./projects/uci";
 const corundum_project_root = "./";
@@ -78,7 +12,6 @@ const corundum_main_source = corundum_project_root ++ "src/main.zig";
 
 /// Setup the build
 pub fn build(b: *std.Build) void {
-    b.reference_trace = 20;
 
     // Build options
     const target = b.standardTargetOptions(.{});
