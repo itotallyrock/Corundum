@@ -1,5 +1,5 @@
 const std = @import("std");
-const AnyUciCommand = @import("uci").AnyUciCommand;
+const AnyUciCommand = @import("corundum_uci").AnyUciCommand;
 
 /// The potential states of the UCI engine
 pub const UciEngineState = union(enum) {

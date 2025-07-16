@@ -1,5 +1,5 @@
 const std = @import("std");
-const zobrist_seed = @import("build_options").zobrist_seed;
+const zobrist_seed = @import("chess_build_options").zobrist_seed;
 
 const BoardStatus = @import("./board_status.zig").BoardStatus;
 const CastleAbilities = @import("./castle.zig").CastleAbilities;
