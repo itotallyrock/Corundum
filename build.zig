@@ -57,7 +57,7 @@ pub fn build(b: *std.Build) void {
         },
         .corundum = .{
             .steps = .{
-                .build = b.step("corundum:build", "Build the corundum library/binary"),
+                .build = b.step("corundum:build", "Build the corundum binary"),
                 .@"test" = b.step("corundum:test", "Run unit tests for the corundum library/binary"),
                 .fmt = b.step("corundum:fmt", "Check or fix formatting issues in the corundum library/binary"),
                 .all = b.step("corundum:all", "Check, test, and build the corundum library/binary"),
