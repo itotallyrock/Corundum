@@ -49,5 +49,7 @@ test Register {
     try std.testing.expectEqualDeep(Register{ .user = .{ .name = "Steve Vai", .code = "12345" } }, Register.parse("register name Steve Vai code 12345"));
     try std.testing.expectEqualDeep(Register{ .user = .{ .name = "Bob", .code = "Password" } }, Register.parse("register code Password NAME Bob"));
     try std.testing.expectEqualDeep(Register{ .user = .{ .name = "Stephen" } }, Register.parse("register name Stephen"));
+    try std.testing.expectEqualDeep(Register{ .user = .{ .name = "❤️" } }, Register.parse("register name ❤️"));
     try std.testing.expectEqualDeep(Register{ .user = .{ .code = "9001" } }, Register.parse("register code 9001"));
+    try std.testing.expectEqualDeep(Register{ .user = .{ .name = "( •_•)>⌐■-■", .code = "❤️🧡💛💚🩵💙💜🩷" } }, Register.parse("register name ( •_•)>⌐■-■ CODE ❤️🧡💛💚🩵💙💜🩷"));
 }

@@ -45,6 +45,9 @@ pub const SetOption = struct {
 test SetOption {
     try std.testing.expectEqualDeep(SetOption{ .name = "Threads", .value = "10" }, SetOption.parse("setoption name Threads value 10"));
     try std.testing.expectEqualDeep(SetOption{ .name = "Threads", .value = null }, SetOption.parse("SETOPTION name Threads"));
+    try std.testing.expectEqualDeep(SetOption{ .name = "Win Emoji", .value = "🫡" }, SetOption.parse("SETOPTION name Win Emoji value 🫡"));
+    try std.testing.expectEqualDeep(SetOption{ .name = "🌚", .value = "🌜" }, SetOption.parse("SETOPTION name 🌚 value 🌜"));
+    try std.testing.expectEqualDeep(SetOption{ .name = "🅱️💯", .value = null }, SetOption.parse("SETOPTION name 🅱️💯"));
     try std.testing.expectEqualDeep(SetOption{ .name = "Nalimov Table Base Path", .value = "C:/Nalimov" }, SetOption.parse("SETOPTION NAME Nalimov Table Base Path VALUE C:/Nalimov"));
     try std.testing.expectEqualDeep(SetOption{ .name = "Use NNUE", .value = "TRUE" }, SetOption.parse("setoption     name   Use NNUE value TRUE"));
     try std.testing.expectError(error.InvalidSetOptionMissingName, SetOption.parse("setoption"));
