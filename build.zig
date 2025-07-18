@@ -23,7 +23,6 @@ pub fn build(b: *std.Build) void {
     var projects = .{
         .chess = .{
             .steps = .{
-                .build = b.step("chess:build", "Build the chess library"),
                 .@"test" = b.step("chess:test", "Run unit tests for the chess library"),
                 .fmt = b.step("chess:fmt", "Check or fix formatting issues in the chess library"),
                 .all = b.step("chess:all", "Check, test, and build the chess library"),
@@ -41,7 +40,6 @@ pub fn build(b: *std.Build) void {
         },
         .uci = .{
             .steps = .{
-                .build = b.step("uci:build", "Build the UCI library"),
                 .@"test" = b.step("uci:test", "Run unit tests for the UCI library"),
                 .fmt = b.step("uci:fmt", "Check or fix formatting issues in the UCI library"),
                 .all = b.step("uci:all", "Check, test, and build the UCI library"),
@@ -101,21 +99,6 @@ pub fn build(b: *std.Build) void {
     projects.chess.module.addOptions("chess_build_options", chess_build_options);
 
     // Setup compilation steps
-    const chess_lib = b.addLibrary(.{
-        .name = "corundum_chess",
-        .root_module = projects.chess.module,
-    });
-    projects.chess.steps.build.dependOn(&chess_lib.step);
-    const uci_lib = b.addLibrary(.{
-        .name = "corundum_uci",
-        .root_module = projects.uci.module,
-    });
-    projects.uci.steps.build.dependOn(&uci_lib.step);
-    const corundum_lib = b.addLibrary(.{
-        .name = "corundum_lib",
-        .root_module = projects.corundum.module,
-    });
-    projects.corundum.steps.build.dependOn(&corundum_lib.step);
     const corundum_bin = b.addExecutable(.{
         .name = "corundum",
         .root_module = projects.corundum.main_module,
@@ -136,10 +119,8 @@ pub fn build(b: *std.Build) void {
     all_steps.all.dependOn(projects.chess.steps.all);
     all_steps.all.dependOn(projects.uci.steps.all);
     all_steps.all.dependOn(projects.corundum.steps.all);
-    projects.chess.steps.all.dependOn(projects.chess.steps.build);
     projects.chess.steps.all.dependOn(projects.chess.steps.@"test");
     projects.chess.steps.all.dependOn(projects.chess.steps.fmt);
-    projects.uci.steps.all.dependOn(projects.uci.steps.build);
     projects.uci.steps.all.dependOn(projects.uci.steps.@"test");
     projects.uci.steps.all.dependOn(projects.uci.steps.fmt);
     projects.corundum.steps.all.dependOn(projects.corundum.steps.build);
@@ -147,7 +128,5 @@ pub fn build(b: *std.Build) void {
     projects.corundum.steps.all.dependOn(projects.corundum.steps.fmt);
 
     // Setup install step
-    b.installArtifact(chess_lib);
-    b.installArtifact(uci_lib);
     b.installArtifact(corundum_bin);
 }
