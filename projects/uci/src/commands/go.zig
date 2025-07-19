@@ -282,6 +282,7 @@ test Go {
     try std.testing.expectEqualDeep(Go{ .time_controls = .{ .search_time_ms = 350_000 } }, Go.parse("go movetime 350_000"));
     try std.testing.expectEqualDeep(Go{ .time_controls = .{ .move_clock = .{ .white_time_ms = 35_000, .black_time_ms = 35_000, .white_increment_ms = 1000, .black_increment_ms = 1000 } } }, Go.parse("go wtime 35000 btime 35000 winc 1000 binc 1000"));
     try std.testing.expectEqualDeep(Go{ .time_controls = .{ .infinite = .{} }, .search_moves = std.mem.tokenizeScalar(u8, "e2e4 d2d4", ' ') }, Go.parse("go infinite searchmoves e2e4 d2d4"));
+    try std.testing.expectEqualDeep(Go{ .time_controls = .{ .infinite = .{} }, .search_moves = std.mem.tokenizeScalar(u8, "👽♟️ 🐵🥜", ' ') }, Go.parse("go infinite searchmoves 👽♟️ 🐵🥜"));
     try std.testing.expectEqualDeep(Go{ .time_controls = .{ .infinite = .{} }, .search_moves = std.mem.tokenizeScalar(u8, "e2e4 d2d4", ' '), .ponder = true }, Go.parse("go infinite searchmoves e2e4 d2d4 ponder"));
     try std.testing.expectEqualDeep(Go{ .time_controls = .{ .move_clock = .{ .white_time_ms = 120_000, .black_time_ms = 30_000, .white_increment_ms = 1000, .black_increment_ms = 1500 } }, .search_moves = std.mem.tokenizeScalar(u8, "b2f4 d8d7", ' '), .ponder = true }, Go.parse("go searchmoves b2f4 d8d7 ponder wtime 120000 btime 30000 winc 1000 binc 1500"));
     try std.testing.expectEqualDeep(Go{ .time_controls = .{ .search_time_ms = 5000 }, .depth = 10 }, Go.parse("go depth 10 movetime 5000"));
@@ -296,6 +297,7 @@ test Go {
     // Error cases
     try std.testing.expectError(error.InvalidGoCommandInvalidMatePliesTooLarge, Go.parse("go mate 500"));
     try std.testing.expectError(error.InvalidGoCommandInvalidMatePliesCharacter, Go.parse("go mate invalid"));
+    try std.testing.expectError(error.InvalidGoCommandInvalidMatePliesCharacter, Go.parse("go mate 9️⃣"));
     try std.testing.expectError(error.InvalidGoCommandMissingMatePlies, Go.parse("go mate"));
     try std.testing.expectError(error.InvalidGoCommandMissingMoveTime, Go.parse("go movetime"));
     try std.testing.expectError(error.InvalidGoCommandMissingDepth, Go.parse("go depth"));
