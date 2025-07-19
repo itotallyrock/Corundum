@@ -116,7 +116,10 @@ pub fn build(b: *std.Build) void {
     projects.corundum.steps.fmt.dependOn(&b.addFmt(.{ .check = !fix_formatting, .paths = &.{corundum_project_root} }).step);
 
     // Setup run step
-    projects.corundum.steps.run.dependOn(&b.addRunArtifact(corundum_bin).step);
+    const run = b.addRunArtifact(corundum_bin);
+    run.step.dependOn(b.getInstallStep());
+    projects.corundum.steps.run.dependOn(&run.step);
+    if (b.args) |args| run.addArgs(args);
 
     // Setup all steps
     all_steps.all.dependOn(projects.chess.steps.all);
