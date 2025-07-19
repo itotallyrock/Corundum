@@ -13,23 +13,21 @@ pub const UciEngineState = union(enum) {
     thinking: struct {},
 };
 
-const maximum_command_length = 4096;
-
 const logger = std.log.scoped(.engine_manager);
 
 /// The manager for the UCI engine
 pub const UciEngineManager = struct {
     const Self = @This();
     /// The input stream for the engine
-    input_stream: std.io.AnyReader,
+    input_stream: std.io.Reader,
     /// The output stream for the engine
-    output_stream: std.io.AnyWriter,
+    output_stream: std.io.Writer,
     /// Root allocator for the engine, used to allocate memory inside of child searchers
     allocator: std.mem.Allocator,
     /// The current state of the engine
     state: UciEngineState = .uninitialized,
 
-    pub fn init(input_stream: std.io.AnyReader, output_stream: std.io.AnyWriter, allocator: std.mem.Allocator) Self {
+    pub fn init(input_stream: std.io.Reader, output_stream: std.io.Writer, allocator: std.mem.Allocator) Self {
         return .{
             .input_stream = input_stream,
             .output_stream = output_stream,
@@ -38,10 +36,8 @@ pub const UciEngineManager = struct {
     }
 
     pub fn run(self: *Self) !void {
-        var buffer: [maximum_command_length]u8 = undefined;
-        var buffer_stream = std.io.fixedBufferStream(&buffer);
         while (true) {
-            self.input_stream.streamUntilDelimiter(buffer_stream.writer(), '\n', maximum_command_length) catch |err| switch (err) {
+            const command = self.input_stream.takeDelimiterExclusive('\n')  catch |err| switch (err) {
                 error.StreamTooLong => {
                     logger.err("command too long", .{});
                     continue;
@@ -50,11 +46,12 @@ pub const UciEngineManager = struct {
                     logger.warn("input stream closed", .{});
                     return;
                 },
-                else => return err,
+                error.ReadFailed => {
+                    logger.err("failed to read from input stream", .{});
+                    return err;
+                },
             };
 
-            const command = buffer_stream.getWritten();
-            defer buffer_stream.reset();
             logger.debug("received command: {s}", .{command});
 
             const parsed_command = AnyUciCommand.parse(std.mem.trim(u8, command, " \r\n\t")) catch |err| switch (err) {
