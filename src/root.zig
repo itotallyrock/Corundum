@@ -37,7 +37,7 @@ pub const UciEngineManager = struct {
 
     pub fn run(self: *Self) !void {
         while (true) {
-            const command = self.input_stream.takeDelimiterExclusive('\n')  catch |err| switch (err) {
+            const command = self.input_stream.takeDelimiterExclusive('\n') catch |err| switch (err) {
                 error.StreamTooLong => {
                     logger.err("command too long", .{});
                     continue;
