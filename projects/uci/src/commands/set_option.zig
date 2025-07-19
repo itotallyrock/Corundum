@@ -1,22 +1,5 @@
 const std = @import("std");
 
-pub const StartingSetOption = union(enum) {
-    startpos,
-    fen: []const u8,
-
-    pub fn parse(source: []const u8) !StartingSetOption {
-        if (std.ascii.eqlIgnoreCase(source, "startpos")) {
-            return .{ .startpos = {} };
-        } else if (std.ascii.startsWithIgnoreCase(source, "fen ")) {
-            const fen_part = std.mem.trim(u8, source[4..], " ");
-            // TODO: validate FEN format?
-            return .{ .fen = fen_part };
-        }
-
-        return error.InvalidSetOptionInSetOptionCommand;
-    }
-};
-
 pub const SetOption = struct {
     const Self = @This();
 
