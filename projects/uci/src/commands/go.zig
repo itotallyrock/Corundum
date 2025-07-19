@@ -312,18 +312,25 @@ test Go {
     try std.testing.expectError(error.InvalidGoCommandMixedTimeControls, Go.parse("go winc 5000 movetime 1000"));
     try std.testing.expectError(error.InvalidGoCommandMultipleMoveTimes, Go.parse("go movetime 1000 movetime 2000"));
     try std.testing.expectError(error.InvalidGoCommandInvalidMoveTimeCharacter, Go.parse("go movetime invalid"));
+    try std.testing.expectError(error.InvalidGoCommandInvalidMoveTimeCharacter, Go.parse("go movetime 234️⃣"));
     try std.testing.expectError(error.InvalidGoCommandInvalidMoveTimeTooLarge, Go.parse("go movetime 50000000000000000000"));
     try std.testing.expectError(error.InvalidGoCommandInvalidDepthCharacter, Go.parse("go depth invalid"));
+    try std.testing.expectError(error.InvalidGoCommandInvalidDepthCharacter, Go.parse("go depth ♟️"));
     try std.testing.expectError(error.InvalidGoCommandInvalidDepthTooLarge, Go.parse("go depth 50000000000000000000"));
     try std.testing.expectError(error.InvalidGoCommandInvalidNodesCharacter, Go.parse("go nodes invalid"));
+    try std.testing.expectError(error.InvalidGoCommandInvalidNodesCharacter, Go.parse("go nodes ♟️"));
     try std.testing.expectError(error.InvalidGoCommandInvalidNodesTooLarge, Go.parse("go nodes 5000000000000000000000000000000000"));
     try std.testing.expectError(error.InvalidGoCommandInvalidWhiteTimeCharacter, Go.parse("go wtime invalid"));
+    try std.testing.expectError(error.InvalidGoCommandInvalidWhiteTimeCharacter, Go.parse("go wtime ♟️"));
     try std.testing.expectError(error.InvalidGoCommandInvalidWhiteTimeTooLarge, Go.parse("go wtime 50000000000000000000"));
     try std.testing.expectError(error.InvalidGoCommandInvalidBlackTimeCharacter, Go.parse("go btime invalid"));
+    try std.testing.expectError(error.InvalidGoCommandInvalidBlackTimeCharacter, Go.parse("go btime ♟️"));
     try std.testing.expectError(error.InvalidGoCommandInvalidBlackTimeTooLarge, Go.parse("go btime 50000000000000000000"));
     try std.testing.expectError(error.InvalidGoCommandInvalidWhiteIncrementCharacter, Go.parse("go winc invalid"));
+    try std.testing.expectError(error.InvalidGoCommandInvalidWhiteIncrementCharacter, Go.parse("go winc ♟️"));
     try std.testing.expectError(error.InvalidGoCommandInvalidWhiteIncrementTooLarge, Go.parse("go winc 50000000000000000000"));
     try std.testing.expectError(error.InvalidGoCommandInvalidBlackIncrementCharacter, Go.parse("go binc invalid"));
+    try std.testing.expectError(error.InvalidGoCommandInvalidBlackIncrementCharacter, Go.parse("go binc ♟️"));
     try std.testing.expectError(error.InvalidGoCommandInvalidBlackIncrementTooLarge, Go.parse("go binc 50000000000000000000"));
     try std.testing.expectError(error.InvalidGoCommandUnknownOption, Go.parse("go unknown_option"));
     // time controls missing white or black

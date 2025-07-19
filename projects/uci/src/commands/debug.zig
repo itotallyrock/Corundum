@@ -30,6 +30,8 @@ test Debug {
     try std.testing.expectEqualDeep(Debug{ .enabled = false }, Debug.parse("debug off"));
     try std.testing.expectEqualDeep(Debug{ .enabled = false }, Debug.parse("DEBUG OFF"));
     try std.testing.expectError(error.InvalidDebugCommand, Debug.parse("debug invalid"));
+    try std.testing.expectError(error.InvalidDebugCommand, Debug.parse("debug ♥"));
+    try std.testing.expectError(error.InvalidDebugCommand, Debug.parse("debug 💛"));
     try std.testing.expectError(error.InvalidDebugCommand, Debug.parse("debug"));
     try std.testing.expectEqual(null, Debug.parse("not a debug command"));
 }

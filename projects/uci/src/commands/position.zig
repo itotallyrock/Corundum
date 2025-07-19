@@ -48,6 +48,7 @@ test Position {
     try std.testing.expectEqualDeep(Position{ .position = .{ .fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" } }, Position.parse("position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"));
     try std.testing.expectEqualDeep(Position{ .position = .{ .fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" }, .moves = std.mem.tokenizeScalar(u8, "e2e4 e7e5 d2d3 f7f6", ' ') }, Position.parse("position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 moves e2e4 e7e5 d2d3 f7f6"));
     try std.testing.expectEqualDeep(Position{ .position = .{ .fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" }, .moves = std.mem.tokenizeScalar(u8, "e2e4 e7e5 d2d3 f7f6", ' ') }, Position.parse("position       fen      rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1    moves     e2e4 e7e5 d2d3 f7f6"));
+    try std.testing.expectEqualDeep(Position{ .position = .{ .fen = "👽👽👽👽👽👽👽👽 w - - 0 1" }, .moves = std.mem.tokenizeScalar(u8, "6️⃣9️⃣ 4️⃣2️⃣", ' ') }, Position.parse("position fen 👽👽👽👽👽👽👽👽 w - - 0 1 moves 6️⃣9️⃣ 4️⃣2️⃣"));
     try std.testing.expectError(error.InvalidPositionMissingPosition, Position.parse("position"));
     try std.testing.expectError(error.InvalidPositionMissingPosition, Position.parse("position "));
     try std.testing.expectError(error.InvalidPositionMissingFen, Position.parse("position fen"));
