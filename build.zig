@@ -34,8 +34,6 @@ pub fn build(b: *std.Build) void {
             }),
             .tests = b.addRunArtifact(b.addTest(.{
                 .root_module = b.modules.get("corundum_chess").?,
-                .target = target,
-                .optimize = optimize,
             })),
         },
         .uci = .{
@@ -51,8 +49,6 @@ pub fn build(b: *std.Build) void {
             }),
             .tests = b.addRunArtifact(b.addTest(.{
                 .root_module = b.modules.get("corundum_uci").?,
-                .target = target,
-                .optimize = optimize,
             })),
         },
         .corundum = .{
@@ -75,8 +71,6 @@ pub fn build(b: *std.Build) void {
             }),
             .tests = b.addRunArtifact(b.addTest(.{
                 .root_module = b.modules.get("corundum").?,
-                .target = target,
-                .optimize = optimize,
             })),
         },
     };
