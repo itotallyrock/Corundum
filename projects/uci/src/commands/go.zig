@@ -159,7 +159,6 @@ pub const Go = struct {
                     }
                 }
 
-                // TODO: Check for remaining time control arguments (we probably need to switch to 4 optional u32s for wtime, winc, btime, binc and a optional infinite and movetime then compute the TC once at the end)
                 if (std.ascii.eqlIgnoreCase(token, "wtime")) {
                     if (tokens.next()) |wtime_str| {
                         if (partial_tc.controlsType()) |tc| {
