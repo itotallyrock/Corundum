@@ -22,6 +22,7 @@ pub fn build(b: *std.Build) void {
     const fix_formatting = b.option(bool, "fmt-fix", "Fix format issues or simply check for them") orelse !continuous_integration;
     const zobrist_seed = b.option(u256, "zobrist-seed", "Zobrist hash seed for the chess library") orelse 0xEB1EDE23CD04F71760E7A908AEB122BBE48D0CF561AEC147678AC2F99E68E420;
     const max_command_length = b.option(u256, "max-command-length", "The maximum length of a UCI command to buffer") orelse 4096;
+    const precise_score = b.option(bool, "precise-score", "Determines the precision for pawn score, true for more exact, false for approximate but lower memory usage") orelse false;
 
     var projects = .{
         .chess = .{
@@ -113,6 +114,10 @@ pub fn build(b: *std.Build) void {
     const chess_build_options = b.addOptions();
     chess_build_options.addOption(u256, "zobrist_seed", zobrist_seed);
     projects.chess.module.addOptions("chess_build_options", chess_build_options);
+
+    const search_build_options = b.addOptions();
+    search_build_options.addOption(bool, "precise_score", precise_score);
+    projects.search.module.addOptions("search_build_options", search_build_options);
 
     const corundum_build_options = b.addOptions();
     corundum_build_options.addOption(u256, "max_command_length", max_command_length);
