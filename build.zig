@@ -3,10 +3,12 @@ const builtin = @import("builtin");
 
 const chess_project_root = "./projects/chess";
 const uci_project_root = "./projects/uci";
+const search_project_root = "./projects/search";
 const corundum_project_root = "./";
 
 const chess_project_root_source = chess_project_root ++ "/src/root.zig";
 const uci_project_root_source = uci_project_root ++ "/src/root.zig";
+const search_project_root_source = search_project_root ++ "/src/root.zig";
 const corundum_project_root_source = corundum_project_root ++ "src/root.zig";
 const corundum_main_source = corundum_project_root ++ "src/main.zig";
 
@@ -52,6 +54,21 @@ pub fn build(b: *std.Build) void {
                 .root_module = b.modules.get("corundum_uci").?,
             })),
         },
+        .search = .{
+            .steps = .{
+                .@"test" = b.step("search:test", "Run unit tests for the search library"),
+                .fmt = b.step("search:fmt", "Check or fix formatting issues in the search library"),
+                .all = b.step("search:all", "Check, test, and build the search library"),
+            },
+            .module = b.addModule("corundum_search", .{
+                .root_source_file = b.path(search_project_root_source),
+                .target = target,
+                .optimize = optimize,
+            }),
+            .tests = b.addRunArtifact(b.addTest(.{
+                .root_module = b.modules.get("corundum_search").?,
+            })),
+        },
         .corundum = .{
             .steps = .{
                 .build = b.step("corundum:build", "Build the corundum binary"),
@@ -85,9 +102,13 @@ pub fn build(b: *std.Build) void {
 
     // Setup project dependencies
     projects.corundum.main_module.addImport("corundum_uci", projects.uci.module);
-    projects.corundum.main_module.addImport("corundum_uci", projects.uci.module);
+    projects.corundum.main_module.addImport("corundum_chess", projects.chess.module);
+    projects.corundum.main_module.addImport("corundum_search", projects.uci.module);
+    projects.corundum.module.addImport("corundum_uci", projects.uci.module);
     projects.corundum.module.addImport("corundum_chess", projects.chess.module);
-    projects.corundum.module.addImport("corundum_chess", projects.chess.module);
+    projects.corundum.module.addImport("corundum_search", projects.chess.module);
+
+    projects.search.module.addImport("corundum_chess", projects.chess.module);
 
     const chess_build_options = b.addOptions();
     chess_build_options.addOption(u256, "zobrist_seed", zobrist_seed);
@@ -108,11 +129,13 @@ pub fn build(b: *std.Build) void {
     // Setup test steps
     projects.chess.steps.@"test".dependOn(&projects.chess.tests.step);
     projects.uci.steps.@"test".dependOn(&projects.uci.tests.step);
+    projects.search.steps.@"test".dependOn(&projects.search.tests.step);
     projects.corundum.steps.@"test".dependOn(&projects.corundum.tests.step);
 
     // Setup format checking
     projects.chess.steps.fmt.dependOn(&b.addFmt(.{ .check = !fix_formatting, .paths = &.{chess_project_root} }).step);
     projects.uci.steps.fmt.dependOn(&b.addFmt(.{ .check = !fix_formatting, .paths = &.{uci_project_root} }).step);
+    projects.search.steps.fmt.dependOn(&b.addFmt(.{ .check = !fix_formatting, .paths = &.{search_project_root} }).step);
     projects.corundum.steps.fmt.dependOn(&b.addFmt(.{ .check = !fix_formatting, .paths = &.{corundum_project_root} }).step);
 
     // Setup run step
@@ -124,11 +147,14 @@ pub fn build(b: *std.Build) void {
     // Setup all steps
     all_steps.all.dependOn(projects.chess.steps.all);
     all_steps.all.dependOn(projects.uci.steps.all);
+    all_steps.all.dependOn(projects.search.steps.all);
     all_steps.all.dependOn(projects.corundum.steps.all);
     projects.chess.steps.all.dependOn(projects.chess.steps.@"test");
     projects.chess.steps.all.dependOn(projects.chess.steps.fmt);
     projects.uci.steps.all.dependOn(projects.uci.steps.@"test");
     projects.uci.steps.all.dependOn(projects.uci.steps.fmt);
+    projects.search.steps.all.dependOn(projects.search.steps.@"test");
+    projects.search.steps.all.dependOn(projects.search.steps.fmt);
     projects.corundum.steps.all.dependOn(projects.corundum.steps.build);
     projects.corundum.steps.all.dependOn(projects.corundum.steps.@"test");
     projects.corundum.steps.all.dependOn(projects.corundum.steps.fmt);
