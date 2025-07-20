@@ -12,17 +12,23 @@ const search_project_root_source = search_project_root ++ "/src/root.zig";
 const corundum_project_root_source = corundum_project_root ++ "src/root.zig";
 const corundum_main_source = corundum_project_root ++ "src/main.zig";
 
+const option_defaults = .{
+    .fix_formatting = false,
+    .zobrist_seed = 0xEB1EDE23CD04F71760E7A908AEB122BBE48D0CF561AEC147678AC2F99E68E420,
+    .max_command_length = 4096,
+    .precise_score = false,
+};
+
 /// Setup the build
 pub fn build(b: *std.Build) void {
 
     // Build options
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
-    const continuous_integration = b.option(bool, "ci", "Run in CI mode") orelse false;
-    const fix_formatting = b.option(bool, "fmt-fix", "Fix format issues or simply check for them") orelse !continuous_integration;
-    const zobrist_seed = b.option(u256, "zobrist-seed", "Zobrist hash seed for the chess library") orelse 0xEB1EDE23CD04F71760E7A908AEB122BBE48D0CF561AEC147678AC2F99E68E420;
-    const max_command_length = b.option(u256, "max-command-length", "The maximum length of a UCI command to buffer") orelse 4096;
-    const precise_score = b.option(bool, "precise-score", "Determines the precision for pawn score, true for more exact, false for approximate but lower memory usage") orelse false;
+    const fix_formatting = b.option(bool, "fmt-fix", b.fmt("Fix format issues or simply check for them (default: {any})", .{option_defaults.fix_formatting})) orelse option_defaults.fix_formatting;
+    const zobrist_seed = b.option(u256, "zobrist-seed", b.fmt("Zobrist hash seed for the chess library (default: 0x{X})", .{option_defaults.zobrist_seed})) orelse option_defaults.zobrist_seed;
+    const max_command_length = b.option(u256, "max-command-length", b.fmt("The maximum length of a UCI command to buffer (default: {any})", .{option_defaults.max_command_length})) orelse option_defaults.max_command_length;
+    const precise_score = b.option(bool, "precise-score", b.fmt("Determines the precision for pawn score, true for more exact, false for approximate but lower memory usage (default: {any})", .{option_defaults.precise_score})) orelse option_defaults.precise_score;
 
     var projects = .{
         .chess = .{
