@@ -70,21 +70,21 @@ const ZobristKeys = struct {
     /// Create a new Zobrist keys struct from a seed.
     fn init(seed: ComptimeRandomSeed) ZobristKeys {
         @setEvalBranchQuota(120_000);
-        const EMPTY_INDEX: usize = 0;
-        const SIDE_INDEX: usize = 1;
-        const EN_PASSANT_INDEX: usize = 2;
-        const CASTLE_INDEX: usize = EN_PASSANT_INDEX + std.enums.values(File).len;
-        const PIECE_SQUARE_INDEX: usize = CASTLE_INDEX + (std.enums.values(CastleDirection).len * std.enums.values(Player).len);
-        const TOTAL_COUNT: usize = PIECE_SQUARE_INDEX + (std.enums.values(Piece).len * std.enums.values(Square).len * std.enums.values(Player).len);
+        const empty_index: usize = 0;
+        const side_index: usize = 1;
+        const en_passant_index: usize = 2;
+        const castle_index: usize = en_passant_index + std.enums.values(File).len;
+        const piece_square_index: usize = castle_index + (std.enums.values(CastleDirection).len * std.enums.values(Player).len);
+        const total_count: usize = piece_square_index + (std.enums.values(Piece).len * std.enums.values(Square).len * std.enums.values(Player).len);
 
         // Generate a random data for the Zobrist keys
-        const source: [TOTAL_COUNT]ZobristKey = comptimeRandom(seed, TOTAL_COUNT);
+        const source: [total_count]ZobristKey = comptimeRandom(seed, total_count);
 
         // Convert the random data into the Zobrist keys
         var en_passant = ByFile(ZobristKey).initUndefined();
 
         inline for (std.enums.values(File), 0..) |file, i| {
-            en_passant.set(file, source[EN_PASSANT_INDEX + i]);
+            en_passant.set(file, source[en_passant_index + i]);
         }
 
         var castle = ByPlayer(ByCastleDirection(ZobristKey)).initUndefined();
@@ -92,15 +92,15 @@ const ZobristKeys = struct {
 
         inline for (std.enums.values(Player), 0..) |player, player_index| {
             var castles = ByCastleDirection(ZobristKey).initUndefined();
-            inline for (std.enums.values(CastleDirection), 0..) |castle_direction, castle_index| {
-                castles.set(castle_direction, source[CASTLE_INDEX + player_index * std.enums.values(CastleDirection).len + castle_index]);
+            inline for (std.enums.values(CastleDirection), 0..) |castle_direction, castle_direction_index| {
+                castles.set(castle_direction, source[castle_index + player_index * std.enums.values(CastleDirection).len + castle_direction_index]);
             }
             castle.set(player, castles);
             var pieces = ByPiece(BySquare(ZobristKey)).initUndefined();
             inline for (std.enums.values(Piece), 0..) |piece, piece_index| {
                 var squares = BySquare(ZobristKey).initUndefined();
                 inline for (std.enums.values(Square), 0..) |square, square_index| {
-                    squares.set(square, source[PIECE_SQUARE_INDEX + player_index * std.enums.values(Piece).len * std.enums.values(Square).len + piece_index * std.enums.values(Square).len + square_index]);
+                    squares.set(square, source[piece_square_index + player_index * std.enums.values(Piece).len * std.enums.values(Square).len + piece_index * std.enums.values(Square).len + square_index]);
                 }
                 pieces.set(piece, squares);
             }
@@ -108,8 +108,8 @@ const ZobristKeys = struct {
         }
 
         return ZobristKeys{
-            .empty = source[EMPTY_INDEX],
-            .side = source[SIDE_INDEX],
+            .empty = source[empty_index],
+            .side = source[side_index],
             .en_passant = en_passant,
             .castle = castle,
             .piece_square = piece_square,
@@ -119,14 +119,16 @@ const ZobristKeys = struct {
 
 /// A Zobrist hash for a chess position.
 pub const ZobristHash = struct {
-    const FEATURES = ZobristKeys.init(zobrist_seed);
+    /// All Zobrist keys.
+    const features = ZobristKeys.init(zobrist_seed);
 
     /// The underlying Zobrist key.
     key: ZobristKey,
 
+    /// Create a new Zobrist hash from scratch given a set of pieces and an en-passant file (if any).
     pub fn initPieces(comptime board_status: BoardStatus, pieces: PieceArrangement, en_passant_file: if (board_status.has_en_passant) File else void) ZobristHash {
         @setEvalBranchQuota(1_000_000);
-        var hash = fromKey(FEATURES.empty)
+        var hash = fromKey(features.empty)
             .togglePiece(.{ .player = .white, .piece = .king }, pieces.kings.get(.white))
             .togglePiece(.{ .player = .black, .piece = .king }, pieces.kings.get(.black))
             .toggleCastleAbilities(board_status.castle_abilities);
@@ -150,7 +152,7 @@ pub const ZobristHash = struct {
 
     /// Switch the side to move in the Zobrist hash.
     pub fn switchSides(self: ZobristHash) ZobristHash {
-        return self.logicalXor(fromKey(FEATURES.side));
+        return self.logicalXor(fromKey(features.side));
     }
 
     /// Toggle the side to move in the Zobrist hash.
@@ -209,7 +211,7 @@ pub const ZobristHash = struct {
 
     /// Toggle an individual player's castle ability for a specific castle direction in the Zobrist hash.
     pub fn toggleCastleAbility(self: ZobristHash, player: Player, castle_direction: CastleDirection) ZobristHash {
-        return self.logicalXor(fromKey(FEATURES.castle.get(player).get(castle_direction)));
+        return self.logicalXor(fromKey(features.castle.get(player).get(castle_direction)));
     }
 
     /// Toggle all `true` castle abilities in the Zobrist hash.
@@ -218,7 +220,7 @@ pub const ZobristHash = struct {
         inline for (comptime std.enums.values(Player)) |player| {
             inline for (comptime std.enums.values(CastleDirection)) |castle_direction| {
                 if (castle_abilities.hasAbility(player, castle_direction)) {
-                    result = result.logicalXor(fromKey(FEATURES.castle.get(player).get(castle_direction)));
+                    result = result.logicalXor(fromKey(features.castle.get(player).get(castle_direction)));
                 }
             }
         }
@@ -227,12 +229,12 @@ pub const ZobristHash = struct {
 
     /// Toggle the en-passant file in the Zobrist hash.
     fn toggleEnPassant(self: ZobristHash, en_passant_file: File) ZobristHash {
-        return self.logicalXor(fromKey(FEATURES.en_passant.get(en_passant_file)));
+        return self.logicalXor(fromKey(features.en_passant.get(en_passant_file)));
     }
 
     /// Toggle a player's piece on the board at a given square.
     fn togglePiece(self: ZobristHash, piece: OwnedPiece, square: Square) ZobristHash {
-        return self.logicalXor(fromKey(FEATURES.piece_square.get(piece.player).get(piece.piece).get(square)));
+        return self.logicalXor(fromKey(features.piece_square.get(piece.player).get(piece.piece).get(square)));
     }
 
     /// Create a new Zobrist hash from a Zobrist key.
@@ -246,14 +248,14 @@ pub const ZobristHash = struct {
     }
 
     // Ensure that the Zobrist key is unique for each feature
-    test FEATURES {
+    test features {
         var seen = std.AutoHashMap(ZobristKey, bool).init(std.testing.allocator);
         defer seen.deinit();
 
         for (std.enums.values(Player)) |player| {
             for (std.enums.values(Piece)) |piece| {
                 for (std.enums.values(Square)) |square| {
-                    const key = FEATURES.piece_square.get(player).get(piece).get(square);
+                    const key = features.piece_square.get(player).get(piece).get(square);
                     try std.testing.expect(!(try seen.getOrPut(key)).found_existing);
                 }
             }
@@ -261,20 +263,20 @@ pub const ZobristHash = struct {
 
         for (std.enums.values(Player)) |player| {
             for (std.enums.values(CastleDirection)) |castle_direction| {
-                const key = FEATURES.castle.get(player).get(castle_direction);
+                const key = features.castle.get(player).get(castle_direction);
                 try std.testing.expect(!(try seen.getOrPut(key)).found_existing);
             }
         }
 
         for (std.enums.values(File)) |files| {
-            const key = FEATURES.en_passant.get(files);
+            const key = features.en_passant.get(files);
             try std.testing.expect(!(try seen.getOrPut(key)).found_existing);
         }
 
-        const side_key = FEATURES.side;
+        const side_key = features.side;
         try std.testing.expect(!(try seen.getOrPut(side_key)).found_existing);
 
-        const empty_key = FEATURES.empty;
+        const empty_key = features.empty;
         try std.testing.expect(!(try seen.getOrPut(empty_key)).found_existing);
 
         try std.testing.expectEqual(782, seen.count());
