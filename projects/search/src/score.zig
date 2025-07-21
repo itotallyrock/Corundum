@@ -37,7 +37,8 @@ pub const Score = enum(MaterialEvaluationInt) {
 
     /// Creates an approximate score from a pawn value
     pub fn initFloat(score: f32) Self {
-        return Self.initGranularized(@intFromFloat(score * pawn_grain));
+        const clamped_score = std.math.clamp(score, -@as(f32, @floatFromInt(max_material_score)), @as(f32, @floatFromInt(max_material_score)));
+        return Self.initGranularized(@intFromFloat(clamped_score * pawn_grain));
     }
 
     test initFloat {
@@ -45,8 +46,8 @@ pub const Score = enum(MaterialEvaluationInt) {
         try std.testing.expectEqual(Score.initFloat(1.0), Score.initGranularized(pawn_grain));
         try std.testing.expectEqual(Score.initGranularized(material_upper_bound), Score.initFloat(@as(f32, @floatFromInt(max_material_score)) + 0.1));
         try std.testing.expectEqual(Score.initGranularized(-material_upper_bound), Score.initFloat(-@as(f32, @floatFromInt(max_material_score)) - 0.1));
-        try std.testing.expectEqual(Score.initGranularized(material_upper_bound), Score.initFloat(@as(f32, @floatFromInt(max_material_score)) + 20));
-        try std.testing.expectEqual(Score.initGranularized(-material_upper_bound), Score.initFloat(-@as(f32, @floatFromInt(max_material_score)) - 20));
+        try std.testing.expectEqual(Score.initGranularized(material_upper_bound), Score.initFloat(@as(f32, @floatFromInt(max_material_score)) + 200.0));
+        try std.testing.expectEqual(Score.initGranularized(-material_upper_bound), Score.initFloat(-@as(f32, @floatFromInt(max_material_score)) - 200.0));
     }
 
     /// Creates a material score from an approximate/granularized pawn value
@@ -63,7 +64,8 @@ pub const Score = enum(MaterialEvaluationInt) {
 
     /// Creates a mated score
     pub fn initMate(plies: Ply) Self {
-        return @enumFromInt(@intFromEnum(Score.infinity) - 1 - std.math.clamp(plies, 0, max_mate_plies));
+        const clamped_plies: MaterialEvaluationInt = @intCast(std.math.clamp(plies, 0, max_mate_plies));
+        return @enumFromInt(@intFromEnum(Score.infinity) - 1 - clamped_plies);
     }
 
     test initMate {
@@ -74,7 +76,8 @@ pub const Score = enum(MaterialEvaluationInt) {
 
     /// Creates a mated score
     pub fn initMated(plies: Ply) Self {
-        return @enumFromInt(@intFromEnum(Score.negative_infinity) + 1 + std.math.clamp(plies, 0, max_mate_plies));
+        const clamped_plies: MaterialEvaluationInt = @intCast(std.math.clamp(plies, 0, max_mate_plies));
+        return @enumFromInt(@intFromEnum(Score.negative_infinity) + 1 + clamped_plies);
     }
 
     test initMated {
