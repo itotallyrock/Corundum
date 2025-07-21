@@ -19,6 +19,7 @@ const option_defaults = .{
     .pawn_grain = 256,
     .max_material_score = 125,
     .max_plies = 255,
+    .max_nodes = std.math.maxInt(u64),
 };
 
 /// Setup the build
@@ -32,8 +33,9 @@ pub fn build(b: *std.Build) void {
     const max_command_length = b.option(u256, "max-command-length", b.fmt("The maximum length of a UCI command to buffer (default: {any})", .{option_defaults.max_command_length})) orelse option_defaults.max_command_length;
     const pawn_grain = b.option(u16, "pawn-grain", b.fmt("Determines the precision for pawn score, true for more exact, false for approximate but lower memory usage (default {any})", .{option_defaults.pawn_grain})) orelse option_defaults.pawn_grain;
     const max_material_score = b.option(u16, "max-score", b.fmt("The maximum material score represented in number of pawns (i.e. 150 pawns or ~12 queens) (default {any})", .{option_defaults.max_material_score})) orelse option_defaults.max_material_score;
-    const max_plies = b.option(u16, "max-plies", b.fmt("The maximum number of plies a search/game can reach (default {any})", .{option_defaults.max_plies})) orelse option_defaults.max_plies;
+    const max_plies = b.option(u16, "max-plies", b.fmt("The absolute maximum number of plies a search/game can reach (default {any})", .{option_defaults.max_plies})) orelse option_defaults.max_plies;
     const max_mate_plies = b.option(u16, "max-mate-plies", b.fmt("The maximum number of plies a mate can be kept track of for (defaults to max-plies {any})", .{max_plies})) orelse max_plies;
+    const max_nodes = b.option(u64, "max-nodes", b.fmt("The absolute maximum number of nodes a search can search through (default {any})", .{option_defaults.max_nodes})) orelse option_defaults.max_nodes;
 
     var projects = .{
         .chess = .{
@@ -131,8 +133,8 @@ pub fn build(b: *std.Build) void {
     search_build_options.addOption(u16, "pawn_grain", pawn_grain);
     search_build_options.addOption(u16, "max_material_score", max_material_score);
     search_build_options.addOption(u16, "max_mate_plies", max_mate_plies);
+    search_build_options.addOption(u64, "max_nodes", max_nodes);
     projects.search.module.addOptions("search_build_options", search_build_options);
-    // projects.search.module.addOptions("chess_build_options", chess_build_options);
 
     const corundum_build_options = b.addOptions();
     corundum_build_options.addOption(u256, "max_command_length", max_command_length);
