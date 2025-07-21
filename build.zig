@@ -16,7 +16,9 @@ const option_defaults = .{
     .fix_formatting = false,
     .zobrist_seed = 0xEB1EDE23CD04F71760E7A908AEB122BBE48D0CF561AEC147678AC2F99E68E420,
     .max_command_length = 4096,
-    .precise_score = false,
+    .pawn_grain = 256,
+    .max_material_score = 125,
+    .max_plies = 255,
 };
 
 /// Setup the build
@@ -28,7 +30,10 @@ pub fn build(b: *std.Build) void {
     const fix_formatting = b.option(bool, "fmt-fix", b.fmt("Fix format issues or simply check for them (default: {any})", .{option_defaults.fix_formatting})) orelse option_defaults.fix_formatting;
     const zobrist_seed = b.option(u256, "zobrist-seed", b.fmt("Zobrist hash seed for the chess library (default: 0x{X})", .{option_defaults.zobrist_seed})) orelse option_defaults.zobrist_seed;
     const max_command_length = b.option(u256, "max-command-length", b.fmt("The maximum length of a UCI command to buffer (default: {any})", .{option_defaults.max_command_length})) orelse option_defaults.max_command_length;
-    const precise_score = b.option(bool, "precise-score", b.fmt("Determines the precision for pawn score, true for more exact, false for approximate but lower memory usage (default: {any})", .{option_defaults.precise_score})) orelse option_defaults.precise_score;
+    const pawn_grain = b.option(u16, "pawn-grain", b.fmt("Determines the precision for pawn score, true for more exact, false for approximate but lower memory usage (default {any})", .{option_defaults.pawn_grain})) orelse option_defaults.pawn_grain;
+    const max_material_score = b.option(u16, "max-score", b.fmt("The maximum material score represented in number of pawns (i.e. 150 pawns or ~12 queens) (default {any})", .{option_defaults.max_material_score})) orelse option_defaults.max_material_score;
+    const max_plies = b.option(u16, "max-plies", b.fmt("The maximum number of plies a search/game can reach (default {any})", .{option_defaults.max_plies})) orelse option_defaults.max_plies;
+    const max_mate_plies = b.option(u16, "max-mate-plies", b.fmt("The maximum number of plies a mate can be kept track of for (defaults to max-plies {any})", .{max_plies})) orelse max_plies;
 
     var projects = .{
         .chess = .{
@@ -119,11 +124,15 @@ pub fn build(b: *std.Build) void {
 
     const chess_build_options = b.addOptions();
     chess_build_options.addOption(u256, "zobrist_seed", zobrist_seed);
+    chess_build_options.addOption(u16, "max_plies", max_plies);
     projects.chess.module.addOptions("chess_build_options", chess_build_options);
 
     const search_build_options = b.addOptions();
-    search_build_options.addOption(bool, "precise_score", precise_score);
+    search_build_options.addOption(u16, "pawn_grain", pawn_grain);
+    search_build_options.addOption(u16, "max_material_score", max_material_score);
+    search_build_options.addOption(u16, "max_mate_plies", max_mate_plies);
     projects.search.module.addOptions("search_build_options", search_build_options);
+    // projects.search.module.addOptions("chess_build_options", chess_build_options);
 
     const corundum_build_options = b.addOptions();
     corundum_build_options.addOption(u256, "max_command_length", max_command_length);

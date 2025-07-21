@@ -1,8 +1,8 @@
 const std = @import("std");
+const max_plies = @import("chess_build_options").max_plies;
 const Ply = @import("./ply.zig").Ply;
-const MAX_PLIES = @import("./ply.zig").MAX_PLIES;
 const CastleGameType = @import("./castle.zig").CastleGameType;
-const MAX_HALFMOVE_CLOCK = @import("./halfmove_clock.zig").MAX_HALFMOVE_CLOCK;
+const max_halfmove_clock = @import("./halfmove_clock.zig").max_halfmove_clock;
 
 /// A boolean rule that can be enabled or disabled.
 pub const BooleanRule = enum(u1) {
@@ -49,10 +49,10 @@ pub const GameRules = struct {
         return Self{
             .castle_game_type = castle_game_type,
             .fifty_move_limit = fifty_move_limit,
-            // if threefold_repetition is enabled, set the history size to 100 if fifty_move_limit is enabled, otherwise set it to MAX_PLIES
+            // if threefold_repetition is enabled, set the history size to 100 if fifty_move_limit is enabled, otherwise set it to max_plies
             .threefold_repetition = if (threefold_repetition == .enabled) .{
                 .enabled = .{
-                    .history_size = if (fifty_move_limit == .enabled) MAX_HALFMOVE_CLOCK else MAX_PLIES,
+                    .history_size = if (fifty_move_limit == .enabled) max_halfmove_clock else max_plies,
                 },
             } else .{ .disabled = .{} },
             .insufficient_material = insufficient_material,
@@ -64,6 +64,6 @@ test "standard game rules" {
     const rules = GameRules.standard;
     try std.testing.expectEqual(rules.castle_game_type, .standard);
     try std.testing.expectEqual(rules.fifty_move_limit, .enabled);
-    try std.testing.expectEqualDeep(rules.threefold_repetition, ThreefoldRepetition{ .enabled = .{ .history_size = MAX_HALFMOVE_CLOCK } });
+    try std.testing.expectEqualDeep(rules.threefold_repetition, ThreefoldRepetition{ .enabled = .{ .history_size = max_halfmove_clock } });
     try std.testing.expectEqual(rules.insufficient_material, .enabled);
 }

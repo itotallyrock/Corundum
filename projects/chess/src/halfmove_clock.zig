@@ -2,9 +2,10 @@ const std = @import("std");
 
 const BooleanRule = @import("./game_rules.zig").BooleanRule;
 const Ply = @import("./ply.zig").Ply;
+const Player = @import("./player.zig").Player;
 
 /// The maximum number of half-moves (plies) before a game is considered drawn due to the fifty-move rule.
-pub const MAX_HALFMOVE_CLOCK = 100;
+pub const max_halfmove_clock = 50 * std.enums.values(Player).len;
 
 /// Tracks the number of half-moves (plies) since the last pawn move or capture.
 pub fn HalfmoveClock(fifty_move_limit: BooleanRule) type {
@@ -12,7 +13,7 @@ pub fn HalfmoveClock(fifty_move_limit: BooleanRule) type {
         .enabled => {
             return struct {
                 const Self = @This();
-                plies: std.math.IntFittingRange(0, MAX_HALFMOVE_CLOCK),
+                plies: std.math.IntFittingRange(0, max_halfmove_clock),
 
                 pub fn init() Self {
                     return Self{
@@ -39,7 +40,7 @@ pub fn HalfmoveClock(fifty_move_limit: BooleanRule) type {
                 }
 
                 pub fn reachedMoveLimit(self: *Self) bool {
-                    return self.plies >= MAX_HALFMOVE_CLOCK;
+                    return self.plies >= max_halfmove_clock;
                 }
 
                 test increment {
@@ -63,7 +64,7 @@ pub fn HalfmoveClock(fifty_move_limit: BooleanRule) type {
                 test reachedMoveLimit {
                     var clock = Self.init();
                     try std.testing.expectEqual(clock.reachedMoveLimit(), false);
-                    inline for (0..MAX_HALFMOVE_CLOCK) |_| {
+                    inline for (0..max_halfmove_clock) |_| {
                         clock.increment();
                     }
                     try std.testing.expectEqual(clock.reachedMoveLimit(), true);
@@ -89,7 +90,7 @@ pub fn HalfmoveClock(fifty_move_limit: BooleanRule) type {
                 test reachedMoveLimit {
                     var clock = Self.init();
                     try std.testing.expectEqual(clock.reachedMoveLimit(), false);
-                    inline for (0..MAX_HALFMOVE_CLOCK) |_| {
+                    inline for (0..max_halfmove_clock) |_| {
                         clock.increment();
                     }
                     try std.testing.expectEqual(clock.reachedMoveLimit(), false);
