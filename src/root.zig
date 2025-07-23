@@ -1,5 +1,5 @@
 const std = @import("std");
-const AnyGuiCommand = @import("corundum_uci").AnyGuiCommand;
+const uci = @import("corundum_uci");
 
 /// The potential states of the UCI engine_commands
 pub const UciEngineState = union(enum) {
@@ -19,15 +19,15 @@ const logger = std.log.scoped(.engine_manager);
 pub const UciEngineManager = struct {
     const Self = @This();
     /// The input stream for the engine_commands
-    input_stream: std.io.Reader,
+    input_stream: *std.io.Reader,
     /// The output stream for the engine_commands
-    output_stream: std.io.Writer,
+    output_stream: *std.io.Writer,
     /// Root allocator for the engine_commands, used to allocate memory inside of child searchers
     allocator: std.mem.Allocator,
     /// The current state of the engine_commands
     state: UciEngineState = .uninitialized,
 
-    pub fn init(input_stream: std.io.Reader, output_stream: std.io.Writer, allocator: std.mem.Allocator) Self {
+    pub fn init(input_stream: *std.io.Reader, output_stream: *std.io.Writer, allocator: std.mem.Allocator) Self {
         return .{
             .input_stream = input_stream,
             .output_stream = output_stream,
