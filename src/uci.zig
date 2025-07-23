@@ -351,7 +351,7 @@ pub const UciOptionConfig = struct {
     }
 };
 
-/// A message sent from the engine to the GUI
+/// A message sent from the engine_commands to the GUI
 pub const UciResponse = union(enum) {
     id: union(enum) {
         name: []const u8,
@@ -383,13 +383,13 @@ pub const UciResponse = union(enum) {
     option: UciOptionConfig,
 };
 
-/// A non-uci command sent to the engine to performance test, or [perft](https://www.chessprogramming.org/Perft), a given position to a certain depth
+/// A non-uci command sent to the engine_commands to performance test, or [perft](https://www.chessprogramming.org/Perft), a given position to a certain depth
 pub const PerftCommand = struct {
     fen: []const u8,
     depth: u32,
 };
 
-/// The state of the CLI and UCI engine
+/// The state of the CLI and UCI engine_commands
 pub const CliState = union(enum) {
     none,
     bench,
@@ -426,7 +426,7 @@ pub const CliCommandParseError = UciCommandParseError || error{
     InvalidPerftCommand,
 };
 
-/// The CLI manager is responsible for parsing commands from the user and maintaining an engine state
+/// The CLI manager is responsible for parsing gui_commands from the user and maintaining an engine_commands state
 pub const CliManager = struct {
     const base_buffer_size: usize = 1024;
     const engine_name = "Corundum";
@@ -461,7 +461,7 @@ pub const CliManager = struct {
     }
 
     /// The main loop for the CLI manager.
-    /// Continuously reads input from the input stream and processes it as commands, mostly for running as a UCI engine.
+    /// Continuously reads input from the input stream and processes it as gui_commands, mostly for running as a UCI engine_commands.
     pub fn run(self: *CliManager) !void {
         try self.output_stream.print("{s} v{s} by {s}\n", .{ engine_name, build_options.version, engine_authors });
         main_loop: while (true) {
@@ -499,7 +499,7 @@ pub const CliManager = struct {
                             self.state = .{ .uci = .uninitialized };
                         },
                         .isready => {
-                            // TODO: Initialize the engine
+                            // TODO: Initialize the engine_commands
                             try self.writeResponse(.readyok);
                             self.state = .{ .uci = .initialized };
                         },
@@ -512,7 +512,7 @@ pub const CliManager = struct {
                                     };
                                     // _ = value;
                                     std.debug.print("Setting option {s} {?}\n", .{ option.name, value });
-                                    // TODO: Update engine with option
+                                    // TODO: Update engine_commands with option
 
                                     continue :main_loop;
                                 }
@@ -547,7 +547,7 @@ pub const CliManager = struct {
                         .stop => {
                             // TODO: Implement stop
                         },
-                        // TODO: The rest of the UCI commands
+                        // TODO: The rest of the UCI gui_commands
                         .quit => break,
                         else => {
                             try self.output_stream.print("Unsupported UCI command.\n", .{});

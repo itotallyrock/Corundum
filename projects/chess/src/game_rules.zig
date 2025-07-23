@@ -23,7 +23,7 @@ pub const ThreefoldRepetition = union(BooleanRule) {
     disabled: struct {},
 };
 
-/// The game rules to tell the engine how to play the game.
+/// The game rules to tell the engine_commands how to play the game.
 pub const GameRules = struct {
     const Self = @This();
     /// The standard game rules for chess.

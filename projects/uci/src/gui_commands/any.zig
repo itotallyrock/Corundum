@@ -11,7 +11,7 @@ const Register = @import("./register.zig").Register;
 const SetOption = @import("./set_option.zig").SetOption;
 const UciNewGame = @import("./uci_new_game.zig").UciNewGame;
 
-/// Tagged union for all UCI commands.
+/// Tagged union for all UCI gui_commands.
 pub const AnyUciCommand = union(enum) {
     const Self = @This();
 

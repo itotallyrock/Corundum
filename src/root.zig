@@ -1,30 +1,30 @@
 const std = @import("std");
 const AnyUciCommand = @import("corundum_uci").AnyUciCommand;
 
-/// The potential states of the UCI engine
+/// The potential states of the UCI engine_commands
 pub const UciEngineState = union(enum) {
-    /// The engine is not initialized (we have not received the "isready" command)
+    /// The engine_commands is not initialized (we have not received the "isready" command)
     uninitialized: struct {},
 
     /// We've sent the "isready" command but aren't searching yet
     ready: struct {},
 
-    /// The engine is searching
+    /// The engine_commands is searching
     thinking: struct {},
 };
 
 const logger = std.log.scoped(.engine_manager);
 
-/// The manager for the UCI engine
+/// The manager for the UCI engine_commands
 pub const UciEngineManager = struct {
     const Self = @This();
-    /// The input stream for the engine
+    /// The input stream for the engine_commands
     input_stream: std.io.Reader,
-    /// The output stream for the engine
+    /// The output stream for the engine_commands
     output_stream: std.io.Writer,
-    /// Root allocator for the engine, used to allocate memory inside of child searchers
+    /// Root allocator for the engine_commands, used to allocate memory inside of child searchers
     allocator: std.mem.Allocator,
-    /// The current state of the engine
+    /// The current state of the engine_commands
     state: UciEngineState = .uninitialized,
 
     pub fn init(input_stream: std.io.Reader, output_stream: std.io.Writer, allocator: std.mem.Allocator) Self {
