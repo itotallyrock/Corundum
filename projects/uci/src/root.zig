@@ -2,7 +2,7 @@
 
 const std = @import("std");
 
-pub const AnyUciCommand = @import("./gui_commands/any.zig").AnyUciCommand;
+pub const AnyGuiCommand = @import("./gui_commands/any.zig").AnyGuiCommand;
 
 test {
     std.testing.refAllDeclsRecursive(@This());

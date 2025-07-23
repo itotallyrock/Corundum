@@ -1,5 +1,5 @@
 const std = @import("std");
-const AnyUciCommand = @import("corundum_uci").AnyUciCommand;
+const AnyGuiCommand = @import("corundum_uci").AnyGuiCommand;
 
 /// The potential states of the UCI engine_commands
 pub const UciEngineState = union(enum) {
@@ -54,7 +54,7 @@ pub const UciEngineManager = struct {
 
             logger.debug("received command: {s}", .{command});
 
-            const parsed_command = AnyUciCommand.parse(std.mem.trim(u8, command, " \r\n\t")) catch |err| switch (err) {
+            const parsed_command = AnyGuiCommand.parse(std.mem.trim(u8, command, " \r\n\t")) catch |err| switch (err) {
                 else => @panic("TODO: Handle error"),
             };
 
