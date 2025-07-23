@@ -17,7 +17,6 @@ pub fn main() !void {
 
     var stdin_reader = stdin_file.reader(&stdin_buffer);
     var stdout_writer = stdout_file.writer(&stdout_buffer);
-    defer stdout_writer.interface.flush() catch {};
 
     var root_buffer: [8 * 1024 * 1024]u8 = undefined;
     var root_allocator = std.heap.FixedBufferAllocator.init(&root_buffer);
