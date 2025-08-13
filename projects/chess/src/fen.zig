@@ -75,11 +75,14 @@ pub fn parseFen(fen: []const u8) FenParseError!ParsedPsuedoLegalFen {
     };
 }
 
+const PieceSquare = struct { OwnedNonKingPiece, Square };
+
 fn parsePieces(part: ?[]const u8) FenParseError!PieceArrangement {
     if (part) |p| {
         var square_offset: i8 = @intCast(Square.a8.offset());
         var king_squares = ByPlayer(?Square).init(.{ .white = null, .black = null });
-        var non_king_piece_list = std.BoundedArray(struct { OwnedNonKingPiece, Square }, std.enums.values(Square).len).init(0) catch unreachable;
+        var piece_list_buffer: [std.enums.values(Square).len]PieceSquare = undefined;
+        var non_king_piece_list = std.ArrayListUnmanaged(PieceSquare).initBuffer(&piece_list_buffer);
         for (p) |c| {
             switch (c) {
                 '1'...'8' => square_offset += @intCast(std.fmt.charToDigit(c, 10) catch unreachable),
@@ -144,7 +147,7 @@ fn parsePieces(part: ?[]const u8) FenParseError!PieceArrangement {
                     .black = black_king,
                 }));
 
-                for (non_king_piece_list.constSlice()) |piece_square| {
+                for (non_king_piece_list.items) |piece_square| {
                     const piece, const to_square = piece_square;
                     pieces = pieces.tryAddPiece(piece, to_square) catch return FenParseError.InvalidBoardDimensions;
                 }
