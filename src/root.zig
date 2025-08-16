@@ -99,9 +99,10 @@ pub const UciEngineManager = struct {
 test "adheres to basic startup uci protocol" {
     var input_buffer: [256]u8 = undefined;
     var output_buffer: [1024]u8 = undefined;
+    var adapter_buffer: [256]u8 = undefined;
     var test_reader = std.testing.Reader.init(&input_buffer, &.{ .{ .buffer = "uci\n" }, .{ .buffer = "isready\n" }, .{ .buffer = "quit\n" } });
     var output_stream = std.Io.fixedBufferStream(&output_buffer);
-    var writer = output_stream.writer().adaptToNewApi();
+    var writer = output_stream.writer().adaptToNewApi(&adapter_buffer);
     var engine_manager = UciEngineManager.init(&test_reader.interface, &writer.new_interface, std.testing.allocator);
 
     try engine_manager.run();
