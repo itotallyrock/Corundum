@@ -44,25 +44,25 @@
 
       # For bundling with nix bundle for running outside of nix
       # example: https://github.com/ralismark/nix-appimage
-      apps.bundle = {
-        type = "app";
-        program = "${packages.foreign}/bin/master";
-      };
+      #apps.bundle = {
+      #  type = "app";
+      #  program = "${packages.foreign}/bin/master";
+      #};
 
       # nix run .
-      apps.default = env.app [] "zig build run -- \"$@\"";
+      # apps.default = env.app [] "zig build run -- \"$@\"";
 
       # nix run .#build
-      apps.build = env.app [] "zig build \"$@\"";
+      # apps.build = env.app [] "zig build \"$@\"";
 
       # nix run .#test
-      apps.test = env.app [] "zig build test -- \"$@\"";
+      # apps.test = env.app [] "zig build test -- \"$@\"";
 
       # nix run .#docs
-      apps.docs = env.app [] "zig build docs -- \"$@\"";
+      # apps.docs = env.app [] "zig build docs -- \"$@\"";
 
       # nix run .#zig2nix
-      apps.zig2nix = env.app [] "zig2nix \"$@\"";
+      # apps.zig2nix = env.app [] "zig2nix \"$@\"";
 
       # nix develop
       devShells.default = env.mkShell {
