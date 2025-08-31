@@ -48,6 +48,8 @@ pub fn build(b: *std.Build) void {
                 .root_source_file = b.path(chess_project_root_source),
                 .target = target,
                 .optimize = optimize,
+                // NOTE: We don't use libc but something in "testing" does, so we need this to run tests on linux systems - https://github.com/ziglang/zig/issues/22210
+                .link_libc = true,
             }),
             .tests = b.addRunArtifact(b.addTest(.{
                 .root_module = b.modules.get("corundum_chess").?,
