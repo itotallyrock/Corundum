@@ -20,6 +20,7 @@ const option_defaults = .{
     .max_material_score = 125,
     .max_plies = 255,
     .max_nodes = std.math.maxInt(u64),
+    .thread_node_flush_interval = 1024,
 };
 
 /// Setup the build
@@ -36,6 +37,7 @@ pub fn build(b: *std.Build) void {
     const max_plies = b.option(u16, "max-plies", b.fmt("The absolute maximum number of plies a search/game can reach (default {any})", .{option_defaults.max_plies})) orelse option_defaults.max_plies;
     const max_mate_plies = b.option(u16, "max-mate-plies", b.fmt("The maximum number of plies a mate can be kept track of for (defaults to max-plies {any})", .{max_plies})) orelse max_plies;
     const max_nodes = b.option(u64, "max-nodes", b.fmt("The absolute maximum number of nodes a search can search through (default {any})", .{option_defaults.max_nodes})) orelse option_defaults.max_nodes;
+    const thread_node_flush_interval = b.option(u64, "node-flush-count", b.fmt("How many nodes a thread should increment locally before reporting to the shared node-count.  When a search specifies a max-nodes it will use this value to calculate the number of threads to avoid over-searching (i.e. <{d} nodes with a {d} node-flush-count would use one thread.   (default {d})", .{ 2 * option_defaults.thread_node_flush_interval, option_defaults.thread_node_flush_interval, option_defaults.thread_node_flush_interval })) orelse option_defaults.thread_node_flush_interval;
 
     var projects = .{
         .chess = .{
@@ -136,6 +138,7 @@ pub fn build(b: *std.Build) void {
     search_build_options.addOption(u16, "max_material_score", max_material_score);
     search_build_options.addOption(u16, "max_mate_plies", max_mate_plies);
     search_build_options.addOption(u64, "max_nodes", max_nodes);
+    search_build_options.addOption(u64, "thread_node_flush_interval", thread_node_flush_interval);
     projects.search.module.addOptions("search_build_options", search_build_options);
 
     const corundum_build_options = b.addOptions();
