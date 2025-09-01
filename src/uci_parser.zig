@@ -93,7 +93,7 @@ pub fn takeUntil(end_parser: anytype) mecha.Parser([]const u8) {
 }
 
 pub const UciParser = mecha.oneOf(.{
-    // Simple commands
+    // Simple gui_commands
     full(mecha.string("uci")).mapConst(UciCommand{ .uci = .{} }),
     full(mecha.string("isready")).mapConst(UciCommand{ .isready = .{} }),
     full(mecha.string("ucinewgame")).mapConst(UciCommand{ .ucinewgame = .{} }),

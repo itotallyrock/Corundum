@@ -17,31 +17,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  fmt:
-    if: github.event_name != 'schedule'
-    name: Zig Format
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: mlugg/setup-zig@v2
-        with:
-          version: master
-      - name: Check
-        run: zig fmt --check .
-  test:
+  check:
     strategy:
       fail-fast: false
       matrix:
         zig: [ master ]
         os: [ ubuntu-latest, windows-latest, macos-latest ]
     runs-on: ${{ matrix.os }}
-    name: Zig Build & Test (zig ${{ matrix.zig }} on ${{ matrix.os }})
+    name: Zig Build & Test Projects (zig ${{ matrix.zig }} on ${{ matrix.os }})
     steps:
       - uses: actions/checkout@v4
       - uses: mlugg/setup-zig@v2
         with:
           version: ${{ matrix.zig }}
-      - name: Build
-        run: zig build --verbose --summary all
-      - name: Run Tests
-        run: zig build test --verbose --summary all
+      - run: zig build all:all --verbose --summary all
+        working-directory: ./projects/chess

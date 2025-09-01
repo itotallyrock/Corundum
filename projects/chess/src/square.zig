@@ -1,7 +1,9 @@
 const std = @import("std");
-const Bitboard = @import("bitboard.zig").Bitboard;
-const Player = @import("players.zig").Player;
-const BoardDirection = @import("directions.zig").BoardDirection;
+
+const Bitboard = @import("./bitboard.zig").Bitboard;
+const CastleDirection = @import("./castle.zig").CastleDirection;
+const BoardDirection = @import("./direction.zig").BoardDirection;
+const Player = @import("./player.zig").Player;
 
 /// A column index for the board
 pub const File = enum(u3) {
@@ -9,14 +11,73 @@ pub const File = enum(u3) {
     a, b, c, d, e, f, g, h,
     // zig fmt: on
 
+    /// Whether two files are adjacent
+    pub fn isAdjacent(self: File, other: File) bool {
+        const selfIndex: i32 = @intCast(@intFromEnum(self));
+        const otherIndex: i32 = @intCast(@intFromEnum(other));
+        return (selfIndex == otherIndex + 1) or (selfIndex == otherIndex - 1);
+    }
+
     /// Returns the en passant square on the given file for the desired player
     pub fn epSquareFor(self: File, player: Player) EnPassantSquare {
-        return EnPassantSquare.from_square(Square.fromFileAndRank(self, Rank.epRankFor(player))) catch unreachable;
+        return EnPassantSquare.fromSquare(Square.fromFileAndRank(self, Rank.epRankFor(player))) catch unreachable;
     }
 
     /// Returns the promotion square on the given file for the desired player
     pub fn promotionSquareFor(self: File, player: Player) Square {
-        return Square.fromFileAndRank(self, Rank.promotionRankFor(player));
+        return Square.fromFileAndRank(self, Rank.promotionTargetRank(player));
+    }
+
+    /// Get the file the king moves to when castling
+    pub fn castlingKingTargetFile(castle_direction: CastleDirection) File {
+        if (castle_direction == .king_side) {
+            return .g;
+        } else {
+            return .c;
+        }
+    }
+
+    /// Get the file the rook moves to when castling
+    pub fn castlingRookTargetFile(castle_direction: CastleDirection) File {
+        if (castle_direction == .king_side) {
+            return .f;
+        } else {
+            return .d;
+        }
+    }
+
+    test isAdjacent {
+        try std.testing.expectEqual(File.a.isAdjacent(.b), true);
+        try std.testing.expectEqual(File.b.isAdjacent(.a), true);
+        try std.testing.expectEqual(File.b.isAdjacent(.c), true);
+        try std.testing.expectEqual(File.c.isAdjacent(.b), true);
+        try std.testing.expectEqual(File.c.isAdjacent(.d), true);
+        try std.testing.expectEqual(File.d.isAdjacent(.c), true);
+        try std.testing.expectEqual(File.d.isAdjacent(.e), true);
+        try std.testing.expectEqual(File.e.isAdjacent(.d), true);
+        try std.testing.expectEqual(File.e.isAdjacent(.f), true);
+        try std.testing.expectEqual(File.f.isAdjacent(.e), true);
+        try std.testing.expectEqual(File.f.isAdjacent(.g), true);
+        try std.testing.expectEqual(File.g.isAdjacent(.f), true);
+        try std.testing.expectEqual(File.g.isAdjacent(.h), true);
+        try std.testing.expectEqual(File.h.isAdjacent(.g), true);
+
+        try std.testing.expectEqual(File.a.isAdjacent(.c), false);
+        try std.testing.expectEqual(File.b.isAdjacent(.d), false);
+        try std.testing.expectEqual(File.c.isAdjacent(.e), false);
+        try std.testing.expectEqual(File.d.isAdjacent(.f), false);
+        try std.testing.expectEqual(File.f.isAdjacent(.h), false);
+        try std.testing.expectEqual(File.h.isAdjacent(.a), false);
+    }
+
+    test castlingKingTargetFile {
+        try std.testing.expectEqual(File.castlingKingTargetFile(.king_side), File.g);
+        try std.testing.expectEqual(File.castlingKingTargetFile(.queen_side), File.c);
+    }
+
+    test castlingRookTargetFile {
+        try std.testing.expectEqual(File.castlingRookTargetFile(.king_side), File.f);
+        try std.testing.expectEqual(File.castlingRookTargetFile(.queen_side), File.d);
     }
 
     test epSquareFor {
@@ -76,7 +137,7 @@ pub const Rank = enum(u3) {
     }
 
     /// Returns the rank for a pawn promotion of the desired player
-    pub fn promotionRankFor(player: Player) Rank {
+    pub fn promotionTargetRank(player: Player) Rank {
         if (player == .white) {
             return ._8;
         } else {
@@ -84,14 +145,70 @@ pub const Rank = enum(u3) {
         }
     }
 
+    /// Returns the rank all pawns promote from for the desired player
+    pub fn promotionFromRank(player: Player) Rank {
+        if (player == .white) {
+            return ._7;
+        } else {
+            return ._2;
+        }
+    }
+
+    /// Returns the rank the major pieces start on for the desired player
+    pub fn backRank(player: Player) Rank {
+        if (player == .white) {
+            return ._1;
+        } else {
+            return ._8;
+        }
+    }
+
+    /// Returns the rank all pawns start on for the desired player
+    pub fn pawnRank(player: Player) Rank {
+        if (player == .white) {
+            return ._2;
+        } else {
+            return ._7;
+        }
+    }
+
+    /// Returns the rank all pawns double push end on for the desired player
+    pub fn doublePushedRank(player: Player) Rank {
+        if (player == .white) {
+            return ._4;
+        } else {
+            return ._5;
+        }
+    }
+
+    test doublePushedRank {
+        try std.testing.expectEqual(Rank.doublePushedRank(.white), Rank._4);
+        try std.testing.expectEqual(Rank.doublePushedRank(.black), Rank._5);
+    }
+
+    test promotionFromRank {
+        try std.testing.expectEqual(Rank.promotionFromRank(.white), Rank._7);
+        try std.testing.expectEqual(Rank.promotionFromRank(.black), Rank._2);
+    }
+
+    test pawnRank {
+        try std.testing.expectEqual(Rank.pawnRank(.white), Rank._2);
+        try std.testing.expectEqual(Rank.pawnRank(.black), Rank._7);
+    }
+
     test epRankFor {
         try std.testing.expectEqual(Rank.epRankFor(.white), Rank._3);
         try std.testing.expectEqual(Rank.epRankFor(.black), Rank._6);
     }
 
-    test promotionRankFor {
-        try std.testing.expectEqual(Rank.promotionRankFor(.white), Rank._8);
-        try std.testing.expectEqual(Rank.promotionRankFor(.black), Rank._1);
+    test promotionTargetRank {
+        try std.testing.expectEqual(Rank.promotionTargetRank(.white), Rank._8);
+        try std.testing.expectEqual(Rank.promotionTargetRank(.black), Rank._1);
+    }
+
+    test backRank {
+        try std.testing.expectEqual(Rank.backRank(.white), Rank._1);
+        try std.testing.expectEqual(Rank.backRank(.black), Rank._8);
     }
 };
 
@@ -108,9 +225,23 @@ pub const Square = enum(u6) {
     a8, b8, c8, d8, e8, f8, g8, h8,
     // zig fmt: on
 
+    /// The integer type that can hold all squares (typicaly used for math operations on squares).
+    pub const OffsetInt = std.math.IntFittingRange(@intFromEnum(Square.a1), @intFromEnum(Square.h8));
+
     /// Creates a square from a file and rank.
     pub fn fromFileAndRank(file: File, rank: Rank) Square {
         return @enumFromInt(@as(u8, @intFromEnum(rank)) * 8 + @as(u8, @intFromEnum(file)));
+    }
+
+    /// Creates a square from an offset int.
+    pub fn fromOffset(offset_int: OffsetInt) Square {
+        std.debug.assert(offset_int <= @intFromEnum(Square.h8));
+        return @enumFromInt(offset_int);
+    }
+
+    /// Returns the offset of the square.
+    pub fn offset(self: Square) OffsetInt {
+        return @intFromEnum(self);
     }
 
     /// Returns the rank of the square.
@@ -125,7 +256,7 @@ pub const Square = enum(u6) {
 
     /// Creates a `Bitboard` with only this square set.
     pub fn toBitboard(self: Square) Bitboard {
-        return Bitboard{ .mask = Bitboard.a1.mask << @intFromEnum(self) };
+        return Bitboard.initInt(Bitboard.a1.mask.mask << @intFromEnum(self));
     }
 
     /// Try to shift/move the square in the given direction.
@@ -135,6 +266,32 @@ pub const Square = enum(u6) {
             .toBitboard()
             .shift(direction)
             .getSquare();
+    }
+
+    test fromOffset {
+        try std.testing.expectEqual(Square.fromOffset(0), Square.a1);
+        try std.testing.expectEqual(Square.fromOffset(1), Square.b1);
+        try std.testing.expectEqual(Square.fromOffset(2), Square.c1);
+        try std.testing.expectEqual(Square.fromOffset(3), Square.d1);
+        try std.testing.expectEqual(Square.fromOffset(4), Square.e1);
+        try std.testing.expectEqual(Square.fromOffset(5), Square.f1);
+        try std.testing.expectEqual(Square.fromOffset(6), Square.g1);
+        try std.testing.expectEqual(Square.fromOffset(7), Square.h1);
+        try std.testing.expectEqual(Square.fromOffset(8), Square.a2);
+        try std.testing.expectEqual(Square.fromOffset(63), Square.h8);
+    }
+    test offset {
+        try std.testing.expectEqual(Square.a1.offset(), 0);
+        try std.testing.expectEqual(Square.b1.offset(), 1);
+        try std.testing.expectEqual(Square.c1.offset(), 2);
+        try std.testing.expectEqual(Square.d1.offset(), 3);
+        try std.testing.expectEqual(Square.e1.offset(), 4);
+        try std.testing.expectEqual(Square.f1.offset(), 5);
+        try std.testing.expectEqual(Square.g1.offset(), 6);
+        try std.testing.expectEqual(Square.h1.offset(), 7);
+        try std.testing.expectEqual(Square.a2.offset(), 8);
+        try std.testing.expectEqual(Square.a8.offset(), 56);
+        try std.testing.expectEqual(Square.h8.offset(), 63);
     }
 
     test fromFileAndRank {
@@ -183,15 +340,15 @@ pub const Square = enum(u6) {
 
     test toBitboard {
         try std.testing.expectEqual(Square.a1.toBitboard(), Bitboard.a1);
-        try std.testing.expectEqual(Square.b4.toBitboard(), Bitboard{ .mask = 0x2000000 });
-        try std.testing.expectEqual(Square.g5.toBitboard(), Bitboard{ .mask = 0x4000000000 });
-        try std.testing.expectEqual(Square.h8.toBitboard(), Bitboard{ .mask = 0x8000000000000000 });
-        try std.testing.expectEqual(Square.a8.toBitboard(), Bitboard{ .mask = 0x100000000000000 });
-        try std.testing.expectEqual(Square.h1.toBitboard(), Bitboard{ .mask = 0x80 });
-        try std.testing.expectEqual(Square.f7.toBitboard(), Bitboard{ .mask = 0x20000000000000 });
-        try std.testing.expectEqual(Square.c2.toBitboard(), Bitboard{ .mask = 0x400 });
-        try std.testing.expectEqual(Square.d3.toBitboard(), Bitboard{ .mask = 0x80000 });
-        try std.testing.expectEqual(Square.e6.toBitboard(), Bitboard{ .mask = 0x100000000000 });
+        try std.testing.expectEqual(Square.b4.toBitboard(), Bitboard.initInt(0x2000000));
+        try std.testing.expectEqual(Square.g5.toBitboard(), Bitboard.initInt(0x4000000000));
+        try std.testing.expectEqual(Square.h8.toBitboard(), Bitboard.initInt(0x8000000000000000));
+        try std.testing.expectEqual(Square.a8.toBitboard(), Bitboard.initInt(0x100000000000000));
+        try std.testing.expectEqual(Square.h1.toBitboard(), Bitboard.initInt(0x80));
+        try std.testing.expectEqual(Square.f7.toBitboard(), Bitboard.initInt(0x20000000000000));
+        try std.testing.expectEqual(Square.c2.toBitboard(), Bitboard.initInt(0x400));
+        try std.testing.expectEqual(Square.d3.toBitboard(), Bitboard.initInt(0x80000));
+        try std.testing.expectEqual(Square.e6.toBitboard(), Bitboard.initInt(0x100000000000));
     }
 
     test shift {
@@ -233,12 +390,12 @@ pub const EnPassantSquare = enum(u6) {
     // zig fmt: on
 
     /// Create a normal `Square` from an `EnPassantSquare`
-    pub fn to_square(self: EnPassantSquare) Square {
+    pub fn toSquare(self: EnPassantSquare) Square {
         return @enumFromInt(@intFromEnum(self));
     }
 
     /// Create an `EnPassantSquare` from a `Square`
-    pub fn from_square(square: Square) !EnPassantSquare {
+    pub fn fromSquare(square: Square) !EnPassantSquare {
         return switch (square) {
             .a3, .b3, .c3, .d3, .e3, .f3, .g3, .h3, .a6, .b6, .c6, .d6, .e6, .f6, .g6, .h6 => @enumFromInt(@intFromEnum(square)),
             else => error.InvalidEnPassantSquare,

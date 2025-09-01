@@ -1,46 +1,49 @@
+//! TODO
+
 const std = @import("std");
+const corundumLogger = @import("./logging.zig").corundumLogger;
+const UciEngineManager = @import("./root.zig").UciEngineManager;
+const max_command_length = @import("corundum_build_options").max_command_length;
+const response_buffer_size = 64;
 
-pub const UciParser = @import("uci_parser.zig").UciParser;
+// TODO: Setup clap, another similar library, or some custom argument parsing
+// - Support certain UCI options that don't make sense to change at runtime or have very little benefit
+//   - Move overhead (constant offset to assume each move should take even if we report the bestmove instantly (to account for I/O and network latency)
+//   - Syzygy path (this is a huge directory of solved endgames and shouldn't change once set, so makes sense as an argument not a UCI option)
+//   - TT Size or "Hash" (GUIs typically only send this once at startup, so it makes more sense to make an argument)
+//   - Threads (GUIs typically only send this once at startup (and the user rarely updates this in the GUI) and furthermore once a search has started (or in other words, the thread pool has be initialized) changing the thread count complicates things.
+//     - Lastly, we can default to the best value, the core count. It's rare the user doesn't want the engine to utilize all their CPU (most users just want to see an analysis/score and list of PVs) and aren't dealing with engine vs. engine with pondering or other situations that warrant this value being anything other than the machine's core count.
+//   - NNUE paths (if not embedded NNUE paths should be set by arugment for the same reason all paths should be)
+// - Support redirecting to different inputs and outputs potentially?
+// - Logging configuration? (we will probably want a build-time option to disable logging entirely and any options here with it)
+//   - Like, using "debug on" to redirect Zig std library logs to "info string ..." commands for the GUI to capture
 
-pub const CliManager = @import("uci.zig").CliManager;
-pub const Square = @import("square.zig").Square;
-pub const EnPassantSquare = @import("square.zig").EnPassantSquare;
-pub const Board = @import("board.zig").Board;
-pub const PieceArrangement = @import("board.zig").PieceArrangement;
-pub const Player = @import("players.zig").Player;
-pub const CastleConfig = @import("castles.zig").CastleConfig;
-pub const CastleAbilities = @import("castles.zig").CastleAbilities;
-pub const CastleDirection = @import("castles.zig").CastleDirection;
-pub const Piece = @import("pieces.zig").Piece;
-pub const NonKingPiece = @import("pieces.zig").NonKingPiece;
-pub const OwnedPiece = @import("pieces.zig").OwnedPiece;
-pub const OwnedNonKingPiece = @import("pieces.zig").OwnedNonKingPiece;
-pub const ByPlayer = @import("players.zig").ByPlayer;
-pub const BoardMove = @import("moves.zig").BoardMove;
-pub const lines = @import("lines.zig");
+// Setup Zig std library options
+pub const std_options: std.Options = .{
+    // Use a custom logger that can be fully disabled (also to support other features like colors)
+    .logFn = corundumLogger,
+};
 
-test {
-    std.testing.refAllDeclsRecursive(@This());
+/// TODO
+pub fn main() !void {
+    var stdin_file = std.fs.File.stdin();
+    defer stdin_file.close();
+    var stdout_file = std.fs.File.stdout();
+    defer stdout_file.close();
+
+    var stdin_buffer: [max_command_length]u8 = undefined;
+    var stdout_buffer: [response_buffer_size]u8 = undefined;
+
+    var stdin_reader = stdin_file.reader(&stdin_buffer);
+    var stdout_writer = stdout_file.writer(&stdout_buffer);
+
+    var root_buffer: [8 * 1024 * 1024]u8 = undefined;
+    var root_allocator = std.heap.FixedBufferAllocator.init(&root_buffer);
+
+    var uci_engine_manager = UciEngineManager.init(&stdin_reader.interface, &stdout_writer.interface, root_allocator.allocator());
+    try uci_engine_manager.run();
 }
 
-pub fn main() !void {
-    _ = @import("board.zig")
-        .Board.start_position
-        .doublePawnPush(.e)
-        .pawnPush(.e7)
-        .pawnPush(.e4)
-        .doublePawnPush(.f)
-        .enPassantCapture(.e)
-        .kingMove(.e8, .e7)
-        .debugPrint();
-
-    var stdin = std.io.getStdIn();
-    defer stdin.close();
-    var stdout = std.io.getStdOut();
-    defer stdout.close();
-
-    var buffered_stdin = std.io.bufferedReader(stdin.reader());
-
-    var cli_manager = CliManager.init(buffered_stdin.reader().any(), stdout.writer().any());
-    try cli_manager.run();
+test {
+    std.testing.refAllDecls(@This());
 }

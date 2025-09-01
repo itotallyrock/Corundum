@@ -1,15 +1,200 @@
 const std = @import("std");
-const Player = @import("players.zig").Player;
-const ByPlayer = @import("players.zig").ByPlayer;
-const File = @import("square.zig").File;
+
+const Player = @import("./player.zig").Player;
+const ByPlayer = @import("./player.zig").ByPlayer;
+const Square = @import("./square.zig").Square;
+const File = @import("./square.zig").File;
+const Rank = @import("./square.zig").Rank;
+const Bitboard = @import("./bitboard.zig").Bitboard;
+const between = @import("./line.zig").between;
 
 /// What set of castling rules are in effect.
-pub const CastleGameType = enum {
+pub const CastleGameType = enum(u1) {
     /// The standard rules for castling.
     standard,
     /// Chess 960 or Fischer Random Chess rules for castling.
     fischer_random,
 };
+
+/// Create the struct for keeping track of the starting files for the rooks and king.
+pub fn StartingCastleFiles(comptime game_type: CastleGameType, comptime castle_abilities: CastleAbilities) type {
+    // When we have no castle abilities, we don't want to store any castling configuration anymore
+    if (castle_abilities == CastleAbilities.none) {
+        return struct {
+            const Self = @This();
+            /// Create a new set of starting files for the rooks and king in standard chess. (noop)
+            pub inline fn init() Self {
+                return .{};
+            }
+        };
+    }
+
+    switch (game_type) {
+        .standard => return struct {
+            const Self = @This();
+
+            /// Create a new set of starting files for the rooks and king in standard chess. (noop)
+            pub inline fn init() Self {
+                return .{};
+            }
+
+            /// The starting file for the king in standard chess.
+            pub inline fn kingFile(_: Self) File {
+                return File.e;
+            }
+
+            /// The starting files for the rooks in standard chess.
+            pub inline fn rookFiles(_: Self) ByCastleDirection(File) {
+                return ByCastleDirection(File).init(.{ .king_side = File.h, .queen_side = File.a });
+            }
+
+            /// Get the mask for the starting rook position for the given player and direction.
+            pub inline fn startingRookMask(self: Self, player: Player, castle_direction: CastleDirection) Bitboard {
+                const back_rank = Rank.backRank(player);
+                return Square.fromFileAndRank(self.rookFiles().get(castle_direction), back_rank).toBitboard();
+            }
+
+            /// Returns the path of squares between the king and rook for the given player and direction.
+            pub inline fn castlePath(self: Self, player: Player, castle_direction: CastleDirection) Bitboard {
+                const rank = Rank.backRank(player);
+                const white_king_square = Square.fromFileAndRank(self.kingFile(), rank);
+                const rook_square = Square.fromFileAndRank(self.rookFiles().get(castle_direction), rank);
+
+                return between(white_king_square, rook_square);
+            }
+
+            test castlePath {
+                try std.testing.expectEqual(
+                    Bitboard.initInt(0xe),
+                    StartingCastleFiles(.standard, .all).init().castlePath(.white, .queen_side),
+                );
+                try std.testing.expectEqual(
+                    Bitboard.initInt(0x60),
+                    StartingCastleFiles(.standard, .all).init().castlePath(.white, .king_side),
+                );
+                try std.testing.expectEqual(
+                    Bitboard.initInt(0xe00000000000000),
+                    StartingCastleFiles(.standard, .all).init().castlePath(.black, .queen_side),
+                );
+                try std.testing.expectEqual(
+                    Bitboard.initInt(0x6000000000000000),
+                    StartingCastleFiles(.standard, .all).init().castlePath(.black, .king_side),
+                );
+            }
+
+            test startingRookMask {
+                try std.testing.expectEqual(
+                    Bitboard.initInt(0x1),
+                    StartingCastleFiles(.standard, .all).init().startingRookMask(.white, .queen_side),
+                );
+                try std.testing.expectEqual(
+                    Bitboard.initInt(0x8000000000000000),
+                    StartingCastleFiles(.standard, .all).init().startingRookMask(.black, .king_side),
+                );
+            }
+
+            test kingFile {
+                const starting_files = StartingCastleFiles(.standard, .all).init();
+                try std.testing.expectEqual(File.e, starting_files.kingFile());
+            }
+
+            test rookFiles {
+                const starting_files = StartingCastleFiles(.standard, .all).init();
+                try std.testing.expectEqualDeep(ByCastleDirection(File).init(.{ .king_side = File.h, .queen_side = File.a }), starting_files.rookFiles());
+            }
+        },
+        .fischer_random => return struct {
+            const Self = @This();
+            /// The starting files for the rooks in Fischer Random Chess.
+            starting_rook_files: ByCastleDirection(File),
+            /// The starting file for the king in Fischer Random Chess.
+            starting_king_file: File,
+
+            /// Create a new set of starting files for the rooks and king in Fischer Random Chess.
+            pub fn init(
+                starting_king_file: File,
+                starting_rook_files: ByCastleDirection(File),
+            ) Self {
+                return Self{
+                    .starting_king_file = starting_king_file,
+                    .starting_rook_files = starting_rook_files,
+                };
+            }
+
+            /// The starting file for the king in Fischer Random Chess.
+            pub inline fn kingFile(self: Self) File {
+                return self.starting_king_file;
+            }
+
+            /// The starting files for the rooks in Fischer Random Chess.
+            pub inline fn rookFiles(self: Self) ByCastleDirection(File) {
+                return self.starting_rook_files;
+            }
+
+            /// Get the mask for the starting rook position for the given player and direction.
+            pub inline fn startingRookMask(self: Self, player: Player, castle_direction: CastleDirection) Bitboard {
+                const back_rank = Rank.backRank(player);
+                return Square.fromFileAndRank(self.rookFiles().get(castle_direction), back_rank).toBitboard();
+            }
+
+            /// Returns the path of squares between the king and rook for the given player and direction.
+            pub inline fn castlePath(self: Self, player: Player, castle_direction: CastleDirection) Bitboard {
+                const rank = Rank.backRank(player);
+                const white_king_square = Square.fromFileAndRank(self.kingFile(), rank);
+                const rook_square = Square.fromFileAndRank(self.rookFiles().get(castle_direction), rank);
+
+                return between(white_king_square, rook_square);
+            }
+
+            test castlePath {
+                try std.testing.expectEqual(
+                    Bitboard.initInt(0x1c),
+                    StartingCastleFiles(.fischer_random, .all).init(.f, ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b })).castlePath(.white, .queen_side),
+                );
+                try std.testing.expectEqual(
+                    Bitboard.initInt(0x3000000000000000),
+                    StartingCastleFiles(.fischer_random, .all).init(.d, ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b })).castlePath(.black, .king_side),
+                );
+            }
+
+            test startingRookMask {
+                try std.testing.expectEqual(
+                    Bitboard.initInt(0x2),
+                    StartingCastleFiles(.fischer_random, .all).init(.e, ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b })).startingRookMask(.white, .queen_side),
+                );
+                try std.testing.expectEqual(
+                    Bitboard.initInt(0x4000000000000000),
+                    StartingCastleFiles(.fischer_random, .all).init(.e, ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b })).startingRookMask(.black, .king_side),
+                );
+            }
+
+            test kingFile {
+                const starting_files = StartingCastleFiles(.fischer_random, .all).init(.e, ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b }));
+                try std.testing.expectEqual(File.e, starting_files.kingFile());
+            }
+
+            test rookFiles {
+                const starting_files = StartingCastleFiles(.fischer_random, .all).init(.e, ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b }));
+                try std.testing.expectEqualDeep(ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b }), starting_files.rookFiles());
+            }
+        },
+    }
+}
+
+test StartingCastleFiles {
+    try std.testing.expectEqual(0, @bitSizeOf(StartingCastleFiles(.standard, .all)));
+    try std.testing.expectEqual(0, @bitSizeOf(StartingCastleFiles(.standard, .none)));
+    try std.testing.expectEqual(0, @bitSizeOf(StartingCastleFiles(.fischer_random, .none)));
+    try std.testing.expect(@bitSizeOf(StartingCastleFiles(.fischer_random, .all)) > 0);
+}
+
+test {
+    inline for (.{ CastleAbilities.all, CastleAbilities.none }) |castle_abilities| {
+        inline for (comptime std.enums.values(CastleGameType)) |castle_game_type| {
+            std.testing.refAllDeclsRecursive(StartingCastleFiles(castle_game_type, castle_abilities));
+        }
+    }
+}
 
 /// Specifies the configuration of castling by the castle ruleset for each game-type.
 /// This can be either the standard configuration or the Fischer Random configuration.
@@ -20,25 +205,35 @@ pub const CastleConfig = union(CastleGameType) {
     fischer_random: struct {
         /// The starting files for the rooks in Fischer Random Chess.
         starting_rook_files: ByCastleDirection(File),
+        /// The starting file for the king in Fischer Random Chess.
+        starting_king_file: File,
     },
 
     /// The starting files for the rooks
-    pub fn startingRookFiles(self: CastleConfig) ByCastleDirection(File) {
+    pub inline fn startingRookFiles(self: CastleConfig) ByCastleDirection(File) {
         return switch (self) {
             .standard => ByCastleDirection(File).init(.{ .king_side = File.h, .queen_side = File.a }),
             .fischer_random => self.fischer_random.starting_rook_files,
         };
     }
 
+    /// The starting file for the king
+    pub inline fn startingKingFile(self: CastleConfig) File {
+        return switch (self) {
+            .standard => File.e,
+            .fischer_random => self.fischer_random.starting_king_file,
+        };
+    }
+
     /// Returns whether the configuration is Fischer Random Chess.
-    pub fn isFischerRandom(self: CastleConfig) bool {
+    pub inline fn isFischerRandom(self: CastleConfig) bool {
         return self == .fischer_random;
     }
 
     test "isFishcerRandom" {
         const standard_config = CastleConfig{ .standard = .{} };
-        const fischer_random_config = CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b }) } };
-        const fischer_random_copying_standard_config = CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = File.h, .queen_side = File.a }) } };
+        const fischer_random_config = CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b }) } };
+        const fischer_random_copying_standard_config = CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = File.h, .queen_side = File.a }) } };
 
         // Fischer Random configuration is correctly identified as such.
         try std.testing.expectEqual(false, standard_config.isFischerRandom());
@@ -50,8 +245,8 @@ pub const CastleConfig = union(CastleGameType) {
 
     test "startingRookFiles" {
         const standard_config = CastleConfig{ .standard = .{} };
-        const fischer_random_config = CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b }) } };
-        const fischer_random_copying_standard_config = CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = File.h, .queen_side = File.a }) } };
+        const fischer_random_config = CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = File.g, .queen_side = File.b }) } };
+        const fischer_random_copying_standard_config = CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = File.h, .queen_side = File.a }) } };
 
         // Standard configuration has the correct starting rook files.
         try std.testing.expectEqualDeep(ByCastleDirection(File).init(.{
@@ -75,18 +270,57 @@ pub const CastleConfig = union(CastleGameType) {
 
 /// Simple flag container to keep track of which players can castle in which directions.
 /// Does not track legality or other positional constraints on castling.
-pub const CastleAbilities = struct {
-    pub const none = CastleAbilities{ .abilities = ByPlayer(ByCastleDirection(bool)).initFill(ByCastleDirection(bool).initFill(false)) };
-    pub const all = CastleAbilities{ .abilities = ByPlayer(ByCastleDirection(bool)).initFill(ByCastleDirection(bool).initFill(true)) };
-    const Abilities = ByPlayer(ByCastleDirection(bool));
+pub const CastleAbilities = packed struct {
+    /// No castle abilities.
+    pub const none = CastleAbilities{ .abilities = Abilities.initEmpty() };
+    /// All castle abilities.
+    pub const all = CastleAbilities{ .abilities = Abilities.initFull() };
+
+    /// Internal representation of the castle abilities.
+    const Abilities = std.bit_set.IntegerBitSet(std.enums.values(CastleDirection).len * std.enums.values(Player).len);
+
+    /// The abilities for each player.
     abilities: Abilities,
+
+    /// Helper function to get the index of the ability for the given player and direction.
+    fn getAbilityIndex(player: Player, direction: CastleDirection) usize {
+        return std.enums.values(Player).len * @intFromEnum(direction) + @intFromEnum(player);
+    }
+
+    /// Initializes the castle abilities given a `ByPlayer` of `ByCastleDirection` booleans.
+    pub fn init(can_castle: ByPlayer(ByCastleDirection(bool))) CastleAbilities {
+        var ability = Abilities.initEmpty();
+        inline for (comptime std.enums.values(Player)) |player| {
+            inline for (comptime std.enums.values(CastleDirection)) |direction| {
+                ability.setValue(getAbilityIndex(player, direction), can_castle.get(player).get(direction));
+            }
+        }
+        return CastleAbilities{ .abilities = ability };
+    }
+
+    test init {
+        const castle_abilities = CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
+            .white = ByCastleDirection(bool).init(.{
+                .king_side = true,
+                .queen_side = false,
+            }),
+            .black = ByCastleDirection(bool).init(.{
+                .king_side = false,
+                .queen_side = true,
+            }),
+        }));
+        try std.testing.expectEqual(true, castle_abilities.hasAbility(.white, .king_side));
+        try std.testing.expectEqual(false, castle_abilities.hasAbility(.white, .queen_side));
+        try std.testing.expectEqual(false, castle_abilities.hasAbility(.black, .king_side));
+        try std.testing.expectEqual(true, castle_abilities.hasAbility(.black, .queen_side));
+    }
 
     /// Returns whether the given player can castle in the specified direction.
     pub fn hasAbility(self: CastleAbilities, player: Player, direction: CastleDirection) bool {
-        return self.abilities.get(player).get(direction);
+        return self.abilities.isSet(getAbilityIndex(player, direction));
     }
 
-    test "hasAbility" {
+    test hasAbility {
         const all_abilities = CastleAbilities.all;
         try std.testing.expectEqual(true, all_abilities.hasAbility(.white, .king_side));
         try std.testing.expectEqual(true, all_abilities.hasAbility(.white, .queen_side));
@@ -102,24 +336,15 @@ pub const CastleAbilities = struct {
 
     /// Adds the ability to castle in the specified direction for the given player.
     pub fn addAbility(self: CastleAbilities, player: Player, direction: CastleDirection) CastleAbilities {
-        return CastleAbilities{
-            .abilities = Abilities.init(.{
-                .white = ByCastleDirection(bool).init(.{
-                    .king_side = self.abilities.get(.white).get(.king_side) or (player == .white and direction == .king_side),
-                    .queen_side = self.abilities.get(.white).get(.queen_side) or (player == .white and direction == .queen_side),
-                }),
-                .black = ByCastleDirection(bool).init(.{
-                    .king_side = self.abilities.get(.black).get(.king_side) or (player == .black and direction == .king_side),
-                    .queen_side = self.abilities.get(.black).get(.queen_side) or (player == .black and direction == .queen_side),
-                }),
-            }),
-        };
+        var result = self.abilities;
+        result.set(getAbilityIndex(player, direction));
+        return CastleAbilities{ .abilities = result };
     }
 
-    test "addAbility" {
+    test addAbility {
         const no_abilities = CastleAbilities.none;
         // Add the king-side castle ability for the white player.
-        try std.testing.expectEqual(CastleAbilities{ .abilities = Abilities.init(.{
+        try std.testing.expectEqual(CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
             .white = ByCastleDirection(bool).init(.{
                 .king_side = true,
                 .queen_side = false,
@@ -128,9 +353,9 @@ pub const CastleAbilities = struct {
                 .king_side = false,
                 .queen_side = false,
             }),
-        }) }, no_abilities.addAbility(.white, .king_side));
+        })), no_abilities.addAbility(.white, .king_side));
         // Add the queen side castle ability for the white player.
-        try std.testing.expectEqual(CastleAbilities{ .abilities = Abilities.init(.{
+        try std.testing.expectEqual(CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
             .white = ByCastleDirection(bool).init(.{
                 .king_side = false,
                 .queen_side = true,
@@ -139,10 +364,10 @@ pub const CastleAbilities = struct {
                 .king_side = false,
                 .queen_side = false,
             }),
-        }) }, no_abilities.addAbility(.white, .queen_side));
+        })), no_abilities.addAbility(.white, .queen_side));
 
         // Add the king-side castle ability for the black player.
-        try std.testing.expectEqual(CastleAbilities{ .abilities = Abilities.init(.{
+        try std.testing.expectEqual(CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
             .white = ByCastleDirection(bool).init(.{
                 .king_side = false,
                 .queen_side = false,
@@ -151,9 +376,9 @@ pub const CastleAbilities = struct {
                 .king_side = true,
                 .queen_side = false,
             }),
-        }) }, no_abilities.addAbility(.black, .king_side));
+        })), no_abilities.addAbility(.black, .king_side));
         // Add the queen side castle ability for the black player.
-        try std.testing.expectEqual(CastleAbilities{ .abilities = Abilities.init(.{
+        try std.testing.expectEqual(CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
             .white = ByCastleDirection(bool).init(.{
                 .king_side = false,
                 .queen_side = false,
@@ -162,7 +387,7 @@ pub const CastleAbilities = struct {
                 .king_side = false,
                 .queen_side = true,
             }),
-        }) }, no_abilities.addAbility(.black, .queen_side));
+        })), no_abilities.addAbility(.black, .queen_side));
 
         // Add castle abilities to the all abilities to see that it doesn't change.
         try std.testing.expectEqual(CastleAbilities.all, CastleAbilities.all.addAbility(.white, .king_side));
@@ -173,24 +398,15 @@ pub const CastleAbilities = struct {
 
     /// Removes the ability to castle in the specified direction for the given player.
     pub fn removeAbility(self: CastleAbilities, player: Player, direction: CastleDirection) CastleAbilities {
-        return CastleAbilities{
-            .abilities = Abilities.init(.{
-                .white = ByCastleDirection(bool).init(.{
-                    .king_side = self.abilities.get(.white).get(.king_side) and !(player == .white and direction == .king_side),
-                    .queen_side = self.abilities.get(.white).get(.queen_side) and !(player == .white and direction == .queen_side),
-                }),
-                .black = ByCastleDirection(bool).init(.{
-                    .king_side = self.abilities.get(.black).get(.king_side) and !(player == .black and direction == .king_side),
-                    .queen_side = self.abilities.get(.black).get(.queen_side) and !(player == .black and direction == .queen_side),
-                }),
-            }),
-        };
+        var result = self.abilities;
+        result.unset(getAbilityIndex(player, direction));
+        return CastleAbilities{ .abilities = result };
     }
 
-    test "removeAbility" {
+    test removeAbility {
         const all_abilities = CastleAbilities.all;
         // Remove the king-side castle ability for the white player.
-        try std.testing.expectEqual(CastleAbilities{ .abilities = Abilities.init(.{
+        try std.testing.expectEqual(CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
             .white = ByCastleDirection(bool).init(.{
                 .king_side = false,
                 .queen_side = true,
@@ -199,9 +415,9 @@ pub const CastleAbilities = struct {
                 .king_side = true,
                 .queen_side = true,
             }),
-        }) }, all_abilities.removeAbility(.white, .king_side));
+        })), all_abilities.removeAbility(.white, .king_side));
         // Remove the queen side castle ability for the white player.
-        try std.testing.expectEqual(CastleAbilities{ .abilities = Abilities.init(.{
+        try std.testing.expectEqual(CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
             .white = ByCastleDirection(bool).init(.{
                 .king_side = true,
                 .queen_side = false,
@@ -210,9 +426,9 @@ pub const CastleAbilities = struct {
                 .king_side = true,
                 .queen_side = true,
             }),
-        }) }, all_abilities.removeAbility(.white, .queen_side));
+        })), all_abilities.removeAbility(.white, .queen_side));
         // Remove the king-side castle ability for the black player.
-        try std.testing.expectEqual(CastleAbilities{ .abilities = Abilities.init(.{
+        try std.testing.expectEqual(CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
             .white = ByCastleDirection(bool).init(.{
                 .king_side = true,
                 .queen_side = true,
@@ -221,9 +437,9 @@ pub const CastleAbilities = struct {
                 .king_side = false,
                 .queen_side = true,
             }),
-        }) }, all_abilities.removeAbility(.black, .king_side));
+        })), all_abilities.removeAbility(.black, .king_side));
         // Remove the queen side castle ability for the black player.
-        try std.testing.expectEqual(CastleAbilities{ .abilities = Abilities.init(.{
+        try std.testing.expectEqual(CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
             .white = ByCastleDirection(bool).init(.{
                 .king_side = true,
                 .queen_side = true,
@@ -232,7 +448,7 @@ pub const CastleAbilities = struct {
                 .king_side = true,
                 .queen_side = false,
             }),
-        }) }, all_abilities.removeAbility(.black, .queen_side));
+        })), all_abilities.removeAbility(.black, .queen_side));
 
         // Remove castle abilities from the no abilities to see that it doesn't change.
         try std.testing.expectEqual(CastleAbilities.none, CastleAbilities.none.removeAbility(.white, .king_side));
@@ -248,10 +464,10 @@ pub const CastleAbilities = struct {
         return self.removeAbility(player, .king_side).removeAbility(player, .queen_side);
     }
 
-    test "kingMove" {
+    test kingMove {
         const all_abilities = CastleAbilities.all;
         // White king move removes all white castle abilities.
-        try std.testing.expectEqual(CastleAbilities{ .abilities = Abilities.init(.{
+        try std.testing.expectEqual(CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
             .white = ByCastleDirection(bool).init(.{
                 .king_side = false,
                 .queen_side = false,
@@ -260,9 +476,9 @@ pub const CastleAbilities = struct {
                 .king_side = true,
                 .queen_side = true,
             }),
-        }) }, all_abilities.kingMove(.white));
+        })), all_abilities.kingMove(.white));
         // Black king move removes all black castle abilities.
-        try std.testing.expectEqual(CastleAbilities{ .abilities = Abilities.init(.{
+        try std.testing.expectEqual(CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
             .white = ByCastleDirection(bool).init(.{
                 .king_side = true,
                 .queen_side = true,
@@ -271,7 +487,7 @@ pub const CastleAbilities = struct {
                 .king_side = false,
                 .queen_side = false,
             }),
-        }) }, all_abilities.kingMove(.black));
+        })), all_abilities.kingMove(.black));
         // Both king move removes all castle abilities.
         try std.testing.expectEqual(CastleAbilities.none, all_abilities.kingMove(.white).kingMove(.black));
     }
@@ -283,9 +499,9 @@ pub const CastleAbilities = struct {
         return self.removeAbility(player, direction);
     }
 
-    test "rookMove" {
+    test rookMove {
         // White king-side rook move removes the white king-side castle ability.
-        try std.testing.expectEqual(CastleAbilities{ .abilities = Abilities.init(.{
+        try std.testing.expectEqual(CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
             .white = ByCastleDirection(bool).init(.{
                 .king_side = false,
                 .queen_side = true,
@@ -294,9 +510,9 @@ pub const CastleAbilities = struct {
                 .king_side = true,
                 .queen_side = true,
             }),
-        }) }, CastleAbilities.all.rookMove(.white, .king_side));
+        })), CastleAbilities.all.rookMove(.white, .king_side));
         // Black queen-side rook move removes the black queen-side castle ability.
-        try std.testing.expectEqual(CastleAbilities{ .abilities = Abilities.init(.{
+        try std.testing.expectEqual(CastleAbilities.init(ByPlayer(ByCastleDirection(bool)).init(.{
             .white = ByCastleDirection(bool).init(.{
                 .king_side = true,
                 .queen_side = true,
@@ -305,7 +521,7 @@ pub const CastleAbilities = struct {
                 .king_side = true,
                 .queen_side = false,
             }),
-        }) }, CastleAbilities.all.rookMove(.black, .queen_side));
+        })), CastleAbilities.all.rookMove(.black, .queen_side));
     }
 
     /// Get the UCI string representation of the castle abilities.
@@ -379,8 +595,16 @@ pub const CastleAbilities = struct {
     }
 };
 
+/// State for maintaining castling rules for a game
+pub const CastleState = struct {
+    /// The castle configuration.
+    config: CastleConfig,
+    /// The castle abilities.
+    abilities: CastleAbilities,
+};
+
 /// Represents the direction of a castle move.
-pub const CastleDirection = enum {
+pub const CastleDirection = enum(u1) {
     /// The king-side castle direction.
     king_side,
     /// The queen-side castle direction.
@@ -409,8 +633,8 @@ test "getCastleChar" {
     try std.testing.expectEqual('q', getCastleChar(CastleConfig{ .standard = .{} }, CastleDirection.queen_side));
 
     // Fischer random castling.
-    try std.testing.expectEqual('g', getCastleChar(CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleDirection.king_side));
-    try std.testing.expectEqual('b', getCastleChar(CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleDirection.queen_side));
+    try std.testing.expectEqual('g', getCastleChar(CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleDirection.king_side));
+    try std.testing.expectEqual('b', getCastleChar(CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleDirection.queen_side));
 }
 
 fn getSidedCastleChar(castle_config: CastleConfig, player: Player, castle_direction: CastleDirection) u8 {
@@ -428,10 +652,10 @@ test "getSidedCastleChar" {
     try std.testing.expectEqual('q', getSidedCastleChar(CastleConfig{ .standard = .{} }, .black, CastleDirection.queen_side));
 
     // Fischer random castling.
-    try std.testing.expectEqual('G', getSidedCastleChar(CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, .white, CastleDirection.king_side));
-    try std.testing.expectEqual('B', getSidedCastleChar(CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, .white, CastleDirection.queen_side));
-    try std.testing.expectEqual('g', getSidedCastleChar(CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, .black, CastleDirection.king_side));
-    try std.testing.expectEqual('b', getSidedCastleChar(CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, .black, CastleDirection.queen_side));
+    try std.testing.expectEqual('G', getSidedCastleChar(CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, .white, CastleDirection.king_side));
+    try std.testing.expectEqual('B', getSidedCastleChar(CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, .white, CastleDirection.queen_side));
+    try std.testing.expectEqual('g', getSidedCastleChar(CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, .black, CastleDirection.king_side));
+    try std.testing.expectEqual('b', getSidedCastleChar(CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, .black, CastleDirection.queen_side));
 }
 
 fn tryGetSidedCastleChar(castle_config: CastleConfig, castle_abilities: CastleAbilities, player: Player, castle_direction: CastleDirection) ?u8 {
@@ -481,10 +705,10 @@ test "getUciString" {
     try std.testing.expectEqualStrings("-", getUciString(CastleConfig{ .standard = .{} }, CastleAbilities.none));
 
     // Fischer random
-    try std.testing.expectEqualStrings("GBgb", getUciString(CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleAbilities.all));
-    try std.testing.expectEqualStrings("GBg", getUciString(CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleAbilities.all.removeAbility(.black, .queen_side)));
-    try std.testing.expectEqualStrings("GBb", getUciString(CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleAbilities.all.removeAbility(.black, .king_side)));
-    try std.testing.expectEqualStrings("GB", getUciString(CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleAbilities.all.removeAbility(.black, .king_side).removeAbility(.black, .queen_side)));
-    try std.testing.expectEqualStrings("G", getUciString(CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleAbilities.all.removeAbility(.white, .queen_side).removeAbility(.black, .king_side).removeAbility(.black, .queen_side)));
-    try std.testing.expectEqualStrings("-", getUciString(CastleConfig{ .fischer_random = .{ .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleAbilities.none));
+    try std.testing.expectEqualStrings("GBgb", getUciString(CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleAbilities.all));
+    try std.testing.expectEqualStrings("GBg", getUciString(CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleAbilities.all.removeAbility(.black, .queen_side)));
+    try std.testing.expectEqualStrings("GBb", getUciString(CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleAbilities.all.removeAbility(.black, .king_side)));
+    try std.testing.expectEqualStrings("GB", getUciString(CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleAbilities.all.removeAbility(.black, .king_side).removeAbility(.black, .queen_side)));
+    try std.testing.expectEqualStrings("G", getUciString(CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleAbilities.all.removeAbility(.white, .queen_side).removeAbility(.black, .king_side).removeAbility(.black, .queen_side)));
+    try std.testing.expectEqualStrings("-", getUciString(CastleConfig{ .fischer_random = .{ .starting_king_file = .e, .starting_rook_files = ByCastleDirection(File).init(.{ .king_side = .g, .queen_side = .b }) } }, CastleAbilities.none));
 }

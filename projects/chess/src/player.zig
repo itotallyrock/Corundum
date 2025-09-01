@@ -1,7 +1,7 @@
 const std = @import("std");
 
 /// A an owner of pieces with a turn to move.
-pub const Player = enum {
+pub const Player = enum(u1) {
     /// The player with the white pieces, typically first to move
     white,
     /// The player with the black pieces, typically second to move
