@@ -4,7 +4,12 @@
     .fingerprint = 0xc40cf4d2cca2811d,
     .minimum_zig_version = "0.15.0-dev.64+2a4e06bcb",
 
-    .dependencies = .{},
+    .dependencies = .{
+        .chameleon = .{
+            .url = "git+https://github.com/tr1ckydev/chameleon#310d43893045af86914f5c46e041a4d1968b6e27",
+            .hash = "chameleon-2.0.1-ZOxajeRzAACgzG4t7iZEQX6D1wqtJsd8z-lQoeyxyuNL",
+        },
+    },
 
     .paths = .{
         "build.zig",

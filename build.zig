@@ -41,6 +41,10 @@ pub fn build(b: *std.Build) void {
     const thread_node_flush_interval = b.option(u64, "node-flush-count", b.fmt("How many nodes a thread should increment locally before reporting to the shared node-count.  When a search specifies a max-nodes it will use this value to calculate the number of threads to avoid over-searching (i.e. <{d} nodes with a {d} node-flush-count would use one thread.   (default {d})", .{ 2 * option_defaults.thread_node_flush_interval, option_defaults.thread_node_flush_interval, option_defaults.thread_node_flush_interval })) orelse option_defaults.thread_node_flush_interval;
     const enable_logging = b.option(bool, "logging", b.fmt("Whether or not to include extra logging functionality. The specific logging functionality relies on other build variables and runtime conditions (default {any})", .{option_defaults.enable_logging})) orelse option_defaults.enable_logging;
 
+    var dependencies = .{
+        .chameleon = b.dependency("chameleon", .{ .target = target, .optimize = optimize }),
+    };
+
     var projects = .{
         .chess = .{
             .steps = .{
@@ -121,9 +125,11 @@ pub fn build(b: *std.Build) void {
     };
 
     // Setup project dependencies
+    projects.corundum.main_module.addImport("chameleon", dependencies.chameleon.module("chameleon"));
     projects.corundum.main_module.addImport("corundum_uci", projects.uci.module);
     projects.corundum.main_module.addImport("corundum_chess", projects.chess.module);
     projects.corundum.main_module.addImport("corundum_search", projects.uci.module);
+    projects.corundum.module.addImport("chameleon", dependencies.chameleon.module("chameleon"));
     projects.corundum.module.addImport("corundum_uci", projects.uci.module);
     projects.corundum.module.addImport("corundum_chess", projects.chess.module);
     projects.corundum.module.addImport("corundum_search", projects.chess.module);

@@ -1,5 +1,6 @@
 const std = @import("std");
 const build_options = @import("build_options");
+const Chameleon = @import("chameleon");
 
 pub fn corundumLogger(
     comptime message_level: std.log.Level,
@@ -16,14 +17,20 @@ pub fn corundumLogger(
     // TODO: Potentially somehow access a "UCI debug info 'Writer'" that when set will redirect or split/'tee' logs into "info string ..." commands
     // TODO: Consider outputting structured args or even using otlp
     // nosuspend stderr.print("{{ \"level\": \"" ++ @tagName(message_level) ++ "\", \"scope\": \"" ++ @tagName(scope) ++ "\", \"message\": \"" ++ format ++ "\" }}\n", args) catch return;
-    nosuspend stderr.print("[" ++ levelText(message_level) ++ "][" ++ @tagName(scope) ++ "] " ++ format ++ "\n", args) catch return;
+    nosuspend stderr.print("[" ++ levelText(message_level) ++ "][" ++ scopeText(scope) ++ "] " ++ format ++ "\n", args) catch return;
 }
 
-pub fn levelText(comptime self: std.log.Level) []const u8 {
-    return switch (self) {
-        .err => "err",
-        .warn => "wrn",
-        .info => "inf",
-        .debug => "dbg",
+inline fn levelText(comptime level: std.log.Level) []const u8 {
+    var c = Chameleon.initComptime();
+    return switch (level) {
+        .err => c.bold().redBright().fmt("err"),
+        .warn => c.yellow().fmt("wrn"),
+        .info => c.cyan().fmt("inf"),
+        .debug => c.magenta().fmt("dbg"),
     };
+}
+
+inline fn scopeText(comptime scope: @TypeOf(.enum_literal)) []const u8 {
+    var c = Chameleon.initComptime();
+    return c.white().fmt(@tagName(scope));
 }
