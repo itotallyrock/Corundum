@@ -1,6 +1,7 @@
 //! TODO
 
 const std = @import("std");
+const corundumLogger = @import("./logging.zig").corundumLogger;
 const UciEngineManager = @import("./root.zig").UciEngineManager;
 const max_command_length = @import("corundum_build_options").max_command_length;
 const response_buffer_size = 64;
@@ -16,6 +17,12 @@ const response_buffer_size = 64;
 // - Support redirecting to different inputs and outputs potentially?
 // - Logging configuration? (we will probably want a build-time option to disable logging entirely and any options here with it)
 //   - Like, using "debug on" to redirect Zig std library logs to "info string ..." commands for the GUI to capture
+
+// Setup Zig std library options
+pub const std_options: std.Options = .{
+    // Use a custom logger that can be fully disabled (also to support other features like colors)
+    .logFn = corundumLogger,
+};
 
 /// TODO
 pub fn main() !void {
