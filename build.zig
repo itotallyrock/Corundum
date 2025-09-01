@@ -21,6 +21,7 @@ const option_defaults = .{
     .max_plies = 255,
     .max_nodes = std.math.maxInt(u64),
     .thread_node_flush_interval = 1024,
+    .enable_logging = true,
 };
 
 /// Setup the build
@@ -38,6 +39,7 @@ pub fn build(b: *std.Build) void {
     const max_mate_plies = b.option(u16, "max-mate-plies", b.fmt("The maximum number of plies a mate can be kept track of for (defaults to max-plies {any})", .{max_plies})) orelse max_plies;
     const max_nodes = b.option(u64, "max-nodes", b.fmt("The absolute maximum number of nodes a search can search through (default {any})", .{option_defaults.max_nodes})) orelse option_defaults.max_nodes;
     const thread_node_flush_interval = b.option(u64, "node-flush-count", b.fmt("How many nodes a thread should increment locally before reporting to the shared node-count.  When a search specifies a max-nodes it will use this value to calculate the number of threads to avoid over-searching (i.e. <{d} nodes with a {d} node-flush-count would use one thread.   (default {d})", .{ 2 * option_defaults.thread_node_flush_interval, option_defaults.thread_node_flush_interval, option_defaults.thread_node_flush_interval })) orelse option_defaults.thread_node_flush_interval;
+    const enable_logging = b.option(bool, "logging", b.fmt("Whether or not to include extra logging functionality. The specific logging functionality relies on other build variables and runtime conditions (default {any})", .{option_defaults.enable_logging})) orelse option_defaults.enable_logging;
 
     var projects = .{
         .chess = .{
@@ -127,6 +129,14 @@ pub fn build(b: *std.Build) void {
     projects.corundum.module.addImport("corundum_search", projects.chess.module);
 
     projects.search.module.addImport("corundum_chess", projects.chess.module);
+
+    const build_options = b.addOptions();
+    build_options.addOption(bool, "enable_logging", enable_logging);
+    projects.chess.module.addOptions("build_options", build_options);
+    projects.uci.module.addOptions("build_options", build_options);
+    projects.search.module.addOptions("build_options", build_options);
+    projects.corundum.module.addOptions("build_options", build_options);
+    projects.corundum.main_module.addOptions("build_options", build_options);
 
     const chess_build_options = b.addOptions();
     chess_build_options.addOption(u256, "zobrist_seed", zobrist_seed);
